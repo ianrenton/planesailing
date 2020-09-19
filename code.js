@@ -236,7 +236,7 @@ class Entity {
     if (a.mach != null) {
       this.speed = bestSpeed;
     }
-    if (a.name != null) {
+    if (a.flight != null) {
       this.name = a.flight.trim();
     }
     if (a.squawk != null) {
@@ -580,9 +580,6 @@ class Entity {
 function requestHistory() {
   var url = dump1090url + "/data/receiver.json";
   $.getJSON(url, function(data) {
-    // Got receiver metadata. Set tracker status
-    $("span#trackerstatus").html("ONLINE, LOADING HISTORY...");
-    setTrackerStatus("waiting");
     // Iterate through all history files. This could be up to 120!
     var historyFileCount = data.history;
     var i;
@@ -603,8 +600,6 @@ function requestHistory() {
 // old. After this function finishes, we are then ready to start receiving
 // live data on top of the historical data.
 function processHistory() {
-  $("span#trackerstatus").html("ONLINE, PROCESSING HISTORY...");
-
   // At startup we did one initial retrieve of live data so we had a nice display
   // from the start. Now we have history data to load in which is older. So,
   // delete the existing live data first.
@@ -654,14 +649,7 @@ function requestLiveData() {
 
 // Handle successful receive of data
 async function handleSuccess(result) {
-  // Set tracker status
-  if (result.aircraft.length > 0) {
-    $("span#trackerstatus").html("ONLINE, TRACKING " + result.aircraft.length + " AIRCRAFT");
-    setTrackerStatus("good");
-  } else {
-    $("span#trackerstatus").html("ONLINE, NO AIRCRAFT DETECTED");
-    setTrackerStatus("warning");
-  }
+  $("#aircraftTrackerOffline").css("display", "none");
 
   // Update the data store
   handleData(result, true);
@@ -687,8 +675,7 @@ function handleData(result, live) {
 
 // Handle a failure to receive data
 async function handleFailure() {
-  $("span#trackerstatus").html("TRACKER OFFLINE");
-  setTrackerStatus("error");
+  $("#aircraftTrackerOffline").css("display", "inline-block");
 }
 
 // Drop any aircraft too old to be displayed
@@ -734,20 +721,6 @@ async function iconSelect(uid) {
     selectedEntityUID = 0;
   }
   updateMap();
-}
-
-
-// Sets the tracker status CSS class to the provided one, removing any
-// others
-function setTrackerStatus(newStatus) {
-  var options = ["waiting", "good", "warning", "error"];
-  for (o of options) {
-    if (o == newStatus) {
-      $("span#trackerstatus").addClass("trackerstatus" + o);
-    } else {
-      $("span#trackerstatus").removeClass("trackerstatus" + o);
-    }
-  }
 }
 
 // Utility function to get local PC time with data time offset applied.
@@ -883,6 +856,7 @@ requestLiveData();
 // point.
 requestHistory();
 setTimeout(processHistory, 9000);
+setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
 
 // Set up the timed data request & update thread.
 setInterval(requestLiveData, 10000);

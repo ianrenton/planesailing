@@ -24,6 +24,7 @@ div#top {
     right: 0;
     margin: 1em auto;
     padding: 0.5em;
+    z-index: 1000;
     display: none; /* shown by JS */
 }
 div#map { 
@@ -35,13 +36,16 @@ div#map {
 div#bottom {
     position: absolute;
     bottom: 0;
+    text-align: center;
+    z-index: 1000;
+}
+div.bottompanel, div.problempanel, div.loadingpanel {
     margin: 1em;
     padding: 0.5em;
-    text-align: center;
 }
 
 /* Styles */
-div.panel {
+div#top {
     font-size: 14px;
     background-color: rgba(22, 33, 49, 0.8);
     border: 1px solid rgba(120, 200, 255, 1);
@@ -50,7 +54,41 @@ div.panel {
     box-sizing: border-box;
     display: inline-block;
     letter-spacing: .06em;
-    z-index: 1000;
+}
+div.bottompanel {
+    font-size: 14px;
+    background-color: rgba(22, 33, 49, 0.8);
+    border: 1px solid rgba(120, 200, 255, 1);
+    border-radius: 3px;
+    color: rgba(120, 200, 255, 1);
+    box-sizing: border-box;
+    display: inline-block;
+    letter-spacing: .06em;
+    line-height: 1.4em;
+}
+div.loadingpanel {
+    font-size: 14px;
+    background-color: rgba(49, 33, 22, 0.8);
+    border: 1px solid rgba(255, 200, 120, 1);
+    border-radius: 3px;
+    color: rgba(255, 200, 120, 1);
+    box-sizing: border-box;
+    letter-spacing: .06em;
+    line-height: 1.4em;
+    animation: blinker 2s linear infinite;
+    display: inline-block;
+}
+div.problempanel {
+    font-size: 14px;
+    background-color: rgba(80, 0, 0, 0.8);
+    border: 1px solid rgba(255, 0, 0, 1);
+    border-radius: 3px;
+    color: rgba(255, 0, 0, 1);
+    box-sizing: border-box;
+    letter-spacing: .06em;
+    line-height: 1.4em;
+    animation: blinker 2s linear infinite;
+    display: none;
 }
 h2, h3, h4 {
     text-align: center;
@@ -59,9 +97,16 @@ h2, h3, h4 {
 span.tagline {
     font-size: 0.6em;
     padding-left: 4em;
+    display: inline-block;
 }
 span.tagline a {
     color: white;
+}
+
+@keyframes blinker {
+  25% { opacity: 1; }
+  50% { opacity: 0; }
+  75% { opacity: 1; }
 }
 
 /* Leaflet.js mods */
