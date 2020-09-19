@@ -98,9 +98,13 @@ span.tagline {
     font-size: 0.6em;
     padding-left: 4em;
     display: inline-block;
+    white-space: nowrap;
 }
 span.tagline a {
     color: white;
+}
+label {
+    white-space: nowrap;
 }
 
 @keyframes blinker {

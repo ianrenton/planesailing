@@ -18,7 +18,7 @@ const MAPBOX_URL = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl
 const BASE_STATION_POS = [50.75128, -1.90168];
 const BASE_STATION_NOTES = ["PiAware 3.8.1", "dump1090-fa"];
 const START_LAT_LON = [50.75128, -1.90168];
-const START_ZOOM = 10;
+const START_ZOOM = 11;
 
 // Airports / seaports
 const AIRPORTS = [
