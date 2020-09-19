@@ -20,10 +20,19 @@
     </head>
     <body>
         <div id="top">
-            <h2>PLANE&nbsp;/&nbsp;SAILING <span class="tagline">The home situational awareness display nobody ever wanted or needed!</span> <span class="tagline">Made by <a href="https://ianrenton.com" target='_blank'>Ian Renton</a> | <a href="https://ianrenton.com/hardware/flight-tracker" target='_blank'>Hardware Setup</a> | <a href="https://github.com/ianrenton/umid1090" target='_blank'>Source Code</a></span></h2>
+            <h2>PLANE&nbsp;/&nbsp;SAILING <span class="tagline">The home situational awareness display nobody wanted or needed!</span> <span class="tagline">Made by <a href="https://ianrenton.com" target='_blank'>Ian Renton</a> | <a href="https://ianrenton.com/hardware/flight-tracker" target='_blank'>Hardware Setup</a> | <a href="https://github.com/ianrenton/umid1090" target='_blank'>Source Code</a></span></h2>
         </div>
         <div id="map"></div>
         <div id="bottom">
+            <div class="problempanel" id="aircraftTrackerOffline">
+                AIRCRAFT&nbsp;TRACKER&nbsp;OFFLINE
+            </div>
+            <div class="problempanel" id="shipTrackerOffline">
+                SHIP&nbsp;TRACKER&nbsp;OFFLINE
+            </div>
+            <div class="loadingpanel" id="loadingpanel">
+                Loading...
+            </div>
             <div class="bottompanel">
                 Show: 
                 <label for="showAircraft"><input type="checkbox" id="showAircraft" name="showAircraft" checked="true"> Aircraft </label>
@@ -31,15 +40,6 @@
                 <label for="showAirports"><input type="checkbox" id="showAirports" name="showAirports" checked="true"> Airports </label>
                 <label for="showSeaPorts"><input type="checkbox" id="showSeaPorts" name="showSeaPorts" checked="true"> Sea Ports </label>
                 <label for="showBase"><input type="checkbox" id="showBase" name="showBase" checked="true"> Base Station </label>
-            </div>
-            <div class="loadingpanel" id="loadingpanel">
-                Loading...
-            </div>
-            <div class="problempanel" id="aircraftTrackerOffline">
-                AIRCRAFT&nbsp;TRACKER&nbsp;OFFLINE
-            </div>
-            <div class="problempanel" id="shipTrackerOffline">
-                SHIP&nbsp;TRACKER&nbsp;OFFLINE
             </div>
         </div>
         <script src="airlinecodes.js"></script>

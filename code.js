@@ -490,16 +490,12 @@ class Entity {
     mysymbol = mysymbol.setOptions({
       size: 30,
       civilianColor: false,
-      colorMode: this.entitySelected() ? "Medium" : "Dark",
-      fill: this.entitySelected(),
-      // fontfamily: 'Exo',
-      // monoColor: this.entitySelected() ? false : mysymbol.getColors().frameColor,
+      colorMode: this.entitySelected() ? "Light" : "Dark",
+      fillOpacity: this.entitySelected() ? 1 : 0.6,
       infoBackground: this.entitySelected() ? "black" : "transparent",
-      infoColor: this.entitySelected() ? "white" : "",
-      infoOutlineColor: this.entitySelected() ? "rgb(239, 239, 239)" : "",
-      infoOutlineWidth: 3,
-      outlineWidth: 3,
-      outlineColor: this.entitySelected() ? "rgb(239, 239, 239)" : "",
+      infoColor: "white",
+      outlineWidth: this.entitySelected() ? 5 : 0,
+      outlineColor: '#007F0E',
     });
 
     // Build into a Leaflet icon and return
