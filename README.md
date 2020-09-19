@@ -4,7 +4,7 @@
 
 ### What is it?
 
-A completely unnecessary home situational awareness display, pulling ADS-B data from a Dump1090 server and AIS from ??? (implementation TBD)
+A completely unnecessary military situational awareness display for your home. It shows the location of nearby aircraft and ships in real time. It does this by pulling ADS-B data from a Dump1090 server and AIS from ??? (implementation TBD), and showing it overlaid on a map using NATO symbology.
 
 This was a weekend project, the code quality here is a very hacky layer on top of the already dubious code for [UMID 1090](https://github.com/ianrenton/umid1090). Contributions are welcome.
 
@@ -26,7 +26,9 @@ You can see it running, showing live data from my ADS-B and AIS receivers, at ht
 
 My code in this project is subject to "The Unlicence", i.e. it's public domain and you can do what you want with it. The source repository contains some libraries (milsymbol, moment.js, latlongcalc, dbloader) that aren't mine and are subject to other licences. All are used with great thanks, see their source files for licence details.
 
-If you want to use this for yourself, go right ahead. There are some static variables at the top of code.js that you will need to tweak to match your install; you also need your own Mapbox API key in order to get the map background working properly. Note that this software lives on the web and points to web interfaces of server(s) you provide, connected to radio receivers and antennas you provide. It's not pulling data from sites with global coverage APIs like FlightRadar24 or MarineTraffic.
+If you want to use this for yourself, go right ahead. There are some static variables at the top of code.js that you will need to tweak to match your install; you also need your own Mapbox API key in order to get the map background working properly.
+
+Note that this software lives on the web and points to web interfaces of server(s) you provide, connected to radio receivers and antennas you provide. It's not pulling data from sites with global coverage APIs like FlightRadar24 or MarineTraffic.
 
 ### Future Plans
 
