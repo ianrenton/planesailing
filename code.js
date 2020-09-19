@@ -16,9 +16,9 @@ const MAPBOX_URL = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl
 
 // Base station position and map default position/zoom
 const BASE_STATION_POS = [50.75128, -1.90168];
-const BASE_STATION_SOFTWARE = ["PiAware 3.8.1", "dump1090-fa"];
+const BASE_STATION_NOTES = ["PiAware 3.8.1", "dump1090-fa"];
 const START_LAT_LON = [50.75128, -1.90168];
-const START_ZOOM = 9;
+const START_ZOOM = 10;
 
 // Airports / seaports
 const AIRPORTS = [
@@ -345,8 +345,6 @@ class Entity {
   // Based on the selected type filters, should we be displaying this entity
   // on the map?
   shouldShowIcon() {
-    console.log(showTypes);
-    console.log(this.type);
     return showTypes.includes(this.type);
   }
 
@@ -425,7 +423,7 @@ class Entity {
   // Generate first "description" line
   firstDescrip() {
     if (this.type == types.BASE) {
-      return BASE_STATION_SOFTWARE[0];
+      return BASE_STATION_NOTES[0];
     } else if (this.type == types.AIRPORT) {
       return ""; // todo airport ID
     } else if (this.type == types.SEAPORT) {
@@ -438,7 +436,7 @@ class Entity {
   // Generate second "description" line. Generally the airline name
   secondDescrip() {
     if (this.type == types.BASE) {
-      return BASE_STATION_SOFTWARE[1];
+      return BASE_STATION_NOTES[1];
     } else if (this.type == types.AIRPORT) {
       return ""; // todo METAR
     } else if (this.type == types.SEAPORT) {
@@ -544,9 +542,7 @@ class Entity {
   // reported positions
   trail() {
     if (this.shouldShowIcon()) {
-      return L.polyline(this.positionHistory, {
-        color: (this.entitySelected() ? '#4581CC' : '#007F0E')
-      });
+      return L.polyline(this.positionHistory, { color: '#007F0E' });
     }
   }
 
@@ -557,7 +553,7 @@ class Entity {
     if (this.shouldShowIcon() && this.positionHistory.length > 0 && this.oldEnoughToDR() && this.drPosition() != null) {
       var points = [this.position(), this.drPosition()];
       return L.polyline(points, {
-        color: (this.entitySelected() ? '#4581CC' : '#007F0E'),
+        color: '#007F0E',
         dashArray: "5 5"
       });
     } else {
@@ -673,9 +669,6 @@ async function handleSuccess(result) {
 
 // Update the internal data store with the provided data
 function handleData(result, live) {
-  // Debug
-  //console.log(JSON.stringify(result));
-
   // Update clock offset (local PC time - data time) - only if data
   // is live rather than historic data being loaded in
   if (live) {
@@ -732,9 +725,14 @@ async function updateMap() {
   });
 }
 
-// Function called when an icon is clicked. Just set entity as selected.
+// Function called when an icon is clicked. Just set entity as selected,
+// unless it already is, in which case deselect.
 async function iconSelect(uid) {
-  selectedEntityUID = uid;
+  if (uid != selectedEntityUID) {
+    selectedEntityUID = uid;
+  } else {
+    selectedEntityUID = 0;
+  }
   updateMap();
 }
 
@@ -788,10 +786,11 @@ L.tileLayer(MAPBOX_URL).addTo(map);
 
 
 /////////////////////////////
-//      PANELS APPEAR      //
+//    PANEL MANAGEMENT     //
 /////////////////////////////
 
 $("div#top").show("slide", { direction: "up" }, 1000);
+setTimeout(function(){ $("div#top").hide("slide", { direction: "up" }, 1000); }, 10000);
 
 
 /////////////////////////////
@@ -829,6 +828,8 @@ $("#showBase").click(function() {
 //   FIXED ENTITY SETUP    //
 /////////////////////////////
 
+// Fixed entities have negative number IDs, to ensure they never conflict
+// with ICAO hex codes or MMSIs.
 var i = -1;
 var base = new Entity(i, types.BASE);
 base.addPosition(BASE_STATION_POS[0], BASE_STATION_POS[1]);

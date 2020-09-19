@@ -17,11 +17,14 @@ html, body, div#map {
 
 /* Layout */
 div#top {
-    width: 100%;
+    width: 90%;
     position: absolute;
     top: 0;
     left: 0;
-    display: none;
+    right: 0;
+    margin: 1em auto;
+    padding: 0.5em;
+    display: none; /* shown by JS */
 }
 div#map { 
     width:auto; 
@@ -42,10 +45,10 @@ div.panel {
     font-size: 14px;
     background-color: rgba(22, 33, 49, 0.8);
     border: 1px solid rgba(120, 200, 255, 1);
+    border-radius: 3px;
     color: rgba(120, 200, 255, 1);
     box-sizing: border-box;
     display: inline-block;
-    font-weight: 100;
     letter-spacing: .06em;
     z-index: 1000;
 }
@@ -53,8 +56,22 @@ h2, h3, h4 {
     text-align: center;
     text-transform: uppercase;
 }
+span.tagline {
+    font-size: 0.6em;
+    padding-left: 4em;
+}
+span.tagline a {
+    color: white;
+}
 
 /* Leaflet.js mods */
 .leaflet-container .leaflet-control-attribution {
     background: none;
+}
+
+/* Mobile */
+@media only screen and (max-width: 600px) {
+    span.tagline {
+        display: none;
+    }
 }
