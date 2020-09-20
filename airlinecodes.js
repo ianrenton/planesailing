@@ -73,6 +73,8 @@ var AIRLINE_CODE_SYMBOLS = new Map([
   ["VGBND", "SFAPMH------"],
   ["RECON", "SFAPMH------"],
   ["CMNDO", "SFAPMH------"],
+  ["DOLPHN", "SFAPMH------"],
+  ["DOLPN", "SFAPMH------"],
   ["BWY", "SFAPMF------"],
   ["RCH", "SFAPMFC-----"]
 ]);
