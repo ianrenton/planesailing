@@ -915,3 +915,7 @@ setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
 // Set up the timed data request & update threads.
 setInterval(requestDump1090LiveData, 10000);
 setInterval(updateMap, 1000);
+
+// Ship tracker "offline" for now as not implemented yet
+// todo logic properly
+$("#shipTrackerOffline").css("display", "inline-block");
