@@ -46,7 +46,7 @@ const types = {
     SEAPORT: 'seaport',
     BASE: 'base'
 }
-const CATEGORY_DESCRIPTIONS = new Map([
+const AIRCRAFT_CATEGORY_TO_DESCRIPTION = new Map([
   ["A0", ""],
   ["A1", "Light"],
   ["A2", "Small"],
@@ -68,7 +68,7 @@ const CATEGORY_DESCRIPTIONS = new Map([
   ["C2", "Service Veh."],
   ["C3", "Obstruction"]
 ]);
-const CATEGORY_SYMBOLS = new Map([
+const AIRCRAFT_CATEGORY_TO_SYMBOL = new Map([
   ["A0", "SUAPCF----"],
   ["A1", "SUAPCF----"],
   ["A2", "SUAPCF----"],
@@ -91,7 +91,7 @@ const CATEGORY_SYMBOLS = new Map([
   ["C3", "SUGP------"]
 ]);
 var entities = new Map(); // uid -> Entity
-var historyStore = [];
+var dump1090HistoryStore = [];
 var showTypes = [types.AIRCRAFT, types.SHIP, types.AIRPORT, types.SEAPORT, types.BASE];
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent data appearing as too new or old if the local PC clock is off.
 var selectedEntityUID = "";
@@ -99,7 +99,7 @@ var snailTrailLength = 500;
 var deadReckonTimeMS = 1000; // Fixed on a very short time to always show dead reckoned position, like FlightRadar24
 var showAnticipatedTimeMS = 60000;
 var dropTrackTimeMS = 300000;
-var dropTrackAtZeroAltTimeMS = 30000; // Drop tracks at zero altitude sooner because they've likely landed, dead reckoning far past the airport runway looks weird
+var dropTrackAtZeroAltTimeMS = 10000; // Drop tracks at zero altitude sooner because they've likely landed, dead reckoning far past the airport runway looks weird
 
 
 /////////////////////////////
@@ -109,7 +109,7 @@ var dropTrackAtZeroAltTimeMS = 30000; // Drop tracks at zero altitude sooner bec
 // Entity class.
 // Altitude is stored in feet, heading/lat/lon in degrees, speed in knots.
 class Entity {
-  // MMSI or ICAO Hex code
+  // ICAO Hex code (air) or MMSI (ship)
   uid = null;
   // Type (aircraft, ship etc.)
   type = null;
@@ -117,29 +117,29 @@ class Entity {
   positionHistory = [];
   // Heading (deg)
   heading = null;
-  // Altitude (ft)
+  // Altitude (ft) (air only)
   altitude = null;
-  // Altitude rate (ft/s)
+  // Altitude rate (ft/s) (air only)
   altRate = null;
   // Speed (knots)
   speed = null;
-  // Ship name or Flight ID
+  // Flight ID (air) or vessel name (ship)
   name = null;
-  // Registration / tail number
+  // Registration / tail number (air) or callsign (ship)
   registration = null
-  // Squawk (4 digit octal)
+  // Squawk (4 digit octal) (air only)
   squawk = null;
-  // Mode S category (A0, A1...)
+  // Mode S category (A0, A1...) (air) or vessel/cargo field (ship)
   category = null;
-  // Type derived from hex code
+  // Type derived from hex code (air only)
   icaotype = null;
-  // Received signal strength (dB)
+  // Received signal strength (dB) (air only)
   rssi = null;
   // Last time any data was updated
   updateTime = null;
   // Last time position was updated
   posUpdateTime = null;
-  // Last time altitude rate was updated
+  // Last time altitude rate was updated (air only)
   altRateUpdateTime = null;
 
   // Create new entity
@@ -170,8 +170,8 @@ class Entity {
     }.bind(this));
   }
 
-  // Internalise own data from the provided Dump1090 aircraft object
-  internalise(a, dataTime) {
+  // internalise data from the provided Dump1090 aircraft object into the Entity
+  internaliseFromDump1090(a, dataTime) {
     // Get "best" versions of some parameters that have multiple variants
     // conveying similar information
     var bestHeading = a.track;
@@ -278,7 +278,7 @@ class Entity {
     }
   }
 
-  // Get the latest known altitude to the nearest 100 ft
+  // Get the latest known altitude to the nearest 100 ft (air only)
   getAltitude() {
     if (this.altitude != null && !isNaN(this.altitude)) {
       return Math.max(0, (this.altitude / 100).toFixed(0) * 100);
@@ -288,7 +288,7 @@ class Entity {
   }
 
   // Get the dead reckoned altitude based on its last altitude update plus
-  // altitude rate at that time
+  // altitude rate at that time (air only)
   drAltitude() {
     if (this.altitude != null && !isNaN(this.altitude) && this.altRateUpdateTime != null && this.altRate != null) {
       // Can dead reckon
@@ -310,7 +310,7 @@ class Entity {
     return pos;
   }
 
-  // Gets an altitude for the icon, either getAltitude() or drAltitude() as required
+  // Gets an altitude for the icon, either getAltitude() or drAltitude() as required (air only)
   iconAltitude() {
     var alt = this.getAltitude();
     if (this.oldEnoughToDR() && this.drAltitude() != null && !isNaN(this.drAltitude())) {
@@ -348,7 +348,7 @@ class Entity {
     return showTypes.includes(this.type);
   }
 
-  // Generate the name for display on the map. Prefer vessel name/flight ID, then registration,
+  // Generate the name for display on the map. Prefer vessel name/flight ID, then registration (tail number),
   // finally just the MMSI/ICAO hex code
   mapDisplayName() {
     if (this.name != null && this.name != "") {
@@ -362,7 +362,7 @@ class Entity {
 
   // Generate a "sub type" for display in the map. Note this is different from
   // the top level "type" (aircraft, ship etc.) and gives more detail.
-  // In descending preference order:
+  // In descending preference order, for aircraft:
   // 1) Use the full name e.g. "BOEING 747", if we have it in our hard-coded
   // table and if we have a proper ICAO type for the plane due to the dump1090
   // database lookup
@@ -371,23 +371,30 @@ class Entity {
   // 3) If we have ICAO type but not category, display that e.g. "B747"
   // 4) If we have a category only, show that e.g. "(A4 HEAVY)"
   // 5) Otherwise show nothing.
+  // For ships:
+  // 1) Show the AIS cargo/vessel type, if known
+  // 2) Otherwise show nothing.
   mapDisplaySubType() {
     var type = ""
-    if (this.icaotype != null && this.icaotype != "") {
-      if (AIRCRAFT_TYPE_DESIGNATORS.has(this.icaotype)) {
-        type= AIRCRAFT_TYPE_DESIGNATORS.get(this.icaotype);
-      } else {
-        type = this.icaotype;
-        if (this.category != null && this.category != "" && CATEGORY_DESCRIPTIONS.has(this.category) && CATEGORY_DESCRIPTIONS.get(this.category) != "") {
-          type = type + " (" + CATEGORY_DESCRIPTIONS.get(this.category) + ")";
+    if (this.type == types.AIRCRAFT) {
+      if (this.icaotype != null && this.icaotype != "") {
+        if (AIRCRAFT_TYPE_DESIGNATORS.has(this.icaotype)) {
+          type= AIRCRAFT_TYPE_DESIGNATORS.get(this.icaotype);
+        } else {
+          type = this.icaotype;
+          if (this.category != null && this.category != "" && AIRCRAFT_CATEGORY_TO_DESCRIPTION.has(this.category) && AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.category) != "") {
+            type = type + " (" + AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.category) + ")";
+          }
         }
+      } else if (this.category != null && this.category != "") {
+        type = "(" + this.category;
+        if (AIRCRAFT_CATEGORY_TO_DESCRIPTION.has(this.category) && AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.category) != "") {
+          type = type + " " + AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.category);
+        }
+        type = type + ")";
       }
-    } else if (this.category != null && this.category != "") {
-      type = "(" + this.category;
-      if (CATEGORY_DESCRIPTIONS.has(this.category) && CATEGORY_DESCRIPTIONS.get(this.category) != "") {
-        type = type + " " + CATEGORY_DESCRIPTIONS.get(this.category);
-      }
-      type = type + ")";
+    } else if (this.type == types.SHIP) {
+      // todo ship
     }
     return type;
   }
@@ -406,8 +413,8 @@ class Entity {
       var symbol = CIVILIAN_AIRCRAFT_SYMBOL;
       if (airlineCode != null && AIRLINE_CODE_SYMBOLS.has(airlineCode)) {
         symbol = AIRLINE_CODE_SYMBOLS.get(airlineCode);
-      } else if (this.category != null && CATEGORY_SYMBOLS.has(this.category)) {
-        symbol = CATEGORY_SYMBOLS.get(this.category);
+      } else if (this.category != null && AIRCRAFT_CATEGORY_TO_SYMBOL.has(this.category)) {
+        symbol = AIRCRAFT_CATEGORY_TO_SYMBOL.get(this.category);
       }
 
       // Change symbol to "anticipated" if old enough
@@ -455,7 +462,7 @@ class Entity {
     }
   }
 
-  // Get the airline code from the flight name
+  // Get the airline code from the flight name (air only)
   airlineCode() {
     if (this.name != null && this.name != "") {
       var matches = /^[a-zA-Z]*/.exec(this.name.trim());
@@ -487,6 +494,7 @@ class Entity {
       dtg: ((!this.fixed() && this.posUpdateTime != null && detailedSymb) ? this.posUpdateTime.utc().format("DDHHmmss[Z]MMMYY").toUpperCase() : ""),
       location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
     });
+    // Styles, some of which change when the entity is selected
     mysymbol = mysymbol.setOptions({
       size: 30,
       civilianColor: false,
@@ -570,10 +578,10 @@ class Entity {
 //       FUNCTIONS         //
 /////////////////////////////
 
-// JSON history retrieval method (only called once at startup). This just
-// queries for history data and populates the historyStore variable, this
-// is then later used in processHistory().
-function requestHistory() {
+// Dump1090 history retrieval method (only called once at startup). This just
+// queries for history data and populates the dump1090HistoryStore variable, this
+// is then later used in processDump1090History().
+function requestDump1090History() {
   var url = dump1090url + "/data/receiver.json";
   $.getJSON(url, function(data) {
     // Iterate through all history files. This could be up to 120!
@@ -585,17 +593,17 @@ function requestHistory() {
         // Got history data, store it. We don't want to process it immediately
         // because history data is not ordered; we need to store it first then
         // order it as soon as we think all the data will have arrived.
-        historyStore.push(data);
+        dump1090HistoryStore.push(data);
       });
     }
   });
 }
 
-// Take whatever history data we have managed to acquire at this point,
+// Take whatever history data we have managed to acquire from Dump1090 at this point,
 // sort by date, push all the updates into the main data store, delete anything
 // old. After this function finishes, we are then ready to start receiving
 // live data on top of the historical data.
-function processHistory() {
+function processDump1090History() {
   // At startup we did one initial retrieve of live data so we had a nice display
   // from the start. Now we have history data to load in which is older. So,
   // delete the existing live data first.
@@ -606,53 +614,53 @@ function processHistory() {
   });
 
   // History data could have come in any order, so first sort it.
-  historyStore.sort((a, b) => (a.now > b.now) ? 1 : -1);
+  dump1090HistoryStore.sort((a, b) => (a.now > b.now) ? 1 : -1);
 
   // Now use it
-  for (item of historyStore) {
-    handleData(item, false);
+  for (item of dump1090HistoryStore) {
+    handleDataDump1090(item, false);
   }
 
   // Drop anything timed out
-  dropTimedOutAircraft();
+  dropTimedOutEntities();
 
   // Now trigger retrieval of a new set of live data, to top off the history
-  requestLiveData();
+  requestDump1090LiveData();
 }
 
-// JSON live data retrieval method. This is the main data request
+// Dump1090 live data retrieval method. This is the main data request
 // function which gets called every 10 seconds to update the internal
 // data store
-function requestLiveData() {
+function requestDump1090LiveData() {
   var url = dump1090url + "/data/aircraft.json?_=" + (new Date()).getTime();
   $.ajax({
     url: url,
     dataType: 'json',
     timeout: 9000,
     success: async function(result) {
-      handleSuccess(result);
-      handleData(result);
+      handleSuccessDump1090(result);
+      handleDataDump1090(result);
     },
     error: function() {
-      handleFailure();
+      handleFailureDump1090();
     },
     complete: function() {
-      dropTimedOutAircraft();
-      updateMap();
+      dropTimedOutEntities();
+      // No need to update the map here as it has its own refresh interval
     }
   });
 }
 
 // Handle successful receive of data
-async function handleSuccess(result) {
+async function handleSuccessDump1090(result) {
   $("#aircraftTrackerOffline").css("display", "none");
 
   // Update the data store
-  handleData(result, true);
+  handleDataDump1090(result, true);
 }
 
 // Update the internal data store with the provided data
-function handleData(result, live) {
+function handleDataDump1090(result, live) {
   // Update clock offset (local PC time - data time) - only if data
   // is live rather than historic data being loaded in
   if (live) {
@@ -665,17 +673,17 @@ function handleData(result, live) {
       // Doesn't exist, so create
       entities.set(a.hex, new Entity(a.hex, types.AIRCRAFT));
     }
-    entities.get(a.hex).internalise(a, result.now);
+    entities.get(a.hex).internaliseFromDump1090(a, result.now);
   }
 }
 
 // Handle a failure to receive data
-async function handleFailure() {
+async function handleFailureDump1090() {
   $("#aircraftTrackerOffline").css("display", "inline-block");
 }
 
-// Drop any aircraft too old to be displayed
-function dropTimedOutAircraft() {
+// Drop any entities too old to be displayed
+function dropTimedOutEntities() {
   entities.forEach(function(e) {
     if (e.oldEnoughToDelete()) {
       entities.delete(e.uid);
@@ -844,15 +852,16 @@ updateMap();
 //    update the display every second.
 
 // First do a one-off live data request so we have something to display.
-requestLiveData();
+requestDump1090LiveData();
 
 // Now grab the history data. The request calls are asynchronous,
 // so we have an additional call after 9 seconds (just before live data is
 // first requested) to unpack and use whatever history data we have at that
 // point.
-requestHistory();
-setTimeout(processHistory, 9000);
+requestDump1090History();
+setTimeout(processDump1090History, 9000);
 setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
 
-// Set up the timed data request & update thread.
-setInterval(requestLiveData, 10000);
+// Set up the timed data request & update threads.
+setInterval(requestDump1090LiveData, 10000);
+setInterval(updateMap, 1000);
