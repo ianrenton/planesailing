@@ -14,16 +14,18 @@ const DUMP1090_URL_ALT = "http://192.168.1.241/dump1090-fa/";
 // access token in the Mapbox URL. You can still use my style.
 const MAPBOX_URL = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNpeGV3andtdzAwNDgyem52NXByNmg5eHIifQ.vP7MkKCkymCJHVbXJzmh5g";
 
-// Base station position and map default position/zoom
-const BASE_STATION_POS = [50.75128, -1.90168];
-const BASE_STATION_NOTES = ["PiAware 3.8.1", "dump1090-fa"];
+// CheckWX API key, used to retrieve airport METAR/TAF
+const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
+
+// Map default position/zoom
 const START_LAT_LON = [50.75128, -1.90168];
 const START_ZOOM = 11;
 
-// Airports / seaports
+// Base station / airports / seaports
+const BASE_STATION = {name: "Base Station", lat: 50.75128, lon: -1.90168, firstDescrip: "PiAware 3.8.1", secondDescrip: "PiAware 3.8.1"};
 const AIRPORTS = [
-  {name: "Bournemouth Airport", lat: 50.78055, lon: -1.83938},
-  {name: "Southampton Airport", lat: 50.95177, lon: -1.35625}
+  {name: "Bournemouth Airport", lat: 50.78055, lon: -1.83938, icaoCode: "EGHH"},
+  {name: "Southampton Airport", lat: 50.95177, lon: -1.35625, icaoCode: "EGHI"}
 ];
 const SEAPORTS = [
   {name: "Port of Poole", lat: 50.70796, lon: -1.99495},
@@ -109,37 +111,45 @@ var dropTrackAtZeroAltTimeMS = 10000; // Drop tracks at zero altitude sooner bec
 // Entity class.
 // Altitude is stored in feet, heading/lat/lon in degrees, speed in knots.
 class Entity {
-  // ICAO Hex code (air) or MMSI (ship)
+  // ICAO Hex code (aircraft) or MMSI (ship)
   uid = null;
   // Type (aircraft, ship etc.)
   type = null;
+  // Flight ID (aircraft) or vessel name (ship)
+  name = null;
   // Position history
   positionHistory = [];
   // Heading (deg)
   heading = null;
-  // Altitude (ft) (air only)
+  // Altitude (ft) (aircraft only)
   altitude = null;
-  // Altitude rate (ft/s) (air only)
+  // Altitude rate (ft/s) (aircraft only)
   altRate = null;
   // Speed (knots)
   speed = null;
-  // Flight ID (air) or vessel name (ship)
-  name = null;
-  // Registration / tail number (air) or callsign (ship)
-  registration = null
-  // Squawk (4 digit octal) (air only)
+  // Registration / tail number (aircraft only)
+  registration = null;
+  // Callsign (ship only)
+  callsign = null;
+  // Squawk (4 digit octal) (aircraft only)
   squawk = null;
-  // Mode S category (A0, A1...) (air) or vessel/cargo field (ship)
-  category = null;
-  // Type derived from hex code (air only)
-  icaotype = null;
-  // Received signal strength (dB) (air only)
+  // Mode S category (A0, A1...) (aircraft only)
+  modeSCategory = null;
+  // Vessel/cargo type number (ship only)
+  vesselCargoType = null;
+  // Aircraft type derived from database lookup (aircraft only)
+  icaoType = null;
+  // Fixed first description line (base/airport only)
+  fixedFirstDescrip = null;
+  // Fixed second description line (base/airport only)
+  fixedSecondDescrip = null;
+  // Received signal strength (dB)
   rssi = null;
   // Last time any data was updated
   updateTime = null;
   // Last time position was updated
   posUpdateTime = null;
-  // Last time altitude rate was updated (air only)
+  // Last time altitude rate was updated (aircraft only)
   altRateUpdateTime = null;
 
   // Create new entity
@@ -159,7 +169,7 @@ class Entity {
         this.registration = data.r.trim();
       }
       if ("t" in data) {
-        this.icaotype = data.t.trim();
+        this.icaoType = data.t.trim();
       }
       if ("desc" in data) {
         this.typeDescription = data.desc.trim();
@@ -243,7 +253,7 @@ class Entity {
       this.squawk = a.squawk;
     }
     if (a.category != null) {
-      this.category = a.category.trim();
+      this.modeSCategory = a.category.trim();
     }
     if (posSeen != null) {
       this.posUpdateTime = posSeen;
@@ -377,19 +387,19 @@ class Entity {
   mapDisplaySubType() {
     var type = ""
     if (this.type == types.AIRCRAFT) {
-      if (this.icaotype != null && this.icaotype != "") {
-        if (AIRCRAFT_TYPE_DESIGNATORS.has(this.icaotype)) {
-          type= AIRCRAFT_TYPE_DESIGNATORS.get(this.icaotype);
+      if (this.icaoType != null && this.icaoType != "") {
+        if (AIRCRAFT_TYPE_DESIGNATORS.has(this.icaoType)) {
+          type= AIRCRAFT_TYPE_DESIGNATORS.get(this.icaoType);
         } else {
-          type = this.icaotype;
-          if (this.category != null && this.category != "" && AIRCRAFT_CATEGORY_TO_DESCRIPTION.has(this.category) && AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.category) != "") {
-            type = type + " (" + AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.category) + ")";
+          type = this.icaoType;
+          if (this.modeSCategory != null && this.modeSCategory != "" && AIRCRAFT_CATEGORY_TO_DESCRIPTION.has(this.modeSCategory) && AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.modeSCategory) != "") {
+            type = type + " (" + AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.modeSCategory) + ")";
           }
         }
-      } else if (this.category != null && this.category != "") {
-        type = "(" + this.category;
-        if (AIRCRAFT_CATEGORY_TO_DESCRIPTION.has(this.category) && AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.category) != "") {
-          type = type + " " + AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.category);
+      } else if (this.modeSCategory != null && this.modeSCategory != "") {
+        type = "(" + this.modeSCategory;
+        if (AIRCRAFT_CATEGORY_TO_DESCRIPTION.has(this.modeSCategory) && AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.modeSCategory) != "") {
+          type = type + " " + AIRCRAFT_CATEGORY_TO_DESCRIPTION.get(this.modeSCategory);
         }
         type = type + ")";
       }
@@ -413,8 +423,8 @@ class Entity {
       var symbol = CIVILIAN_AIRCRAFT_SYMBOL;
       if (airlineCode != null && AIRLINE_CODE_SYMBOLS.has(airlineCode)) {
         symbol = AIRLINE_CODE_SYMBOLS.get(airlineCode);
-      } else if (this.category != null && AIRCRAFT_CATEGORY_TO_SYMBOL.has(this.category)) {
-        symbol = AIRCRAFT_CATEGORY_TO_SYMBOL.get(this.category);
+      } else if (this.modeSCategory != null && AIRCRAFT_CATEGORY_TO_SYMBOL.has(this.modeSCategory)) {
+        symbol = AIRCRAFT_CATEGORY_TO_SYMBOL.get(this.modeSCategory);
       }
 
       // Change symbol to "anticipated" if old enough
@@ -427,27 +437,23 @@ class Entity {
     }
   }
 
-  // Generate first "description" line
+  // Generate first "description" line. This can be either fixed (for base,
+  // airport & port which never change) or the entity "sub type" descriptor
+  // generated from data (e.g. "Boeing 747" or "Passenger Ship").
   firstDescrip() {
-    if (this.type == types.BASE) {
-      return BASE_STATION_NOTES[0];
-    } else if (this.type == types.AIRPORT) {
-      return ""; // todo airport ID
-    } else if (this.type == types.SEAPORT) {
-      return "";
+    if (this.fixedFirstDescrip != null) {
+      return this.fixedFirstDescrip;
     } else {
       return this.mapDisplaySubType();
     }
   }
 
-  // Generate second "description" line. Generally the airline name
+  // Generate second "description" line. This can be either fixed (for base,
+  // airport & port which never change) or a descriptor generated from data
+  // (e.g. airline name or COLREGS state).
   secondDescrip() {
-    if (this.type == types.BASE) {
-      return BASE_STATION_NOTES[1];
-    } else if (this.type == types.AIRPORT) {
-      return ""; // todo METAR
-    } else if (this.type == types.SEAPORT) {
-      return "";
+    if (this.fixedSecondDescrip != null) {
+      return this.fixedSecondDescrip;
     } else if (this.type == types.AIRCRAFT) {
       var airline = "";
       var airlineCode = this.airlineCode();
@@ -732,6 +738,30 @@ function getTimeInServerRefFrame() {
   return moment().subtract(clockOffset, "seconds");
 }
 
+// Retrieve METAR & TAF data from CheckWX and update an airport entity
+// Runs asynchronously, updates "fixedSecondDescrip" and 
+// "fixedSecondDescrip" in the airport entity when done.
+function updateMETAR(uid, icaoCode) {
+  $.ajax({
+    type: 'GET',
+    url: 'https://api.checkwx.com/metar/' + icaoCode,
+    headers: { 'X-API-Key': CHECKWX_API_KEY },
+    dataType: 'json',
+    success: function (result) {
+      entities.get(uid).fixedFirstDescrip = "METAR " + result.data[0];
+    }
+  });
+  $.ajax({
+    type: 'GET',
+    url: 'https://api.checkwx.com/taf/' + icaoCode,
+    headers: { 'X-API-Key': CHECKWX_API_KEY },
+    dataType: 'json',
+    success: function (result) {
+      entities.get(uid).fixedSecondDescrip = result.data[0];
+    }
+  });
+}
+
 
 /////////////////////////////
 //          INIT           //
@@ -808,25 +838,37 @@ $("#showBase").click(function() {
 // Fixed entities have negative number IDs, to ensure they never conflict
 // with ICAO hex codes or MMSIs.
 var i = -1;
+
+// Add base station
 var base = new Entity(i, types.BASE);
-base.addPosition(BASE_STATION_POS[0], BASE_STATION_POS[1]);
-base.name = "Base Station";
+base.name = BASE_STATION.name;
+base.addPosition(BASE_STATION.lat, BASE_STATION.lon);
+base.fixedFirstDescrip = BASE_STATION.firstDescrip;
+base.fixedSecondDescrip = BASE_STATION.secondDescrip;
 entities.set(i, base);
 
+// Add airports
 for (ap of AIRPORTS) {
   i--;
   var e = new Entity(i, types.AIRPORT);
-  e.addPosition(ap.lat, ap.lon);
   e.name = ap.name;
+  e.addPosition(ap.lat, ap.lon);
+  e.fixedFirstDescrip = ap.firstDescrip;
   entities.set(i, e);
+  // Request METAR
+  updateMETAR(i, ap.icaoCode);
 }
-for (ap of SEAPORTS) {
+
+// Add sea ports
+for (sp of SEAPORTS) {
   i--;
   var e = new Entity(i, types.SEAPORT);
-  e.addPosition(ap.lat, ap.lon);
-  e.name = ap.name;
+  e.name = sp.name;
+  e.addPosition(sp.lat, sp.lon);
   entities.set(i, e);
 }
+
+// Update map so we see these instantly
 updateMap();
 
 
