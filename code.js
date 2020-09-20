@@ -780,11 +780,18 @@ if (urlParams.get("alt") == "true") {
 //       MAP SETUP         //
 /////////////////////////////
 
-// Create map and set initial view
+// Create map and set initial view. Zoom out one level if on mobile
 var map = L.map('map', {
   zoomControl: false
 })
-map.setView(START_LAT_LON, START_ZOOM);
+var startZoom = START_ZOOM;
+var screenWidth = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+if (screenWidth <= 600) {
+  startZoom--;
+}
+map.setView(START_LAT_LON, startZoom);
+
+// Add main marker layer
 var markersLayer = new L.LayerGroup();
 markersLayer.addTo(map);
 
