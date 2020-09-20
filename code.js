@@ -839,7 +839,7 @@ updateMap();
 // as much info (e.g. snail trails) to plot, however it takes a while to
 // load as it can be up to 120 separate requests. So the procedure is:
 // 1) Get a single shot of live data, so the display comes up populated ASAP
-// 2) Update map and table once, at the end of that process.
+// 2) Update map once after 2 seconds, when it should be complete
 // 3) Kick off all the history requests asynchronously
 // 4) Wait 9 seconds
 // 5) Delete the single shot of live data and replace it with the full
@@ -853,6 +853,7 @@ updateMap();
 
 // First do a one-off live data request so we have something to display.
 requestDump1090LiveData();
+setTimeout(updateMap, 2000);
 
 // Now grab the history data. The request calls are asynchronous,
 // so we have an additional call after 9 seconds (just before live data is
