@@ -1,6 +1,6 @@
 // From https://en.wikipedia.org/wiki/List_of_airline_codes. I've just added common
 // ones for my area because there are a lot of duplicates across different countries
-// If running UMID1090 for yourself you may want to change them for what you see
+// If running Plane Sailing for yourself you may want to change them for what you see
 // in your area.
 var AIRLINE_CODES = new Map([
   ["RYR", "Ryanair"],
@@ -52,6 +52,7 @@ var AIRLINE_CODES = new Map([
   ["VGBND", "UK Armed Forces"],
   ["RECON", "UK Armed Forces"],
   ["CMNDO", "UK Armed Forces"],
+  ["MARINE", "Royal Marines"],
   ["BWY", "736 Naval Air Sqdn"],
   ["RCH", "U.S. Air Mobility Command"]
 ]);
@@ -75,6 +76,8 @@ var AIRLINE_CODE_SYMBOLS = new Map([
   ["CMNDO", "SFAPMH------"],
   ["DOLPHN", "SFAPMH------"],
   ["DOLPN", "SFAPMH------"],
+  ["MARINE", "SFAPMH------"],
+  ["CASTLE", "SFAPMH------"],
   ["BWY", "SFAPMF------"],
   ["RCH", "SFAPMFC-----"]
 ]);
