@@ -25,12 +25,15 @@ const START_ZOOM = 11;
 const BASE_STATION = {name: "Base Station", lat: 50.75128, lon: -1.90168, firstDescrip: "PiAware 3.8.1", secondDescrip: "PiAware 3.8.1"};
 const AIRPORTS = [
   {name: "Bournemouth Airport", lat: 50.78055, lon: -1.83938, icaoCode: "EGHH"},
-  {name: "Southampton Airport", lat: 50.95177, lon: -1.35625, icaoCode: "EGHI"}
+  {name: "Southampton Airport", lat: 50.95177, lon: -1.35625, icaoCode: "EGHI"},
+  {name: "Bristol Airport", lat: 51.38363, lon: -2.71574, icaoCode: "EGGD"},
+  {name: "London Heathrow Airport", lat: 51.46999, lon: -0.45470, icaoCode: "EGLL"}
 ];
 const SEAPORTS = [
   {name: "Port of Poole", lat: 50.70796, lon: -1.99495},
   {name: "Southampton Docks", lat: 50.89871, lon: -1.41198},
-  {name: "Portland Port", lat: 50.56768, lon: -2.43635}
+  {name: "Portland Port", lat: 50.56768, lon: -2.43635},
+  {name: "Portsmouth Port", lat: 50.81206, lon: -1.09251}
 ];
 
 // More globals - you should not have to edit beyond this point unless you want
