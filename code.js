@@ -513,6 +513,7 @@ class Entity {
       infoColor: "white",
       outlineWidth: this.entitySelected() ? 5 : 0,
       outlineColor: '#007F0E',
+      fontfamily: 'Exo, Exo Regular, Verdana, sans-serif'
     });
 
     // Build into a Leaflet icon and return
