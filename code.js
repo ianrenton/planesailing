@@ -42,7 +42,8 @@ const SEAPORTS = [
 // to change how the software works!
 const MACH_TO_KNOTS = 666.739;
 const KNOTS_TO_MPS = 0.514444;
-const CIVILIAN_AIRCRAFT_SYMBOL = "SUAPCF----";
+const DEFAULT_AIRCRAFT_SYMBOL = "SUAPCF----";
+const DEFAULT_SHIP_SYMBOL = "SUSP------";
 const BASE_STATION_SYMBOL = "SFGPUUS-----";
 const AIRPORT_SYMBOL = "SFGPIBA---H";
 const SEAPORT_SYMBOL = "SFGPIBN---H-";
@@ -265,6 +266,17 @@ class Entity {
     }
   }
 
+
+  // internalise data from the provided AIS data into the Entity
+  internaliseFromAIS(mmsi, name, lat, lon, seen) {
+    this.name = name;
+    this.updateTime = seen;
+    this.posUpdateTime = seen;
+    if (lat != null) {
+      this.addPosition(lat, lon);
+    }
+  }
+
   // Update its position, adding to the history
   addPosition(lat, lon) {
     // Trim the snail trail if required
@@ -425,7 +437,7 @@ class Entity {
     } else if (this.type == types.AIRCRAFT) {
       // Generate symbol based on airline code and/or category
       var airlineCode = this.airlineCode();
-      var symbol = CIVILIAN_AIRCRAFT_SYMBOL;
+      var symbol = DEFAULT_AIRCRAFT_SYMBOL;
       if (airlineCode != null && AIRLINE_CODE_SYMBOLS.has(airlineCode)) {
         symbol = AIRLINE_CODE_SYMBOLS.get(airlineCode);
       } else if (this.modeSCategory != null && AIRCRAFT_CATEGORY_TO_SYMBOL.has(this.modeSCategory)) {
@@ -438,7 +450,7 @@ class Entity {
       }
       return symbol;
     } else {
-      // todo ship
+      return DEFAULT_SHIP_SYMBOL; // todo types
     }
   }
 
@@ -693,15 +705,6 @@ async function handleFailureDump1090() {
   $("#aircraftTrackerOffline").css("display", "inline-block");
 }
 
-// Drop any entities too old to be displayed
-function dropTimedOutEntities() {
-  entities.forEach(function(e) {
-    if (e.oldEnoughToDelete()) {
-      entities.delete(e.uid);
-    }
-  });
-}
-
 // AIS Dispatcher data retrieval method. This is the main data request
 // function which gets called every 10 seconds to update the internal
 // data store
@@ -733,12 +736,55 @@ async function handleSuccessAISD(result) {
 
 // Update the internal data store with the provided data
 function handleDataAISD(result, live) {
-  // todo
+  var placemarks = result.getElementsByTagName("Placemark");
+  for (i = 0; i < placemarks.length; i++) {
+    // Name and position are contained nicely within the placemark XML
+    var name = placemarks[i].getElementsByTagName("name")[0].childNodes[0].nodeValue.trim();
+    var posString = placemarks[i].getElementsByTagName("Point")[0].getElementsByTagName("coordinates")[0].childNodes[0].nodeValue.trim()
+    var posBits = posString.split(",");
+    if (posBits.length >= 2) {
+      var lon = posBits[0];
+      var lat = posBits[1];
+    }
+    // Then... we have the "description" which is an HTML table containing
+    // the rest of the data we need. We use a second XML parser to deal with that.
+    // Entries are always present and always in the same order thankfully!
+    var description = placemarks[i].getElementsByTagName("description")[0].childNodes[0].nodeValue;
+    var parser = new DOMParser();  
+    var table = parser.parseFromString(description, 'text/xml');
+    var cells = table.getElementsByTagName("td");
+    var lastSeenStr = cells[1].childNodes[0].data; // todo
+    var lastSeen = moment.utc();
+    var mmsi = cells[5].childNodes[0].data;
+    var callsign = cells[7].childNodes[0] ? cells[7].childNodes[0].data : ""; // todo
+    var type = cells[11].childNodes[0].data; // todo
+    var navstat = cells[13].childNodes[0].data; // todo
+    var destination = cells[15].childNodes[0] ? cells[15].childNodes[0].data : ""; // todo
+    var speedStr = cells[21].childNodes[0].data; // todo
+    var courseStr = cells[23].childNodes[0].data; // todo
+    var headingStr = cells[25].childNodes[0].data; // todo
+
+    // Update internal data
+    if (!entities.has(mmsi)) {
+      // Doesn't exist, so create
+      entities.set(mmsi, new Entity(mmsi, types.SHIP));
+    }
+    entities.get(mmsi).internaliseFromAIS(mmsi, name, lat, lon, lastSeen);
+  }
 }
 
 // Handle a failure to receive data
 async function handleFailureAISD() {
   $("#shipTrackerOffline").css("display", "inline-block");
+}
+
+// Drop any entities too old to be displayed
+function dropTimedOutEntities() {
+  entities.forEach(function(e) {
+    if (e.oldEnoughToDelete()) {
+      entities.delete(e.uid);
+    }
+  });
 }
 
 // Update map, clearing old markers and drawing new ones
