@@ -3,12 +3,14 @@
 /////////////////////////////
 
 // You can provide a main and alternate URL, e.g. one for use from the public internet
-// and one for use when you are on the same LAN as the machine running Dump1090.
-// Select the alternate URL by appending ?alt=true to the URL for UMID1090.
+// and one for use when you are on the same LAN as the machine running the servers.
+// Select the alternate URL by appending ?alt=true to the URL for Plane Sailing.
 // Normal users won't do this and will therefore use the main public URL, but you
 // can bookmark the "alt" version to always use your LAN address for testing.
 const DUMP1090_URL = window.location.protocol + "//flightmap2.ianrenton.com/dump1090-fa/";
 const DUMP1090_URL_ALT = "http://192.168.1.241/dump1090-fa/";
+const AIS_DISPATCHER_KML_URL = window.location.protocol + "//flightmap2.ianrenton.com/ais/aisDispatcherSnapshot.kml";
+const AIS_DISPATCHER_KML_URL_ALT = "http://192.168.1.241/ais/aisDispatcherSnapshot.kml";
 
 // Map layer URL - if re-using this code you will need to provide your own Mapbox
 // access token in the Mapbox URL. You can still use my style.
@@ -616,9 +618,9 @@ function requestDump1090History() {
 function processDump1090History() {
   // At startup we did one initial retrieve of live data so we had a nice display
   // from the start. Now we have history data to load in which is older. So,
-  // delete the existing live data first.
+  // delete the existing live aircraft data first.
   entities.forEach(function(e) {
-    if (!e.fixed()) {
+    if (e.type == types.AIRCRAFT) {
       entities.delete(e.uid);
     }
   });
@@ -649,7 +651,6 @@ function requestDump1090LiveData() {
     timeout: 9000,
     success: async function(result) {
       handleSuccessDump1090(result);
-      handleDataDump1090(result);
     },
     error: function() {
       handleFailureDump1090();
@@ -699,6 +700,45 @@ function dropTimedOutEntities() {
       entities.delete(e.uid);
     }
   });
+}
+
+// AIS Dispatcher data retrieval method. This is the main data request
+// function which gets called every 10 seconds to update the internal
+// data store
+function requestAISDispatcherLiveData() {
+  $.ajax({
+    url: aisdurl,
+    dataType: 'xml',
+    timeout: 9000,
+    success: async function(result) {
+      handleSuccessAISD(result);
+    },
+    error: function() {
+      handleFailureAISD();
+    },
+    complete: function() {
+      dropTimedOutEntities();
+      // No need to update the map here as it has its own refresh interval
+    }
+  });
+}
+
+// Handle successful receive of data
+async function handleSuccessAISD(result) {
+  $("#shipTrackerOffline").css("display", "none");
+
+  // Update the data store
+  handleDataAISD(result, true);
+}
+
+// Update the internal data store with the provided data
+function handleDataAISD(result, live) {
+  // todo
+}
+
+// Handle a failure to receive data
+async function handleFailureAISD() {
+  $("#shipTrackerOffline").css("display", "inline-block");
 }
 
 // Update map, clearing old markers and drawing new ones
@@ -775,8 +815,10 @@ function updateMETAR(uid, icaoCode) {
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 var dump1090url = DUMP1090_URL;
+var aisdurl = AIS_DISPATCHER_KML_URL;
 if (urlParams.get("alt") == "true") {
   dump1090url = DUMP1090_URL_ALT;
+  aisdurl = AIS_DISPATCHER_KML_URL_ALT;
 }
 
 
@@ -918,8 +960,5 @@ setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
 
 // Set up the timed data request & update threads.
 setInterval(requestDump1090LiveData, 10000);
+setInterval(requestAISDispatcherLiveData, 10000);
 setInterval(updateMap, 1000);
-
-// Ship tracker "offline" for now as not implemented yet
-// todo logic properly
-$("#shipTrackerOffline").css("display", "inline-block");
