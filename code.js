@@ -1006,12 +1006,13 @@ updateMap();
 
 // First do a one-off live data request so we have something to display.
 requestDump1090LiveData();
+requestAISDispatcherLiveData();
 setTimeout(updateMap, 2000);
 
-// Now grab the history data. The request calls are asynchronous,
+// Now grab the dump1090 history data. The request calls are asynchronous,
 // so we have an additional call after 9 seconds (just before live data is
 // first requested) to unpack and use whatever history data we have at that
-// point.
+// point. There is no history equivalent for AIS.
 requestDump1090History();
 setTimeout(processDump1090History, 9000);
 setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
