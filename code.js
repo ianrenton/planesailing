@@ -266,7 +266,6 @@ class Entity {
     }
   }
 
-
   // internalise data from the provided AIS data into the Entity
   internaliseFromAIS(mmsi, name, lat, lon, seen) {
     this.name = name;
@@ -810,6 +809,19 @@ async function updateMap() {
       markersLayer.addLayer(e.drTrail());
     }
   });
+
+  // Update counters
+  var aircraftCount = 0;
+  var shipCount = 0;
+  entities.forEach(function(e) {
+    if (e.type == types.AIRCRAFT) {
+      aircraftCount++;
+    } else if (e.type == types.SHIP) {
+      shipCount++;
+    }
+  });
+  $("#aircraftCount").text("(" + aircraftCount + ")");
+  $("#shipCount").text("(" + shipCount + ")");
 }
 
 // Function called when an icon is clicked. Just set entity as selected,
