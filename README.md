@@ -4,7 +4,7 @@
 
 ### What is it?
 
-A completely unnecessary military situational awareness display for your home. It shows the location of nearby aircraft and ships in real time. It does this by pulling ADS-B data from a Dump1090 server and AIS from ??? (implementation TBD), and showing it overlaid on a map using NATO symbology.
+A completely unnecessary military situational awareness display for your home. It shows the location of nearby aircraft and ships in real time. It does this by pulling ADS-B data in JSON format from a Dump1090 server and AIS from AIS Repeater's KML snapshots. It then shows them overlaid on a map using NATO symbology.
 
 This was a weekend project, the code quality here is a very hacky layer on top of the already dubious code for [UMID 1090](https://github.com/ianrenton/umid1090). Contributions are welcome.
 
@@ -32,6 +32,5 @@ Note that this repository only provides the web-based user interface, and so is 
 
 ### Future Plans
 
-1. Actual AIS implementation (pending receiver hardware setup)
-2. APRS?
-3. Whatever else I can pick up with the ever expanding set of Raspberry Pis and RTL-SDR dongles on my desk
+1. APRS?
+2. Whatever else I can pick up with the ever expanding set of Raspberry Pis and RTL-SDR dongles on my desk
