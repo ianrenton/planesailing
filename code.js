@@ -605,8 +605,8 @@ class Entity {
     // Generate full symbol for display
     var detailedSymb = this.entitySelected();
     var mysymbol = new ms.Symbol(this.symbolCode(), {
-      staffComments: detailedSymb ? this.firstDescrip().toUpperCase() : "",
-      additionalInformation: detailedSymb ? this.secondDescrip().toUpperCase() : "",
+      staffComments: (detailedSymb && this.firstDescrip()) ? this.firstDescrip().toUpperCase() : "",
+      additionalInformation: (detailedSymb && this.secondDescrip()) ? this.secondDescrip().toUpperCase() : "",
       direction: (this.heading != null) ? this.heading : "",
       altitudeDepth: (this.iconAltitude() != null && detailedSymb) ? ("FL" + this.iconAltitude() / 100) : "",
       speed: (this.speed != null && detailedSymb) ? (this.speed.toFixed(0) + "KTS") : "",
