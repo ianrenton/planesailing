@@ -1,8 +1,8 @@
-# Plane/Sailing
+# Plane✈/Sailing⛵
 
 *The home situational awareness display nobody wanted or needed!*
 
-![Plane Sailing Banner](./banner.png){: .center}
+![Plane Sailing Banner](./banner.png)
 
 ### What is it?
 
