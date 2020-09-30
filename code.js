@@ -306,6 +306,7 @@ class Entity {
     var speedStr = cells[21].childNodes[0] ? cells[21].childNodes[0].data.replace("kts", "") : "";
     var courseStr = cells[23].childNodes[0] ? cells[23].childNodes[0].data.replace("°", "") : "";
     var headingStr = cells[25].childNodes[0] ? cells[25].childNodes[0].data.replace("°", "") : "";
+    console.log(name + " " + lastSeenStr);
 
     // Prepend "MMSI" to track names that are just an MMSI not a real vessel name
     if (name == mmsi) {
@@ -313,29 +314,29 @@ class Entity {
     }
     this.name = name;
 
-    // Fake age of track to "now", see comments below
-    this.updateTime = moment().utc();
-    this.posUpdateTime = moment().utc();
-
     // Handle true age of track
-    // Real track age gives us dead reckoning weirdness as we could be reckoning ships with a
-    // very small speed over several hours which gives unexpected positions. Just assume all
-    // AIS data is "now" for the moment.
-    // if (lastSeenStr) {
-    //   var lastSeen = moment.utc(lastSeenStr.replace(" UTC",""), 'DD-MM-YYYY hh:mm:ss a');
-    //   if (lastSeen.year() < 2020) {
-    //     // Clearly a junk date, use "now"
-    //     lastSeen = moment().utc();
-    //   }
-    //   this.updateTime = lastSeen;
-    //   this.posUpdateTime = lastSeen; // AIS Dispatcher data doesn't distinguish between "last seen" and "position last recorded"
-    // }
+    if (lastSeenStr) {
+      var lastSeen = moment.utc(lastSeenStr.replace(" UTC",""), 'DD-MM-YYYY hh:mm:ss a');
+      if (lastSeen.year() < 2020) {
+        // Clearly a junk date, use "now"
+        lastSeen = moment().utc();
+      }
+      this.updateTime = lastSeen;
+      this.posUpdateTime = lastSeen; // AIS Dispatcher data doesn't distinguish between "last seen" and "position last recorded"
+    }
 
     if (lat) {
       this.addPosition(parseFloat(lat), parseFloat(lon));
     }
     if (speedStr) {
-      this.speed = parseFloat(speedStr);
+      var speed = parseFloat(speedStr);
+      // If < 2 knots treat this as "no speed", to prevent long-term drift of dead reckoned
+      // anchored vessels
+      if (speed >= 2) {
+        this.speed = speed;
+      } else {
+        this.speed = null;
+      }
     }
     if (courseStr) {
       this.course = parseFloat(courseStr);
@@ -608,7 +609,7 @@ class Entity {
       additionalInformation: detailedSymb ? this.secondDescrip().toUpperCase() : "",
       direction: (this.heading != null) ? this.heading : "",
       altitudeDepth: (this.iconAltitude() != null && detailedSymb) ? ("FL" + this.iconAltitude() / 100) : "",
-      speed: (this.speed != null && this.speed > 1 && detailedSymb) ? (this.speed.toFixed(0) + "KTS") : "",
+      speed: (this.speed != null && detailedSymb) ? (this.speed.toFixed(0) + "KTS") : "",
       type: this.mapDisplayName().toUpperCase(),
       dtg: ((!this.fixed() && this.posUpdateTime != null && detailedSymb) ? this.posUpdateTime.utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
       location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
