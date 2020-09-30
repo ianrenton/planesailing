@@ -2,6 +2,8 @@
 
 *The home situational awareness display nobody wanted or needed!*
 
+![Plane Sailing Banner](./banner.png){: .center}
+
 ### What is it?
 
 A completely unnecessary military situational awareness display for your home. It shows the location of nearby aircraft and ships in real time. It does this by pulling ADS-B data in JSON format from a Dump1090 server and AIS from AIS Repeater's KML snapshots. It then shows them overlaid on a map using NATO symbology.
@@ -20,9 +22,15 @@ No idea. Ex-military hams who can't leave the SIGINT life behind? Turbo nerds wi
 
 Blame [@elderlygoose](https://twitter.com/ElderlyGoose)
 
-### Using and Adapting
+### Can I see what it looks like?
 
-You can see it running, showing live data from my ADS-B and AIS receivers, at http://planesailing.ianrenton.com.
+You can see it running, showing live data from my ADS-B and AIS receivers, at https://planesailing.ianrenton.com.
+
+### What's the hardware behind it?
+
+You can check out the hardware and build guide at https://ianrenton.com/hardware/planesailing/.
+
+### Can I run my own version?
 
 My code in this project is subject to "The Unlicence", i.e. it's public domain and you can do what you want with it.
 
