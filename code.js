@@ -114,7 +114,8 @@ var deadReckonTimeMS = 1000; // Fixed on a very short time to always show dead r
 var showAnticipatedTimeMS = 60000;
 var dropAirTrackTimeMS = 300000; // 5 min
 var dropAirTrackAtZeroAltTimeMS = 10000; // Drop tracks at zero altitude sooner because they've likely landed, dead reckoning far past the airport runway looks weird
-var dropShipTrackTimeMS = 172800000; // 2 days
+var dropMovingShipTrackTimeMS = 3600000; // 1 hour
+var dropStaticShipTrackTimeMS = 172800000; // 2 days
 
 
 /////////////////////////////
@@ -306,7 +307,6 @@ class Entity {
     var speedStr = cells[21].childNodes[0] ? cells[21].childNodes[0].data.replace("kts", "") : "";
     var courseStr = cells[23].childNodes[0] ? cells[23].childNodes[0].data.replace("°", "") : "";
     var headingStr = cells[25].childNodes[0] ? cells[25].childNodes[0].data.replace("°", "") : "";
-    console.log(name + " " + lastSeenStr);
 
     // Prepend "MMSI" to track names that are just an MMSI not a real vessel name
     if (name == mmsi) {
@@ -444,7 +444,7 @@ class Entity {
     } else if (this.type == types.AIRCRAFT) {
       return getTimeInServerRefFrame().diff(this.updateTime) > dropAirTrackTimeMS || (this.iconAltitude() <= 0 && getTimeInServerRefFrame().diff(this.updateTime) > dropAirTrackAtZeroAltTimeMS);
     } else if (this.type == types.SHIP) {
-      return getTimeInServerRefFrame().diff(this.updateTime) > dropShipTrackTimeMS;
+      return getTimeInServerRefFrame().diff(this.updateTime) > dropStaticShipTrackTimeMS || (this.speed != null && getTimeInServerRefFrame().diff(this.updateTime) > dropMovingShipTrackTimeMS);
     }
   }
 
