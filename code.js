@@ -111,7 +111,8 @@ var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dat
 var selectedEntityUID = "";
 var snailTrailLength = 500;
 var deadReckonTimeMS = 1000; // Fixed on a very short time to always show dead reckoned position, like FlightRadar24
-var showAnticipatedTimeMS = 60000;
+var showAirAnticipatedTimeMS = 60000; // 60 sec
+var showShipAnticipatedTimeMS = 300000; // 5 min
 var dropAirTrackTimeMS = 300000; // 5 min
 var dropAirTrackAtZeroAltTimeMS = 10000; // Drop tracks at zero altitude sooner because they've likely landed, dead reckoning far past the airport runway looks weird
 var dropMovingShipTrackTimeMS = 3600000; // 1 hour
@@ -429,7 +430,13 @@ class Entity {
   // Is the track old enough that we should display the track as an anticipated
   // position?
   oldEnoughToShowAnticipated() {
-    return !this.fixed() && this.posUpdateTime != null && getTimeInServerRefFrame().diff(this.posUpdateTime) > showAnticipatedTimeMS;
+    if (this.fixed()) {
+      return false;
+    } else if (this.type == types.AIRCRAFT) {
+      return this.posUpdateTime != null && getTimeInServerRefFrame().diff(this.posUpdateTime) > showAirAnticipatedTimeMS;
+    } else if (this.type == types.SHIP) {
+      return this.posUpdateTime != null && getTimeInServerRefFrame().diff(this.posUpdateTime) > showShipAnticipatedTimeMS;
+    }
   }
 
   // Is the track old enough that we should dead reckon the position?
