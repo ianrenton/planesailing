@@ -20,11 +20,11 @@ const MAPBOX_URL = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl
 const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
 
 // Map default position/zoom
-const START_LAT_LON = [50.75128, -1.90168];
+const START_LAT_LON = [50.68, -1.9];
 const START_ZOOM = 11;
 
 // Base station / airports / seaports
-const BASE_STATION = {name: "Base Station", lat: 50.75128, lon: -1.90168, firstDescrip: "PiAware 3.8.1", secondDescrip: ""};
+const BASE_STATION = {name: "Base Station", lat: 50.75128, lon: -1.90168, firstDescrip: "", secondDescrip: ""};
 const AIRPORTS = [
   {name: "Bournemouth Airport", lat: 50.78055, lon: -1.83938, icaoCode: "EGHH"},
   {name: "Southampton Airport", lat: 50.95177, lon: -1.35625, icaoCode: "EGHI"},
@@ -98,6 +98,12 @@ const AIRCRAFT_CATEGORY_TO_SYMBOL = new Map([
   ["C2", "SUGP------"],
   ["C3", "SUGP------"]
 ]);
+const SHIP_TYPE_TO_SYMBOL = new Map([
+  ["Unknown", "SUSPX-------"],
+  ["Passenger ship", "SUSPXMP-----"],
+  ["Pleasure craft", "SUSPXR------"],
+  ["Cargo ship (HAZ-A)", "SUSPXMH-----"]
+]);
 var entities = new Map(); // uid -> Entity
 var dump1090HistoryStore = [];
 var showTypes = [types.AIRCRAFT, types.SHIP, types.AIRPORT, types.SEAPORT, types.BASE];
@@ -108,7 +114,7 @@ var deadReckonTimeMS = 1000; // Fixed on a very short time to always show dead r
 var showAnticipatedTimeMS = 60000;
 var dropAirTrackTimeMS = 300000; // 5 min
 var dropAirTrackAtZeroAltTimeMS = 10000; // Drop tracks at zero altitude sooner because they've likely landed, dead reckoning far past the airport runway looks weird
-var dropShipTrackTimeMS = 1800000; // 30 min
+var dropShipTrackTimeMS = 172800000; // 2 days
 
 
 /////////////////////////////
@@ -128,6 +134,8 @@ class Entity {
   positionHistory = [];
   // Heading (deg)
   heading = null;
+  // Course (deg)
+  course = null;
   // Altitude (ft) (aircraft only)
   altitude = null;
   // Altitude rate (ft/s) (aircraft only)
@@ -146,6 +154,10 @@ class Entity {
   vesselCargoType = null;
   // Aircraft type derived from database lookup (aircraft only)
   icaoType = null;
+  // Navigation status (ship only)
+  navStatus = null;
+  // Destination (ship only unless we get from FlightAware/FlightRadar API in future)
+  destination = null;
   // Fixed first description line (base/airport only)
   fixedFirstDescrip = null;
   // Fixed second description line (base/airport only)
@@ -242,6 +254,7 @@ class Entity {
     }
     if (bestHeading != null) {
       this.heading = bestHeading;
+      this.course = bestHeading; // We can assume no significant course/heading difference for planes
     }
     if (bestAlt != null) {
       this.altitude = bestAlt;
@@ -284,23 +297,57 @@ class Entity {
     var parser = new DOMParser();  
     var table = parser.parseFromString(description, 'text/xml');
     var cells = table.getElementsByTagName("td");
-    var lastSeenStr = cells[1].childNodes[0].data; // todo
-    var lastSeen = moment.utc();
-    var mmsi = cells[5].childNodes[0].data;
-    var callsign = cells[7].childNodes[0] ? cells[7].childNodes[0].data : ""; // todo
-    var type = cells[11].childNodes[0].data; // todo
-    var navstat = cells[13].childNodes[0].data; // todo
-    var destination = cells[15].childNodes[0] ? cells[15].childNodes[0].data : ""; // todo
-    var speedStr = cells[21].childNodes[0].data; // todo
-    var courseStr = cells[23].childNodes[0].data; // todo
-    var headingStr = cells[25].childNodes[0].data; // todo
+    var lastSeenStr = cells[1].childNodes[0].data;
+    var mmsi = cells[5].childNodes[0].data.trim();
+    var callsign = cells[7].childNodes[0] ? cells[7].childNodes[0].data : "";
+    var vesselType = cells[11].childNodes[0].data;
+    var navstat = cells[13].childNodes[0].data;
+    var destination = cells[15].childNodes[0] ? cells[15].childNodes[0].data.trim() : "";
+    var speedStr = cells[21].childNodes[0] ? cells[21].childNodes[0].data.replace("kts", "") : "";
+    var courseStr = cells[23].childNodes[0] ? cells[23].childNodes[0].data.replace("°", "") : "";
+    var headingStr = cells[25].childNodes[0] ? cells[25].childNodes[0].data.replace("°", "") : "";
 
-    this.name = name;
-    this.updateTime = lastSeen;
-    this.posUpdateTime = lastSeen; // AIS Dispatcher data doesn't distinguish between "last seen" and "position last recorded"
-    if (lat != null) {
-      this.addPosition(lat, lon);
+    // Prepend "MMSI" to track names that are just an MMSI not a real vessel name
+    if (name == mmsi) {
+      name = "MMSI " + mmsi;
     }
+    this.name = name;
+
+    // Fake age of track to "now", see comments below
+    this.updateTime = moment().utc();
+    this.posUpdateTime = moment().utc();
+
+    // Handle true age of track
+    // Real track age gives us dead reckoning weirdness as we could be reckoning ships with a
+    // very small speed over several hours which gives unexpected positions. Just assume all
+    // AIS data is "now" for the moment.
+    // if (lastSeenStr) {
+    //   var lastSeen = moment.utc(lastSeenStr.replace(" UTC",""), 'DD-MM-YYYY hh:mm:ss a');
+    //   if (lastSeen.year() < 2020) {
+    //     // Clearly a junk date, use "now"
+    //     lastSeen = moment().utc();
+    //   }
+    //   this.updateTime = lastSeen;
+    //   this.posUpdateTime = lastSeen; // AIS Dispatcher data doesn't distinguish between "last seen" and "position last recorded"
+    // }
+
+    if (lat) {
+      this.addPosition(parseFloat(lat), parseFloat(lon));
+    }
+    if (speedStr) {
+      this.speed = parseFloat(speedStr);
+    }
+    if (courseStr) {
+      this.course = parseFloat(courseStr);
+    }
+    if (headingStr) {
+      this.heading = parseFloat(headingStr);
+    }
+
+    this.callsign = callsign;
+    this.vesselCargoType = vesselType;
+    this.navStatus = navstat;
+    this.destination = destination;
   }
 
   // Update its position, adding to the history
@@ -320,11 +367,11 @@ class Entity {
   // Get the dead reckoned position based on its last position update plus
   // course and speed at that time
   drPosition() {
-    if (this.position() != null && this.posUpdateTime != null && this.speed != null && this.heading != null) {
+    if (this.position() != null && this.posUpdateTime != null && this.speed != null && this.course != null) {
       // Can dead reckon
       var timePassedSec = getTimeInServerRefFrame().diff(this.posUpdateTime) / 1000.0;
       var speedMps = this.speed * KNOTS_TO_MPS;
-      var newPos = destVincenty(this.position()[0], this.position()[1], this.heading, timePassedSec * speedMps);
+      var newPos = destVincenty(this.position()[0], this.position()[1], this.course, timePassedSec * speedMps);
       return newPos;
     } else {
       return null;
@@ -414,7 +461,7 @@ class Entity {
     } else if (this.registration != null && this.registration != "") {
       return this.registration;
     } else {
-      return "T:" + this.uid;
+      return "ICAO " + this.uid;
     }
   }
 
@@ -452,7 +499,11 @@ class Entity {
         type = type + ")";
       }
     } else if (this.type == types.SHIP) {
-      // todo ship
+      if (this.vesselCargoType != "Unknown") {
+        type = this.vesselCargoType;
+      } else {
+        type = "Ship (Unknown Type)"
+      }
     }
     return type;
   }
@@ -481,7 +532,17 @@ class Entity {
       }
       return symbol;
     } else {
-      return DEFAULT_SHIP_SYMBOL; // todo types
+      // Generate symbol based on ship/cargo type
+      var symbol = DEFAULT_SHIP_SYMBOL;
+      if (this.vesselCargoType != null && SHIP_TYPE_TO_SYMBOL.has(this.vesselCargoType)) {
+        symbol = SHIP_TYPE_TO_SYMBOL.get(this.vesselCargoType);
+      }
+
+      // Change symbol to "anticipated" if old enough
+      if (this.oldEnoughToShowAnticipated()) {
+        symbol = symbol.substr(0, 3) + "A" + symbol.substr(4);
+      }
+      return symbol;
     }
   }
 
@@ -512,7 +573,11 @@ class Entity {
       }
       return airline;
     } else {
-      return ""; // ship, todo colregs data
+      var descrip = this.navStatus;
+      if (this.destination) {
+        descrip += " - DEST: " + this.destination;
+      }
+      return descrip;
     }
   }
 
@@ -543,9 +608,9 @@ class Entity {
       additionalInformation: detailedSymb ? this.secondDescrip().toUpperCase() : "",
       direction: (this.heading != null) ? this.heading : "",
       altitudeDepth: (this.iconAltitude() != null && detailedSymb) ? ("FL" + this.iconAltitude() / 100) : "",
-      speed: (this.speed != null && detailedSymb) ? (this.speed.toFixed(0) + "KTS") : "",
+      speed: (this.speed != null && this.speed > 1 && detailedSymb) ? (this.speed.toFixed(0) + "KTS") : "",
       type: this.mapDisplayName().toUpperCase(),
-      dtg: ((!this.fixed() && this.posUpdateTime != null && detailedSymb) ? this.posUpdateTime.utc().format("DDHHmmss[Z]MMMYY").toUpperCase() : ""),
+      dtg: ((!this.fixed() && this.posUpdateTime != null && detailedSymb) ? this.posUpdateTime.utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
       location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
     });
     // Styles, some of which change when the entity is selected
