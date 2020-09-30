@@ -106,8 +106,9 @@ var selectedEntityUID = "";
 var snailTrailLength = 500;
 var deadReckonTimeMS = 1000; // Fixed on a very short time to always show dead reckoned position, like FlightRadar24
 var showAnticipatedTimeMS = 60000;
-var dropTrackTimeMS = 300000;
-var dropTrackAtZeroAltTimeMS = 10000; // Drop tracks at zero altitude sooner because they've likely landed, dead reckoning far past the airport runway looks weird
+var dropAirTrackTimeMS = 300000; // 5 min
+var dropAirTrackAtZeroAltTimeMS = 10000; // Drop tracks at zero altitude sooner because they've likely landed, dead reckoning far past the airport runway looks weird
+var dropShipTrackTimeMS = 1800000; // 30 min
 
 
 /////////////////////////////
@@ -364,8 +365,13 @@ class Entity {
 
   // Is the track old enough that we should drop it?
   oldEnoughToDelete() {
-    return !this.fixed() && (getTimeInServerRefFrame().diff(this.updateTime) > dropTrackTimeMS
-    || (this.iconAltitude() <= 0 && getTimeInServerRefFrame().diff(this.updateTime) > dropTrackAtZeroAltTimeMS));
+    if (this.fixed()) {
+      return false;
+    } else if (this.type == types.AIRCRAFT) {
+      return getTimeInServerRefFrame().diff(this.updateTime) > dropAirTrackTimeMS || (this.iconAltitude() <= 0 && getTimeInServerRefFrame().diff(this.updateTime) > dropAirTrackAtZeroAltTimeMS);
+    } else if (this.type == types.SHIP) {
+      return getTimeInServerRefFrame().diff(this.updateTime) > dropShipTrackTimeMS;
+    }
   }
 
   // Based on the selected type filters, should we be displaying this entity
@@ -1019,5 +1025,5 @@ setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
 
 // Set up the timed data request & update threads.
 setInterval(requestDump1090LiveData, 10000);
-setInterval(requestAISDispatcherLiveData, 10000);
+setInterval(requestAISDispatcherLiveData, 60000);
 setInterval(updateMap, 1000);
