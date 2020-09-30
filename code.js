@@ -7,9 +7,9 @@
 // Select the alternate URL by appending ?alt=true to the URL for Plane Sailing.
 // Normal users won't do this and will therefore use the main public URL, but you
 // can bookmark the "alt" version to always use your LAN address for testing.
-const DUMP1090_URL = window.location.protocol + "//flightmap2.ianrenton.com/dump1090-fa/";
+const DUMP1090_URL = window.location.protocol + "//mciserver.zapto.org/dump1090-fa/";
 const DUMP1090_URL_ALT = "http://192.168.1.241/dump1090-fa/";
-const AIS_DISPATCHER_KML_URL = window.location.protocol + "//flightmap2.ianrenton.com/ais/aisDispatcherSnapshot.kml";
+const AIS_DISPATCHER_KML_URL = window.location.protocol + "//mciserver.zapto.org/ais/aisDispatcherSnapshot.kml";
 const AIS_DISPATCHER_KML_URL_ALT = "http://192.168.1.241/ais/aisDispatcherSnapshot.kml";
 
 // Map layer URL - if re-using this code you will need to provide your own Mapbox
