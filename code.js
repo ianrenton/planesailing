@@ -267,11 +267,37 @@ class Entity {
     }
   }
 
-  // internalise data from the provided AIS data into the Entity
-  internaliseFromAIS(mmsi, name, lat, lon, seen) {
+  // internalise data from the AIS data provided as a KML placemark into the Entity
+  internaliseFromAIS(placemark) {
+    // Name and position are contained nicely within the placemark XML
+    var name = placemark.getElementsByTagName("name")[0].childNodes[0].nodeValue.trim();
+    var posString = placemark.getElementsByTagName("Point")[0].getElementsByTagName("coordinates")[0].childNodes[0].nodeValue.trim()
+    var posBits = posString.split(",");
+    if (posBits.length >= 2) {
+      var lon = posBits[0];
+      var lat = posBits[1];
+    }
+    // Then... we have the "description" which is an HTML table containing
+    // the rest of the data we need. We use a second XML parser to deal with that.
+    // Entries are always present and always in the same order thankfully!
+    var description = placemark.getElementsByTagName("description")[0].childNodes[0].nodeValue;
+    var parser = new DOMParser();  
+    var table = parser.parseFromString(description, 'text/xml');
+    var cells = table.getElementsByTagName("td");
+    var lastSeenStr = cells[1].childNodes[0].data; // todo
+    var lastSeen = moment.utc();
+    var mmsi = cells[5].childNodes[0].data;
+    var callsign = cells[7].childNodes[0] ? cells[7].childNodes[0].data : ""; // todo
+    var type = cells[11].childNodes[0].data; // todo
+    var navstat = cells[13].childNodes[0].data; // todo
+    var destination = cells[15].childNodes[0] ? cells[15].childNodes[0].data : ""; // todo
+    var speedStr = cells[21].childNodes[0].data; // todo
+    var courseStr = cells[23].childNodes[0].data; // todo
+    var headingStr = cells[25].childNodes[0].data; // todo
+
     this.name = name;
-    this.updateTime = seen;
-    this.posUpdateTime = seen;
+    this.updateTime = lastSeen;
+    this.posUpdateTime = lastSeen; // AIS Dispatcher data doesn't distinguish between "last seen" and "position last recorded"
     if (lat != null) {
       this.addPosition(lat, lon);
     }
@@ -743,38 +769,20 @@ async function handleSuccessAISD(result) {
 function handleDataAISD(result, live) {
   var placemarks = result.getElementsByTagName("Placemark");
   for (i = 0; i < placemarks.length; i++) {
-    // Name and position are contained nicely within the placemark XML
-    var name = placemarks[i].getElementsByTagName("name")[0].childNodes[0].nodeValue.trim();
-    var posString = placemarks[i].getElementsByTagName("Point")[0].getElementsByTagName("coordinates")[0].childNodes[0].nodeValue.trim()
-    var posBits = posString.split(",");
-    if (posBits.length >= 2) {
-      var lon = posBits[0];
-      var lat = posBits[1];
-    }
-    // Then... we have the "description" which is an HTML table containing
-    // the rest of the data we need. We use a second XML parser to deal with that.
-    // Entries are always present and always in the same order thankfully!
+    // We want a unique ID (here the MMSI) to find out which track to update
+    // Unfortunately this is buried in an HTML table insid the description field
     var description = placemarks[i].getElementsByTagName("description")[0].childNodes[0].nodeValue;
     var parser = new DOMParser();  
     var table = parser.parseFromString(description, 'text/xml');
     var cells = table.getElementsByTagName("td");
-    var lastSeenStr = cells[1].childNodes[0].data; // todo
-    var lastSeen = moment.utc();
     var mmsi = cells[5].childNodes[0].data;
-    var callsign = cells[7].childNodes[0] ? cells[7].childNodes[0].data : ""; // todo
-    var type = cells[11].childNodes[0].data; // todo
-    var navstat = cells[13].childNodes[0].data; // todo
-    var destination = cells[15].childNodes[0] ? cells[15].childNodes[0].data : ""; // todo
-    var speedStr = cells[21].childNodes[0].data; // todo
-    var courseStr = cells[23].childNodes[0].data; // todo
-    var headingStr = cells[25].childNodes[0].data; // todo
 
     // Update internal data
     if (!entities.has(mmsi)) {
       // Doesn't exist, so create
       entities.set(mmsi, new Entity(mmsi, types.SHIP));
     }
-    entities.get(mmsi).internaliseFromAIS(mmsi, name, lat, lon, lastSeen);
+    entities.get(mmsi).internaliseFromAIS(placemarks[i]);
   }
 }
 
