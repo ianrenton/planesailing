@@ -13,8 +13,9 @@ const AIS_DISPATCHER_KML_URL = window.location.protocol + "//mciserver.zapto.org
 const AIS_DISPATCHER_KML_URL_ALT = "http://192.168.1.241/ais/aisDispatcherSnapshot.kml";
 
 // Map layer URL - if re-using this code you will need to provide your own Mapbox
-// access token in the Mapbox URL. You can still use my style.
-const MAPBOX_URL = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNpeGV3andtdzAwNDgyem52NXByNmg5eHIifQ.vP7MkKCkymCJHVbXJzmh5g";
+// access token in the Mapbox URL. You can still use my styles.
+const MAPBOX_URL_DARK = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNpeGV3andtdzAwNDgyem52NXByNmg5eHIifQ.vP7MkKCkymCJHVbXJzmh5g";
+const MAPBOX_URL_LIGHT = "https://api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrY2h4ZzU1ejE1eXoyc25uZjRvMmkyc2IifQ.JN65BkQfwQQIDfpMP_fFIQ";
 
 // CheckWX API key, used to retrieve airport METAR/TAF
 const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
@@ -107,6 +108,7 @@ const SHIP_TYPE_TO_SYMBOL = new Map([
 var entities = new Map(); // uid -> Entity
 var dump1090HistoryStore = [];
 var showTypes = [types.AIRCRAFT, types.SHIP, types.AIRPORT, types.SEAPORT, types.BASE];
+var darkTheme = true;
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent data appearing as too new or old if the local PC clock is off.
 var selectedEntityUID = "";
 var snailTrailLength = 500;
@@ -631,14 +633,15 @@ class Entity {
       dtg: ((!this.fixed() && this.posUpdateTime != null && detailedSymb) ? this.posUpdateTime.utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
       location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
     });
-    // Styles, some of which change when the entity is selected
+    // Styles, some of which change when the entity is selected and depending on the theme
+    var showLight = (darkTheme && this.entitySelected()) || (!darkTheme && !this.entitySelected());
     mysymbol = mysymbol.setOptions({
       size: 30,
       civilianColor: false,
-      colorMode: this.entitySelected() ? "Light" : "Dark",
+      colorMode: showLight ? "Light" : "Dark",
       fillOpacity: this.entitySelected() ? 1 : 0.6,
-      infoBackground: this.entitySelected() ? "black" : "transparent",
-      infoColor: "white",
+      infoBackground: this.entitySelected() ? (darkTheme ? "black" : "white") : "transparent",
+      infoColor: darkTheme ? "white" : "black",
       outlineWidth: this.entitySelected() ? 5 : 0,
       outlineColor: '#007F0E',
       fontfamily: 'Exo, Exo Regular, Verdana, sans-serif'
@@ -997,7 +1000,8 @@ var markersLayer = new L.LayerGroup();
 markersLayer.addTo(map);
 
 // Add background layers
-L.tileLayer(MAPBOX_URL).addTo(map);
+var tileLayer = L.tileLayer(MAPBOX_URL_DARK)
+tileLayer.addTo(map);
 
 
 /////////////////////////////
@@ -1012,7 +1016,7 @@ setTimeout(function(){ $("div#top").hide("slide", { direction: "up" }, 1000); },
 //     CONTROLS SETUP      //
 /////////////////////////////
 
-
+// Types
 function setTypeEnable(type, enable) {
   if (enable) {
     showTypes.push(type);
@@ -1036,6 +1040,24 @@ $("#showSeaPorts").click(function() {
 });
 $("#showBase").click(function() {
   setTypeEnable(types.BASE, $(this).is(':checked'));
+});
+
+// Colour themes
+$("#light").click(function() {
+  darkTheme = false;
+  document.documentElement.setAttribute("color-mode", "light");
+  map.removeLayer(tileLayer);
+  tileLayer = L.tileLayer(MAPBOX_URL_LIGHT);
+  tileLayer.addTo(map);
+  updateMap();
+});
+$("#dark").click(function() {
+  darkTheme = true;
+  document.documentElement.setAttribute("color-mode", "dark");
+  map.removeLayer(tileLayer);
+  tileLayer = L.tileLayer(MAPBOX_URL_DARK);
+  tileLayer.addTo(map);
+  updateMap();
 });
 
 
