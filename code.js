@@ -340,10 +340,20 @@ class Entity {
       }
     }
     if (courseStr) {
-      this.course = parseFloat(courseStr);
+      var course = parseFloat(courseStr);
+      if (course != 511) {
+        this.course = course;
+      } else {
+        this.course = null;
+      }
     }
     if (headingStr) {
-      this.heading = parseFloat(headingStr);
+      var heading = parseFloat(headingStr);
+      if (heading != 511) {
+        this.heading = heading;
+      } else {
+        this.heading = null;
+      }
     }
 
     this.callsign = callsign;
