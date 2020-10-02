@@ -631,7 +631,7 @@ class Entity {
       speed: (this.speed != null && detailedSymb) ? (this.speed.toFixed(0) + "KTS") : "",
       type: this.mapDisplayName().toUpperCase(),
       dtg: ((!this.fixed() && this.posUpdateTime != null && detailedSymb) ? this.posUpdateTime.utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
-      location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
+      location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + " " + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
     });
     // Styles, some of which change when the entity is selected and depending on the theme
     var showLight = (darkTheme && this.entitySelected()) || (!darkTheme && !this.entitySelected());
