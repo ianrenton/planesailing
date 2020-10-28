@@ -8,7 +8,7 @@
 
 A completely unnecessary military situational awareness display for your home. It shows the location of nearby aircraft and ships in real time. It does this by pulling ADS-B data in JSON format from a Dump1090 server and AIS from AIS Repeater's KML snapshots. It then shows them overlaid on a map using NATO symbology.
 
-This was a weekend project, the code quality here is a very hacky layer on top of the already dubious code for [UMID 1090](https://github.com/ianrenton/umid1090). Contributions are welcome.
+This was a weekend project, it's a very hacky layer on top of the already dubious code for [UMID 1090](https://github.com/ianrenton/umid1090).
 
 ### Why is it?
 
@@ -34,9 +34,13 @@ You can check out the hardware and build guide at https://ianrenton.com/hardware
 
 My code in this project is subject to "The Unlicence", i.e. it's public domain and you can do what you want with it.
 
-If you want to use this for yourself, go right ahead. There are some static variables at the top of code.js that you will need to tweak to match your install; you also need your own Mapbox API key in order to get the map background working properly.
+If you want to use this for yourself, go right ahead. There are some static variables at the top of code.js that you will need to tweak to match your install; you also need your own Mapbox API key in order to get the map background working properly. Let me know if you need any help.
 
 Note that this repository only provides the web-based user interface, and so is only part of the whole system. If you want to recreate the whole thing for yourself, you will need to point it at web interfaces of ADS-B and AIS data servers you provide, connected to radio receivers and antennas you provide. It's not pulling data from sites with global coverage APIs like FlightRadar24 or MarineTraffic.
+
+### Can I contribute?
+
+Sure. Pull request away!
 
 ### Future Plans
 
