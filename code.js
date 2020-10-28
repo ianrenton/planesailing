@@ -103,7 +103,10 @@ const SHIP_TYPE_TO_SYMBOL = new Map([
   ["Unknown", "SUSPX-------"],
   ["Passenger ship", "SUSPXMP-----"],
   ["Pleasure craft", "SUSPXR------"],
-  ["Cargo ship (HAZ-A)", "SUSPXMH-----"]
+  ["Sailing vessel", "SUSPXR------"],
+  ["Cargo ship", "SUSPXMC-----"],
+  ["Cargo ship (HAZ-A)", "SUSPXMH-----"],
+  ["Military ops", "SFSPC-------"]
 ]);
 var entities = new Map(); // uid -> Entity
 var dump1090HistoryStore = [];
@@ -554,6 +557,7 @@ class Entity {
     } else {
       // Generate symbol based on ship/cargo type
       var symbol = DEFAULT_SHIP_SYMBOL;
+      console.log(this.name + ":" + this.vesselCargoType + ":");
       if (this.vesselCargoType != null && SHIP_TYPE_TO_SYMBOL.has(this.vesselCargoType)) {
         symbol = SHIP_TYPE_TO_SYMBOL.get(this.vesselCargoType);
       }
