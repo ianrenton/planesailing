@@ -106,6 +106,9 @@ const SHIP_TYPE_TO_SYMBOL = new Map([
   ["Sailing vessel", "SUSPXR------"],
   ["Cargo ship", "SUSPXMC-----"],
   ["Cargo ship (HAZ-A)", "SUSPXMH-----"],
+  ["Cargo ship (HAZ-B)", "SUSPXMH-----"],
+  ["Cargo ship (HAZ-C)", "SUSPXMH-----"],
+  ["Cargo ship (HAZ-D)", "SUSPXMH-----"],
   ["Military ops", "SFSPC-------"]
 ]);
 var entities = new Map(); // uid -> Entity
