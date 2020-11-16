@@ -1,13 +1,13 @@
 /* Colour modes */
 :root[color-mode="dark"] {
-    --background: #012;
+    --background: black;
     --box-background: rgba(22, 33, 49, 0.8);
     --highlight: rgba(120, 200, 255, 1);
     --text: white;
 }
 :root[color-mode="light"] {
     --background: white;
-    --box-background: rgba(200, 200, 200, 0.8);
+    --box-background: rgba(255, 255, 255, 0.8);
     --highlight: rgba(0, 40, 120, 1);
     --text: black;
 }

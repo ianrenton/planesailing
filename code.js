@@ -12,10 +12,9 @@ const DUMP1090_URL_ALT = "http://192.168.1.241/dump1090-fa/";
 const AIS_DISPATCHER_KML_URL = window.location.protocol + "//mciserver.zapto.org/ais/aisDispatcherSnapshot.kml";
 const AIS_DISPATCHER_KML_URL_ALT = "http://192.168.1.241/ais/aisDispatcherSnapshot.kml";
 
-// Map layer URL - if re-using this code you will need to provide your own Mapbox
-// access token in the Mapbox URL. You can still use my styles.
-const MAPBOX_URL_DARK = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNpeGV3andtdzAwNDgyem52NXByNmg5eHIifQ.vP7MkKCkymCJHVbXJzmh5g";
-const MAPBOX_URL_LIGHT = "https://api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrY2h4ZzU1ejE1eXoyc25uZjRvMmkyc2IifQ.JN65BkQfwQQIDfpMP_fFIQ";
+// Map layer URL - formerly using Mapbox, but had to switch to a free option
+// due to excess use! (Nice problems to have I guess.)
+const MAP_URL = "http://tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg";
 
 // CheckWX API key, used to retrieve airport METAR/TAF
 const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
@@ -651,7 +650,7 @@ class Entity {
       infoColor: darkTheme ? "white" : "black",
       outlineWidth: this.entitySelected() ? 5 : 0,
       outlineColor: '#007F0E',
-      fontfamily: 'Exo, Exo Regular, Verdana, sans-serif'
+//      fontfamily: 'Exo, Exo Regular, Verdana, sans-serif'
     });
 
     // Build into a Leaflet icon and return
@@ -1007,7 +1006,8 @@ var markersLayer = new L.LayerGroup();
 markersLayer.addTo(map);
 
 // Add background layers
-var tileLayer = L.tileLayer(MAPBOX_URL_DARK)
+var tileLayer = L.tileLayer(MAP_URL);
+tileLayer.setOpacity(0.2);
 tileLayer.addTo(map);
 
 
@@ -1053,17 +1053,13 @@ $("#showBase").click(function() {
 $("#light").click(function() {
   darkTheme = false;
   document.documentElement.setAttribute("color-mode", "light");
-  map.removeLayer(tileLayer);
-  tileLayer = L.tileLayer(MAPBOX_URL_LIGHT);
-  tileLayer.addTo(map);
+  tileLayer.setOpacity(1.0);
   updateMap();
 });
 $("#dark").click(function() {
   darkTheme = true;
   document.documentElement.setAttribute("color-mode", "dark");
-  map.removeLayer(tileLayer);
-  tileLayer = L.tileLayer(MAPBOX_URL_DARK);
-  tileLayer.addTo(map);
+  tileLayer.setOpacity(0.2);
   updateMap();
 });
 
