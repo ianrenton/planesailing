@@ -14,7 +14,7 @@ const AIS_DISPATCHER_KML_URL_ALT = "http://192.168.1.241/ais/aisDispatcherSnapsh
 
 // Map layer URL - formerly using Mapbox, but had to switch to a free option
 // due to excess use! (Nice problems to have I guess.)
-const MAP_URL = "http://tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg";
+const MAP_URL = window.location.protocol + "//tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg";
 
 // CheckWX API key, used to retrieve airport METAR/TAF
 const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
@@ -559,7 +559,6 @@ class Entity {
     } else {
       // Generate symbol based on ship/cargo type
       var symbol = DEFAULT_SHIP_SYMBOL;
-      console.log(this.name + ":" + this.vesselCargoType + ":");
       if (this.vesselCargoType != null && SHIP_TYPE_TO_SYMBOL.has(this.vesselCargoType)) {
         symbol = SHIP_TYPE_TO_SYMBOL.get(this.vesselCargoType);
       }
