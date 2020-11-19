@@ -24,7 +24,7 @@ const START_LAT_LON = [50.68, -1.9];
 const START_ZOOM = 11;
 
 // Base station / airports / seaports
-const BASE_STATION = {name: "Base Station", lat: 50.75128, lon: -1.90168, firstDescrip: "", secondDescrip: ""};
+const BASE_STATION = {name: "M7BGT (Base Station)", lat: 50.75128, lon: -1.90168, firstDescrip: "PiAware + Dump1090-fa 4.0", secondDescrip: "rtl_ais + aisdespatcher"};
 const AIRPORTS = [
   {name: "Bournemouth Airport", lat: 50.78055, lon: -1.83938, icaoCode: "EGHH"},
   {name: "Southampton Airport", lat: 50.95177, lon: -1.35625, icaoCode: "EGHI"},
