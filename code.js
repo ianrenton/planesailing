@@ -969,6 +969,33 @@ function updateMETAR(uid, icaoCode) {
   });
 }
 
+function setLightTheme() {
+  darkTheme = false;
+  document.documentElement.setAttribute("color-mode", "light");
+  var metaThemeColor = document.querySelector("meta[name=theme-color]");
+  metaThemeColor.setAttribute("content", "#DDDDB9");
+  tileLayer.setOpacity(1.0);
+  updateMap();
+}
+
+function setDarkTheme() {
+  darkTheme = true;
+  document.documentElement.setAttribute("color-mode", "dark");
+  var metaThemeColor = document.querySelector("meta[name=theme-color]");
+  metaThemeColor.setAttribute("content", "#2C2C25");
+  tileLayer.setOpacity(1.0);
+  tileLayer.setOpacity(0.2);
+  updateMap();
+}
+
+function setThemeToMatchOS() {
+  if (!window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    setDarkTheme();
+  } else {
+    setLightTheme();
+  }
+}
+
 
 /////////////////////////////
 //          INIT           //
@@ -1011,6 +1038,13 @@ tileLayer.addTo(map);
 
 
 /////////////////////////////
+//       THEME SETUP       //
+/////////////////////////////
+
+setThemeToMatchOS();
+window.matchMedia("(prefers-color-scheme: dark)").addListener(setThemeToMatchOS);
+
+/////////////////////////////
 //    PANEL MANAGEMENT     //
 /////////////////////////////
 
@@ -1049,18 +1083,8 @@ $("#showBase").click(function() {
 });
 
 // Colour themes
-$("#light").click(function() {
-  darkTheme = false;
-  document.documentElement.setAttribute("color-mode", "light");
-  tileLayer.setOpacity(1.0);
-  updateMap();
-});
-$("#dark").click(function() {
-  darkTheme = true;
-  document.documentElement.setAttribute("color-mode", "dark");
-  tileLayer.setOpacity(0.2);
-  updateMap();
-});
+$("#light").click(setLightTheme);
+$("#dark").click(setDarkTheme);
 
 
 /////////////////////////////
