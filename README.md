@@ -34,9 +34,9 @@ You can check out the hardware and build guide at https://ianrenton.com/hardware
 
 My code in this project is subject to "The Unlicence", i.e. it's public domain and you can do what you want with it.
 
-If you want to use this for yourself, go right ahead. There are some static variables at the top of code.js that you will need to tweak to match your install; you also need your own Mapbox API key in order to get the map background working properly. Let me know if you need any help.
+If you want to use this for yourself, go right ahead. There are some static variables at the top of code.js that you will need to tweak to match your install; you also need your own CheckWX API key in order to get the METAR data working properly. Let me know if you need any help. If you'd like some nicer tilesets let me know, I have some great-looking ones on Mapbox that you can use - I had to stop using them on Plane/Sailing because I hit the API limit and it started costing me money, but you can use it for free provided you keep under the limit.
 
-Note that this repository only provides the web-based user interface, and so is only part of the whole system. If you want to recreate the whole thing for yourself, you will need to point it at web interfaces of ADS-B and AIS data servers you provide, connected to radio receivers and antennas you provide. It's not pulling data from sites with global coverage APIs like FlightRadar24 or MarineTraffic.
+Note that this repository only provides the web-based user interface, and so is only part of the whole system. If you want to recreate the whole thing for yourself, you will need to point it at web interfaces of ADS-B and AIS data servers you provide, connected to radio receivers and antennas you provide. It's not pulling data from sites with global coverage APIs like FlightRadar24 or MarineTraffic. Check out the [build guide](https://ianrenton.com/hardware/planesailing/) for more information.
 
 ### Can I contribute?
 
