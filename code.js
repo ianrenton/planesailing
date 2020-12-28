@@ -7,14 +7,14 @@
 // Select the alternate URL by appending ?alt=true to the URL for Plane Sailing.
 // Normal users won't do this and will therefore use the main public URL, but you
 // can bookmark the "alt" version to always use your LAN address for testing.
-const DUMP1090_URL = window.location.protocol + "//mciserver.zapto.org/dump1090-fa/";
+const DUMP1090_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//mciserver.zapto.org/dump1090-fa/";
 const DUMP1090_URL_ALT = "http://192.168.1.241/dump1090-fa/";
-const AIS_DISPATCHER_KML_URL = window.location.protocol + "//mciserver.zapto.org/ais/aisDispatcherSnapshot.kml";
+const AIS_DISPATCHER_KML_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//mciserver.zapto.org/ais/aisDispatcherSnapshot.kml";
 const AIS_DISPATCHER_KML_URL_ALT = "http://192.168.1.241/ais/aisDispatcherSnapshot.kml";
 
 // Map layer URL - formerly using Mapbox, but had to switch to a free option
 // due to excess use! (Nice problems to have I guess.)
-const MAP_URL = window.location.protocol + "//tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg";
+const MAP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg";
 
 // CheckWX API key, used to retrieve airport METAR/TAF
 const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
