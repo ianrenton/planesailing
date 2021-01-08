@@ -114,7 +114,8 @@ const SHIP_TYPE_TO_SYMBOL = new Map([
   ["Tanker (HAZ-C)", "SUSPXMH-----"],
   ["Tanker (HAZ-D)", "SUSPXMH-----"],
   ["Tug", "SUSPXMTU----"],
-  ["Military ops", "SFSPC-------"]
+  ["Military ops", "SFSPC-------"],
+  ["HSC", "SUSPXMP-----"]
 ]);
 var entities = new Map(); // uid -> Entity
 var dump1090HistoryStore = [];
