@@ -1136,6 +1136,20 @@ updateMap();
 
 
 /////////////////////////////
+//     REDIRECT TO HTTP    //
+/////////////////////////////
+
+// Unfortunately HTTPS isn't working well on my home server, so redirect
+// HTTPS requests to HTTP. (You can't just make HTTP requests from a page
+// that's served as HTTPS unfortunately, so we must redirect the user.)
+// If you are running this software yourself and HTTPS to your server
+// works better, please remove this.
+if (location.protocol == 'https:') {
+    location.replace(`http:${location.href.substring(location.protocol.length)}`);
+}
+
+
+/////////////////////////////
 //        KICK-OFF         //
 /////////////////////////////
 
