@@ -119,13 +119,14 @@ const SHIP_TYPE_TO_SYMBOL = new Map([
   ["SAR", "SUSPXL------"]
 ]);
 var entities = new Map(); // uid -> Entity
+var markers = new Map(); // uid -> Marker
 var dump1090HistoryStore = [];
 var showTypes = [types.AIRCRAFT, types.SHIP, types.AIRPORT, types.SEAPORT, types.BASE];
 var darkTheme = true;
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent data appearing as too new or old if the local PC clock is off.
 var selectedEntityUID = "";
 var snailTrailLength = 500;
-var deadReckonTimeMS = 1000; // Fixed on a very short time to always show dead reckoned position, like FlightRadar24
+var deadReckonTimeMS = 0; // Fixed on zero to always show dead reckoned position, like FlightRadar24
 var showAirAnticipatedTimeMS = 60000; // 60 sec
 var showShipAnticipatedTimeMS = 300000; // 5 min
 var dropAirTrackTimeMS = 300000; // 5 min
@@ -670,7 +671,7 @@ class Entity {
   // Generate a map marker (a positioned equivalent of icon()). This will be
   // placed at the last known position, or the dead reckoned position if DR
   // should be used
-  marker() {
+  newMarker() {
     var pos = this.iconPosition();
     var icon = this.icon();
     if (this.shouldShowIcon() && pos != null && icon != null) {
@@ -901,25 +902,48 @@ function dropTimedOutEntities() {
 
 // Update map, clearing old markers and drawing new ones
 async function updateMap() {
-  // Remove existing markers
-  markersLayer.clearLayers();
-
-  // Add entity markers to map
+  // Iterate through entities. For each, update an existing marker
+  // or create a new marker if required.
   entities.forEach(function(e) {
-    if (e.marker() != null) {
-      markersLayer.addLayer(e.marker());
+    var pos = e.iconPosition();
+    var icon = e.icon();
+    if (markers.has(e.uid)) {
+      var m = markers.get(e.uid);
+      if (e.shouldShowIcon() && pos != null && icon != null) {
+        // Existing marker, data still valid, so update
+        m.setLatLng(pos);
+        m.setIcon(icon);
+      } else {
+        // Existing marker, data invalid, so remove
+        markersLayer.removeLayer(m);
+        markers.delete(e.uid);
+      }
+    } else if (e.shouldShowIcon() && pos != null && icon != null) {
+      // No existing marker, data is valid, so create
+      var m = e.newMarker();
+      markersLayer.addLayer(m);
+      markers.set(e.uid, m);
+    }
+  });
+
+  // Iterate through markers. If one corresponds to a dropped entity, delete it
+  markers.forEach(function(marker, uid, map) {
+    if (!entities.has(uid)) {
+      markersLayer.removeLayer(marker);
+      markers.delete(uid);
     }
   });
 
   // Add snail trails to map for selected entity
+  snailTrailLayer.clearLayers();
   entities.forEach(function(e) {
     if (e.uid == selectedEntityUID) {
-      markersLayer.addLayer(e.trail());
+      snailTrailLayer.addLayer(e.trail());
     }
   });
   entities.forEach(function(e) {
     if (e.uid == selectedEntityUID && e.drTrail() != null) {
-      markersLayer.addLayer(e.drTrail());
+      snailTrailLayer.addLayer(e.drTrail());
     }
   });
 
@@ -1038,6 +1062,10 @@ map.setView(START_LAT_LON, startZoom);
 // Add main marker layer
 var markersLayer = new L.LayerGroup();
 markersLayer.addTo(map);
+
+// Add snail trail layer
+var snailTrailLayer = new L.LayerGroup();
+snailTrailLayer.addTo(map);
 
 // Add background layers
 var tileLayer = L.tileLayer(MAP_URL);
