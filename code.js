@@ -677,7 +677,8 @@ class Entity {
     if (this.shouldShowIcon() && pos != null && icon != null) {
       // Create marker
       var m = L.marker(pos, {
-        icon: icon
+        icon: icon,
+        animaDur: 1000
       });
       // Set the click action for the marker
       var uid = this.uid;
@@ -910,8 +911,8 @@ async function updateMap() {
     if (markers.has(e.uid)) {
       var m = markers.get(e.uid);
       if (e.shouldShowIcon() && pos != null && icon != null) {
-        // Existing marker, data still valid, so update
-        m.setLatLng(pos);
+        // Existing marker, data still valid, so move the marker
+        m.slideTo(pos, { duration: 1000 });
         m.setIcon(icon);
       } else {
         // Existing marker, data invalid, so remove
