@@ -732,33 +732,6 @@ class Entity {
       this.positionHistory.shift();
     }
   }
-
-  // Return the best animation time to use when moving the entity's marker.
-  // If we have speed information, this will have position updates every
-  // time the map updates*, so the animation duration should match the
-  // period at which we ask the map to redraw. If we don't have speed
-  // information, this will have position updates based on how often we
-  // query the server, so we should animate accordingly.
-  // If the entity is *selected*, and the redraw time would be long (based
-  // on data refresh), then disable animation (set to 1ms) otherwise
-  // the symbol and the snail trail don't line up and it looks bad.
-  //
-  // * Only actually true if the dead reckon time is less than or equal
-  // to the map update interval, which it currently is, but note this is a
-  // variable that could be changed!
-  bestAnimationTime() {
-    if (this.speed != null) {
-      return updateMapIntervalMS;
-    } else if (this.entitySelected()) {
-      return 1;
-    } else if (this.type == types.AIRCRAFT) {
-      return queryAirDataIntervalMS;
-    } else {
-      // This catches the static entities too but we don't really care
-      // what their animation time is because they don't move.
-      return queryShipDataIntervalMS;
-    }
-  }
 }
 
 
@@ -833,7 +806,7 @@ function requestDump1090LiveData() {
     },
     complete: function() {
       dropTimedOutEntities();
-      // No need to update the map here as it has its own refresh interval
+      updateMap();
     }
   });
 }
@@ -885,7 +858,7 @@ function requestAISDispatcherLiveData() {
     },
     complete: function() {
       dropTimedOutEntities();
-      // No need to update the map here as it has its own refresh interval
+      updateMap();
     }
   });
 }
@@ -943,27 +916,30 @@ async function updateMap() {
     if (markers.has(e.uid)) {
       var m = markers.get(e.uid);
       if (e.shouldShowIcon() && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
+        // Update the icon if it's changed.
+        if (icon != m.getIcon()) {
+          m.setIcon(icon);
+        }
+
         // Existing marker, data still valid, so move the marker.
+        // Map is going to refresh at roughly the rate of querying air data, so use
+        // that as the time animations should run for.
+        var animationTime = queryAirDataIntervalMS;
         if (m._slideToLatLng != null && (m._slideToLatLng[0] != pos[0] || m._slideToLatLng[1] != pos[1])) {
           // Were previously animating to a position, now the position of the
           // entitiy has changed. So cancel the previous animation, snapping
           // to its target position, and start a new animation towards the new
           // position.
           m.setLatLng(m._slideToLatLng);
-          m.slideTo(pos, { duration: e.bestAnimationTime() });
+          m.slideTo(pos, { duration: animationTime });
         } else if (m._slideToLatLng == null) {
           // No previous animation, so start a new one.
-          m.slideTo(pos, { duration: e.bestAnimationTime() });
+          m.slideTo(pos, { duration: animationTime });
         }
         // If neither of the cases matched in the above if/else, that means we
         // were animating to a position, and we have no position update on the
         // entity, so we just want to carry on letting the animation run and
         // not interfere.
-
-        // Update the icon if it's changed.
-        if (icon != m.getIcon()) {
-          m.setIcon(icon);
-        }
       } else {
         // Existing marker, data invalid, so remove
         markersLayer.removeLayer(m);
@@ -1123,6 +1099,10 @@ var tileLayer = L.tileLayer(MAP_URL);
 tileLayer.setOpacity(0.2);
 tileLayer.addTo(map);
 
+// Zooming affects the level of detail shown on icons, so we need to update the map
+// on a zoom change.
+map.on("zoomend", function (e) { updateMap(); });
+
 
 /////////////////////////////
 //       THEME SETUP       //
@@ -1253,7 +1233,6 @@ if (location.protocol == 'https:') {
 // First do a one-off live data request so we have something to display.
 requestDump1090LiveData();
 requestAISDispatcherLiveData();
-setTimeout(updateMap, 2000);
 
 // Now grab the dump1090 history data. The request calls are asynchronous,
 // so we have an additional call after 9 seconds (just before live data is
@@ -1263,7 +1242,6 @@ requestDump1090History();
 setTimeout(processDump1090History, 9000);
 setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
 
-// Set up the timed data request & update threads.
+// Set up the timed data request threads.
 setInterval(requestDump1090LiveData, queryAirDataIntervalMS);
 setInterval(requestAISDispatcherLiveData, queryShipDataIntervalMS);
-setInterval(updateMap, updateMapIntervalMS);
