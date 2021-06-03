@@ -127,6 +127,9 @@ var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dat
 var selectedEntityUID = "";
 var snailTrailLength = 500;
 var deadReckonTimeMS = 0; // Fixed on zero to always show dead reckoned position, like FlightRadar24
+var updateMapIntervalMS = 1000;
+var queryAirDataIntervalMS = 10000;
+var queryShipDataIntervalMS = 60000;
 var showAirAnticipatedTimeMS = 60000; // 60 sec
 var showShipAnticipatedTimeMS = 300000; // 5 min
 var dropAirTrackTimeMS = 300000; // 5 min
@@ -674,7 +677,7 @@ class Entity {
   newMarker() {
     var pos = this.iconPosition();
     var icon = this.icon();
-    if (this.shouldShowIcon() && pos != null && icon != null) {
+    if (this.shouldShowIcon() && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
       // Create marker
       var m = L.marker(pos, {
         icon: icon,
@@ -725,6 +728,34 @@ class Entity {
   trimSnailTrail() {
     while (this.positionHistory.length >= snailTrailLength) {
       this.positionHistory.shift();
+    }
+  }
+
+  // Return the best animation time to use when moving the entity's marker.
+  // If we have speed information, this will have position updates every
+  // time the map updates*, so the animation duration should match the
+  // period at which we ask the map to redraw. If we don't have speed
+  // information, this will have position updates based on how often we
+  // query the server, so use that value instead minus a correction for
+  // the redraw time.
+  // If the entity is *selected*, and the redraw time would be long (based
+  // on data refresh), then disable animation (set to 1ms) otherwise
+  // the symbol and the snail trail don't line up and it looks bad.
+  //
+  // * Only actually true if the dead reckon time is less than or equal
+  // to the map update interval, which it currently is, but note this is a
+  // variable that could be changed!
+  bestAnimationTime() {
+    if (this.speed != null) {
+      return updateMapIntervalMS;
+    } else if (this.entitySelected()) {
+      return 1;
+    } else if (this.type == types.AIRCRAFT) {
+      return queryAirDataIntervalMS - updateMapIntervalMS;
+    } else {
+      // This catches the static entities too but we don't really care
+      // what their animation time is because they don't move.
+      return queryShipDataIntervalMS - updateMapIntervalMS;
     }
   }
 }
@@ -910,16 +941,16 @@ async function updateMap() {
     var icon = e.icon();
     if (markers.has(e.uid)) {
       var m = markers.get(e.uid);
-      if (e.shouldShowIcon() && pos != null && icon != null) {
+      if (e.shouldShowIcon() && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
         // Existing marker, data still valid, so move the marker
-        m.slideTo(pos, { duration: 1000 });
+        m.slideTo(pos, { duration: e.bestAnimationTime() });
         m.setIcon(icon);
       } else {
         // Existing marker, data invalid, so remove
         markersLayer.removeLayer(m);
         markers.delete(e.uid);
       }
-    } else if (e.shouldShowIcon() && pos != null && icon != null) {
+    } else if (e.shouldShowIcon() && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
       // No existing marker, data is valid, so create
       var m = e.newMarker();
       markersLayer.addLayer(m);
@@ -1214,6 +1245,6 @@ setTimeout(processDump1090History, 9000);
 setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
 
 // Set up the timed data request & update threads.
-setInterval(requestDump1090LiveData, 10000);
-setInterval(requestAISDispatcherLiveData, 60000);
-setInterval(updateMap, 1000);
+setInterval(requestDump1090LiveData, queryAirDataIntervalMS);
+setInterval(requestAISDispatcherLiveData, queryShipDataIntervalMS);
+setInterval(updateMap, updateMapIntervalMS);
