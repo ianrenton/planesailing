@@ -115,7 +115,8 @@ const SHIP_TYPE_TO_SYMBOL = new Map([
   ["Tanker (HAZ-D)", "SUSPXMH-----"],
   ["Tug", "SUSPXMTU----"],
   ["Military ops", "SFSPC-------"],
-  ["HSC", "SUSPXMP-----"]
+  ["HSC", "SUSPXMP-----"],
+  ["SAR", "SUSPXL------"]
 ]);
 var entities = new Map(); // uid -> Entity
 var dump1090HistoryStore = [];
@@ -299,7 +300,7 @@ class Entity {
   // internalise data from the AIS data provided as a KML placemark into the Entity
   internaliseFromAIS(placemark) {
     // Name and position are contained nicely within the placemark XML
-    var name = placemark.getElementsByTagName("name")[0].childNodes[0].nodeValue.trim();
+    var name = placemark.getElementsByTagName("name")[0].childNodes[0].nodeValue.replaceAll("_", " ").trim();
     var posString = placemark.getElementsByTagName("Point")[0].getElementsByTagName("coordinates")[0].childNodes[0].nodeValue.trim()
     var posBits = posString.split(",");
     if (posBits.length >= 2) {
