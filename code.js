@@ -130,7 +130,7 @@ var showAirAnticipatedTimeMS = 60000; // 60 sec
 var showShipAnticipatedTimeMS = 300000; // 5 min
 var dropAirTrackTimeMS = 300000; // 5 min
 var dropAirTrackAtZeroAltTimeMS = 10000; // Drop tracks at zero altitude sooner because they've likely landed, dead reckoning far past the airport runway looks weird
-var dropMovingShipTrackTimeMS = 3600000; // 1 hour
+var dropMovingShipTrackTimeMS = 1200000; // 20 minutes
 var dropStaticShipTrackTimeMS = 172800000; // 2 days
 
 
