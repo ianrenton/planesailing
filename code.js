@@ -123,7 +123,8 @@ var markers = new Map(); // uid -> Marker
 var dump1090HistoryStore = [];
 var showTypes = [types.AIRCRAFT, types.SHIP, types.AIRPORT, types.SEAPORT, types.BASE];
 var darkTheme = true;
-var zoomLevelForSymbolNames = 12; // If zoomed in at least this far, show all symbol names. Decrease this to show names at lower zooms.
+var zoomLevelForAirSymbolNames = 9; // If zoomed in at least this far, show all air symbol names. Decrease this to show names at lower zooms.
+var zoomLevelForShipSymbolNames = 12; // If zoomed in at least this far, show all ship symbol names. Decrease this to show names at lower zooms.
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent data appearing as too new or old if the local PC clock is off.
 var selectedEntityUID = "";
 var snailTrailLength = 500;
@@ -491,6 +492,16 @@ class Entity {
     return showTypes.includes(this.type);
   }
 
+  // Based on zoom level, should the entity's name be shown? (When not selected-
+  // names are always shown if the entity is selected)
+  shouldShowName() {
+    if (this.type == types.AIRCRAFT) {
+      return map.getZoom() >= zoomLevelForAirSymbolNames;
+    } else {
+      return map.getZoom() >= zoomLevelForShipSymbolNames;
+    }
+  }
+
   // Generate the name for display on the map. Prefer vessel name/flight ID, then registration (tail number),
   // finally just the MMSI/ICAO hex code
   mapDisplayName() {
@@ -638,17 +649,19 @@ class Entity {
     // Get position for display
     var lat = this.iconPosition()[0];
     var lon = this.iconPosition()[1];
+    
+    // Decide how much detail to display
+    var showName = this.shouldShowName();
+    var detailedSymb = this.entitySelected();
 
     // Generate symbol for display
-    var showNames = map.getZoom() >= zoomLevelForSymbolNames;
-    var detailedSymb = this.entitySelected();
     var mysymbol = new ms.Symbol(this.symbolCode(), {
       staffComments: (detailedSymb && this.firstDescrip()) ? this.firstDescrip().toUpperCase() : "",
       additionalInformation: (detailedSymb && this.secondDescrip()) ? this.secondDescrip().toUpperCase() : "",
       direction: (this.heading != null) ? this.heading : "",
       altitudeDepth: (this.iconAltitude() != null && detailedSymb) ? ("FL" + this.iconAltitude() / 100) : "",
       speed: (this.speed != null && detailedSymb) ? (this.speed.toFixed(0) + "KTS") : "",
-      type: (detailedSymb || showNames) ? this.mapDisplayName().toUpperCase() : "",
+      type: (detailedSymb || showName) ? this.mapDisplayName().toUpperCase() : "",
       dtg: ((!this.fixed() && this.posUpdateTime != null && detailedSymb) ? this.posUpdateTime.utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
       location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + " " + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
     });
