@@ -21,7 +21,8 @@ const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
 
 // Map default position/zoom
 const START_LAT_LON = [50.68, -1.9];
-const START_ZOOM = 11;
+const START_ZOOM = 12;
+const ZOOM_LEVEL_FOR_SYMBOL_NAMES = 12;
 
 // Base station / airports / seaports
 const BASE_STATION = {name: "M7BGT (Base Station)", lat: 50.75128, lon: -1.90168, firstDescrip: "PiAware + Dump1090-fa 4.0", secondDescrip: "rtl_ais + aisdespatcher"};
@@ -638,7 +639,8 @@ class Entity {
     var lat = this.iconPosition()[0];
     var lon = this.iconPosition()[1];
 
-    // Generate full symbol for display
+    // Generate symbol for display
+    var showNames = map.getZoom() >= ZOOM_LEVEL_FOR_SYMBOL_NAMES;
     var detailedSymb = this.entitySelected();
     var mysymbol = new ms.Symbol(this.symbolCode(), {
       staffComments: (detailedSymb && this.firstDescrip()) ? this.firstDescrip().toUpperCase() : "",
@@ -646,7 +648,7 @@ class Entity {
       direction: (this.heading != null) ? this.heading : "",
       altitudeDepth: (this.iconAltitude() != null && detailedSymb) ? ("FL" + this.iconAltitude() / 100) : "",
       speed: (this.speed != null && detailedSymb) ? (this.speed.toFixed(0) + "KTS") : "",
-      type: this.mapDisplayName().toUpperCase(),
+      type: (detailedSymb || showNames) ? this.mapDisplayName().toUpperCase() : "",
       dtg: ((!this.fixed() && this.posUpdateTime != null && detailedSymb) ? this.posUpdateTime.utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
       location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + " " + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
     });
