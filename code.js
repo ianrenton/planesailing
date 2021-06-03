@@ -22,7 +22,6 @@ const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
 // Map default position/zoom
 const START_LAT_LON = [50.68, -1.9];
 const START_ZOOM = 12;
-const ZOOM_LEVEL_FOR_SYMBOL_NAMES = 12;
 
 // Base station / airports / seaports
 const BASE_STATION = {name: "M7BGT (Base Station)", lat: 50.75128, lon: -1.90168, firstDescrip: "PiAware + Dump1090-fa 4.0", secondDescrip: "rtl_ais + aisdespatcher"};
@@ -124,6 +123,7 @@ var markers = new Map(); // uid -> Marker
 var dump1090HistoryStore = [];
 var showTypes = [types.AIRCRAFT, types.SHIP, types.AIRPORT, types.SEAPORT, types.BASE];
 var darkTheme = true;
+var zoomLevelForSymbolNames = 12; // If zoomed in at least this far, show all symbol names. Decrease this to show names at lower zooms.
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent data appearing as too new or old if the local PC clock is off.
 var selectedEntityUID = "";
 var snailTrailLength = 500;
@@ -640,7 +640,7 @@ class Entity {
     var lon = this.iconPosition()[1];
 
     // Generate symbol for display
-    var showNames = map.getZoom() >= ZOOM_LEVEL_FOR_SYMBOL_NAMES;
+    var showNames = map.getZoom() >= zoomLevelForSymbolNames;
     var detailedSymb = this.entitySelected();
     var mysymbol = new ms.Symbol(this.symbolCode(), {
       staffComments: (detailedSymb && this.firstDescrip()) ? this.firstDescrip().toUpperCase() : "",
