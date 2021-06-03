@@ -736,8 +736,7 @@ class Entity {
   // time the map updates*, so the animation duration should match the
   // period at which we ask the map to redraw. If we don't have speed
   // information, this will have position updates based on how often we
-  // query the server, so use that value instead minus a correction for
-  // the redraw time.
+  // query the server, so we should animate accordingly.
   // If the entity is *selected*, and the redraw time would be long (based
   // on data refresh), then disable animation (set to 1ms) otherwise
   // the symbol and the snail trail don't line up and it looks bad.
@@ -751,11 +750,11 @@ class Entity {
     } else if (this.entitySelected()) {
       return 1;
     } else if (this.type == types.AIRCRAFT) {
-      return queryAirDataIntervalMS - updateMapIntervalMS;
+      return queryAirDataIntervalMS;
     } else {
       // This catches the static entities too but we don't really care
       // what their animation time is because they don't move.
-      return queryShipDataIntervalMS - updateMapIntervalMS;
+      return queryShipDataIntervalMS;
     }
   }
 }
@@ -942,9 +941,27 @@ async function updateMap() {
     if (markers.has(e.uid)) {
       var m = markers.get(e.uid);
       if (e.shouldShowIcon() && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
-        // Existing marker, data still valid, so move the marker
-        m.slideTo(pos, { duration: e.bestAnimationTime() });
-        m.setIcon(icon);
+        // Existing marker, data still valid, so move the marker.
+        if (m._slideToLatLng != null && (m._slideToLatLng[0] != pos[0] || m._slideToLatLng[1] != pos[1])) {
+          // Were previously animating to a position, now the position of the
+          // entitiy has changed. So cancel the previous animation, snapping
+          // to its target position, and start a new animation towards the new
+          // position.
+          m.setLatLng(m._slideToLatLng);
+          m.slideTo(pos, { duration: e.bestAnimationTime() });
+        } else if (m._slideToLatLng == null) {
+          // No previous animation, so start a new one.
+          m.slideTo(pos, { duration: e.bestAnimationTime() });
+        }
+        // If neither of the cases matched in the above if/else, that means we
+        // were animating to a position, and we have no position update on the
+        // entity, so we just want to carry on letting the animation run and
+        // not interfere.
+
+        // Update the icon if it's changed.
+        if (icon != m.getIcon()) {
+          m.setIcon(icon);
+        }
       } else {
         // Existing marker, data invalid, so remove
         markersLayer.removeLayer(m);
