@@ -1,12 +1,12 @@
 /* Colour modes */
 :root[color-mode="dark"] {
-    --background: #012;
+    --background: #081217;
     --box-background: rgba(22, 33, 49, 0.8);
     --highlight: rgba(120, 200, 255, 1);
     --text: white;
 }
 :root[color-mode="light"] {
-    --box-background: rgba(200, 200, 200, 0.8);
+    --background: #95C8EE;
     --box-background: rgba(255, 255, 255, 0.8);
     --highlight: rgba(0, 40, 120, 1);
     --text: black;
