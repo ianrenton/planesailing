@@ -404,7 +404,7 @@ class Entity {
       // Can dead reckon
       var timePassedSec = getTimeInServerRefFrame().diff(this.posUpdateTime) / 1000.0;
       var speedMps = this.speed * KNOTS_TO_MPS;
-      var newPos = destVincenty(this.position()[0], this.position()[1], this.course, timePassedSec * speedMps);
+      var newPos = dest(this.position()[0], this.position()[1], this.course, timePassedSec * speedMps);
       return newPos;
     } else {
       return null;
