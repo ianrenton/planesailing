@@ -994,6 +994,31 @@ async function iconSelect(uid) {
   updateMap();
 }
 
+// Calculate the destination point given start point
+// latitude / longitude (numeric degrees), bearing
+// (numeric degrees) and distance (in m).
+function dest(lat, lon, course, distance) {
+    var startLatitudeRadians = lat * Math.PI / 180;
+    var startLongitudeRadians = lon * Math.PI / 180;
+    var courseRadians = course * Math.PI / 180;
+    var distMovedRadians = distance / 6371000.0;
+        
+    var cosphi1 = Math.cos(startLatitudeRadians);
+    var sinphi1 = Math.sin(startLatitudeRadians);
+    var cosAz = Math.cos(courseRadians);
+    var sinAz = Math.sin(courseRadians);
+    var sinc = Math.sin(distMovedRadians);
+    var cosc = Math.cos(distMovedRadians);
+        
+    var endLatitudeRadians = Math.asin(sinphi1 * cosc + cosphi1 * sinc * cosAz);
+    var endLongitudeRadians = Math.atan2(sinc * sinAz, cosphi1 * cosc - sinphi1 * sinc * cosAz) + startLongitudeRadians;
+        
+    var endLatitudeDegrees = endLatitudeRadians * 180 / Math.PI;
+    var endLongitudeDegrees = endLongitudeRadians * 180 / Math.PI;
+        
+    return [endLatitudeDegrees, endLongitudeDegrees];
+};
+
 // Utility function to get local PC time with data time offset applied.
 function getTimeInServerRefFrame() {
   return moment().subtract(clockOffset, "seconds");
