@@ -695,8 +695,7 @@ class Entity {
     if (this.shouldShowIcon() && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
       // Create marker
       var m = L.marker(pos, {
-        icon: icon,
-        animaDur: 1000
+        icon: icon
       });
       // Set the click action for the marker
       var uid = this.uid;
@@ -819,7 +818,7 @@ function requestDump1090LiveData() {
     },
     complete: function() {
       dropTimedOutEntities();
-      updateMap();
+      // No need to update the map here as it has its own refresh interval
     }
   });
 }
@@ -871,7 +870,7 @@ function requestAISDispatcherLiveData() {
     },
     complete: function() {
       dropTimedOutEntities();
-      updateMap();
+      // No need to update the map here as it has its own refresh interval
     }
   });
 }
@@ -934,25 +933,8 @@ async function updateMap() {
           m.setIcon(icon);
         }
 
-        // Existing marker, data still valid, so move the marker.
-        // Map is going to refresh at roughly the rate of querying air data, so use
-        // that as the time animations should run for.
-        var animationTime = queryAirDataIntervalMS;
-        if (m._slideToLatLng != null && (m._slideToLatLng[0] != pos[0] || m._slideToLatLng[1] != pos[1])) {
-          // Were previously animating to a position, now the position of the
-          // entitiy has changed. So cancel the previous animation, snapping
-          // to its target position, and start a new animation towards the new
-          // position.
-          m.setLatLng(m._slideToLatLng);
-          m.slideTo(pos, { duration: animationTime });
-        } else if (m._slideToLatLng == null) {
-          // No previous animation, so start a new one.
-          m.slideTo(pos, { duration: animationTime });
-        }
-        // If neither of the cases matched in the above if/else, that means we
-        // were animating to a position, and we have no position update on the
-        // entity, so we just want to carry on letting the animation run and
-        // not interfere.
+        // Calculate the current dead reckoned position and move the icon there
+        m.setLatLng(pos);
       } else {
         // Existing marker, data invalid, so remove
         markersLayer.removeLayer(m);
@@ -1246,6 +1228,7 @@ if (location.protocol == 'https:') {
 // First do a one-off live data request so we have something to display.
 requestDump1090LiveData();
 requestAISDispatcherLiveData();
+setTimeout(updateMap, 2000);
 
 // Now grab the dump1090 history data. The request calls are asynchronous,
 // so we have an additional call after 9 seconds (just before live data is
@@ -1255,6 +1238,7 @@ requestDump1090History();
 setTimeout(processDump1090History, 9000);
 setTimeout(function() { $("#loadingpanel").css("display", "none");}, 10000);
 
-// Set up the timed data request threads.
+// Set up the timed data request & update threads.
 setInterval(requestDump1090LiveData, queryAirDataIntervalMS);
 setInterval(requestAISDispatcherLiveData, queryShipDataIntervalMS);
+setInterval(updateMap, updateMapIntervalMS);
