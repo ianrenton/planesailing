@@ -12,9 +12,10 @@ const DUMP1090_URL_ALT = "http://192.168.1.241/dump1090-fa/";
 const AIS_DISPATCHER_KML_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//mciserver.zapto.org/ais/aisDispatcherSnapshot.kml";
 const AIS_DISPATCHER_KML_URL_ALT = "http://192.168.1.241/ais/aisDispatcherSnapshot.kml";
 
-// Map layer URL - formerly using Mapbox, but had to switch to a free option
-// due to excess use! (Nice problems to have I guess.)
-const MAP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg";
+// Map layer URL - if re-using this code you will need to provide your own Mapbox
+// access token in the Mapbox URL. You can still use my styles.
+const MAPBOX_URL_DARK = ((window.location.protocol == "https:") ? "https:" : "http:") + "//api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
+const MAPBOX_URL_LIGHT = ((window.location.protocol == "https:") ? "https:" : "http:") + "//api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
 
 // CheckWX API key, used to retrieve airport METAR/TAF
 const CHECKWX_API_KEY = "cffedc0990104f23b3486c67ad";
@@ -1053,7 +1054,11 @@ function setLightTheme() {
   document.documentElement.setAttribute("color-mode", "light");
   var metaThemeColor = document.querySelector("meta[name=theme-color]");
   metaThemeColor.setAttribute("content", "#DDDDB9");
-  tileLayer.setOpacity(1.0);
+  if (typeof tileLayer !== 'undefined') {
+    map.removeLayer(tileLayer);
+  }
+  tileLayer = L.tileLayer(MAPBOX_URL_LIGHT);
+  tileLayer.addTo(map);
   updateMap();
 }
 
@@ -1062,8 +1067,11 @@ function setDarkTheme() {
   document.documentElement.setAttribute("color-mode", "dark");
   var metaThemeColor = document.querySelector("meta[name=theme-color]");
   metaThemeColor.setAttribute("content", "#2C2C25");
-  tileLayer.setOpacity(1.0);
-  tileLayer.setOpacity(0.2);
+  if (typeof tileLayer !== 'undefined') {
+    map.removeLayer(tileLayer);
+  }
+  tileLayer = L.tileLayer(MAPBOX_URL_DARK);
+  tileLayer.addTo(map);
   updateMap();
 }
 
@@ -1114,10 +1122,7 @@ markersLayer.addTo(map);
 var snailTrailLayer = new L.LayerGroup();
 snailTrailLayer.addTo(map);
 
-// Add background layers
-var tileLayer = L.tileLayer(MAP_URL);
-tileLayer.setOpacity(0.2);
-tileLayer.addTo(map);
+// Background layers will be added shortly in setThemeToMatchOS()
 
 // Zooming affects the level of detail shown on icons, so we need to update the map
 // on a zoom change.
