@@ -1,13 +1,19 @@
 /* Colour modes */
 :root[color-mode="dark"] {
     --background: #081217;
-    --box-background: rgba(22, 33, 49, 0.8);
+    --shade-top: rgba(66,66,66,1);
+    --shade-bottom: rgba(22,22,22,1);
+    --box-background: rgba(22, 22, 22, 0.8);
+    --box-border: black;
     --highlight: rgba(120, 200, 255, 1);
     --text: white;
 }
 :root[color-mode="light"] {
     --background: #95C8EE;
-    --box-background: rgba(255, 255, 255, 0.8);
+    --shade-top: rgba(224,224,224,1);
+    --shade-bottom: rgba(163,163,163,1);
+    --box-background: rgba(224, 224, 224, 0.8);
+    --box-border: darkgray;
     --highlight: rgba(0, 40, 120, 1);
     --text: black;
 }
@@ -21,19 +27,30 @@ html, body, div#map {
     font-family: Exo, Arial, sans-serif;
     background-color: var(--background);
     color: var(--text);
+    font-size: 16px;
+    cursor: default;
 }
 
 /* Layout */
 div#top {
-    width: 90%;
+    width: 100%;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    margin: 1em auto;
-    padding: 0.5em;
+    margin: 0;
     z-index: 1000;
-    display: none; /* shown by JS */
+}
+div#top h1 {
+    margin: 0.3em 0.5em 0.3em 0.5em;
+}
+div#menu {
+    float: right;
+    margin: 0.4em 0.5em 0 0.5em;
+}
+div#menu button {
+    margin-left: 0.5em;
+    padding: 0.5em;
 }
 div#map { 
     width:auto; 
@@ -41,79 +58,46 @@ div#map {
     margin:0; 
     overflow: hidden;
 }
-div#bottom {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    text-align: center;
-    z-index: 1000;
-}
-div.bottompanel, div.problempanel, div.loadingpanel {
-    margin: 1em;
-    padding: 0.5em;
-}
 
 /* Styles */
 div#top {
-    font-size: 14px;
     background-color: var(--box-background);
-    border: 1px solid var(--highlight);
-    border-radius: 3px;
+    background: rgb(0,0,0);
+    background: linear-gradient(0deg, var(--shade-bottom) 0%, var(--shade-top) 100%);
+    border-bottom: 1px solid var(--box-border);
     color: var(--highlight);
     box-sizing: border-box;
     display: inline-block;
     letter-spacing: .06em;
 }
-div.bottompanel {
-    font-size: 14px;
+div#top h1 {
+    font-size: 1.7em;
+    text-align: left;
+}
+div#menu button {
+    font-family: Exo, Arial, sans-serif;
+    font-size: 0.9em;
     background-color: var(--box-background);
     border: 1px solid var(--highlight);
     border-radius: 3px;
     color: var(--highlight);
-    box-sizing: border-box;
-    display: inline-block;
-    letter-spacing: .06em;
-    line-height: 1.4em;
 }
-div.loadingpanel {
-    font-size: 14px;
+span.menubuttonicon {
+    position: relative;
+    top: 3px;
+}
+div#menu button.loading {
     background-color: rgba(49, 33, 22, 0.4);
     border: 1px solid rgba(255, 200, 120, 1);
-    border-radius: 3px;
     color: rgba(255, 200, 120, 1);
-    box-sizing: border-box;
-    letter-spacing: .06em;
-    line-height: 1.4em;
     animation: blinker 2s linear infinite;
-    display: inline-block;
 }
-div.problempanel {
-    font-size: 14px;
+div#menu button.problem {
     background-color: rgba(80, 0, 0, 0.4);
     border: 1px solid rgba(255, 0, 0, 1);
-    border-radius: 3px;
     color: rgba(255, 0, 0, 1);
-    box-sizing: border-box;
-    letter-spacing: .06em;
-    line-height: 1.4em;
     animation: blinker 2s linear infinite;
     display: none;
-}
-h2, h3, h4 {
-    text-align: center;
-    text-transform: uppercase;
-}
-span.tagline {
-    font-size: 0.6em;
-    padding-left: 4em;
-    display: inline-block;
-    white-space: nowrap;
-}
-span.tagline a {
-    color: var(--text);
-}
-label {
-    white-space: nowrap;
 }
 button.colourtoggle {
     background: none;
@@ -134,7 +118,5 @@ button.colourtoggle {
 
 /* Mobile */
 @media only screen and (max-width: 600px) {
-    span.tagline {
-        display: none;
-    }
+
 }

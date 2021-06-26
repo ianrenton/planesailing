@@ -22,19 +22,18 @@
     </head>
     <body>
         <div id="top">
-            <h2>PLANE&nbsp;/&nbsp;SAILING <span class="tagline">The home situational awareness display nobody wanted or needed!</span> <span class="tagline">Made by <a href="https://ianrenton.com" target='_blank'>Ian Renton</a> | <a href="https://ianrenton.com/hardware/planesailing" target='_blank'>Hardware Setup</a> | <a href="https://github.com/ianrenton/planesailing" target='_blank'>Source Code</a></span></h2>
+            <div id="menu">
+                <button class="loading" id="loading"><span class="menubuttonicon"><img src="icons/loading.png"/></span> <span class="menubuttontext">Loading...</span></button>
+                <button class="problem" id="serverOffline"><span class="menubuttonicon"><img src="icons/offline.png"/></span> <span class="menubuttontext">SERVER&nbsp;OFFLINE</span></button>
+                <button><span class="menubuttonicon"><img src="icons/info.png"/></span> <span class="menubuttontext">Info</span></button>
+                <button><span class="menubuttonicon"><img src="icons/config.png"/></span> <span class="menubuttontext">Config</span></button>
+                <button><span class="menubuttonicon"><img src="icons/tracktable.png"/></span> <span class="menubuttontext">Track Table</span></button>
+            </div>
+            <h1>PLANE&nbsp;/&nbsp;SAILING</h1>
         </div>
         <div id="map"></div>
-        <div id="bottom">
-            <div class="loadingpanel" id="loadingpanel">
-                Loading...
-            </div>
-            <div class="problempanel" id="aircraftTrackerOffline">
-                AIRCRAFT&nbsp;TRACKER&nbsp;OFFLINE
-            </div>
-            <div class="problempanel" id="shipTrackerOffline">
-                SHIP&nbsp;TRACKER&nbsp;OFFLINE
-            </div>
+        <div id="infoPanel" style="visibility: none;"> <span class="tagline">The home situational awareness display nobody wanted or needed!</span> <span class="tagline">Made by <a href="https://ianrenton.com" target='_blank'>Ian Renton</a> | <a href="https://ianrenton.com/hardware/planesailing" target='_blank'>Hardware Setup</a> | <a href="https://github.com/ianrenton/planesailing" target='_blank'>Source Code</a></span></div><!-- todo -->
+        <div id="configPanel" style="visibility: none;">
             <div class="bottompanel">
                 Theme: <button class="colourtoggle" id="light">☀️</button> | <button class="colourtoggle" id="dark">🌙</button>
             </div>
@@ -46,10 +45,11 @@
                 <label for="showSeaPorts"><input type="checkbox" id="showSeaPorts" name="showSeaPorts" checked="true"> Sea Ports </label>
                 <label for="showBase"><input type="checkbox" id="showBase" name="showBase" checked="true"> Base Station </label>
             </div>
-        </div>
-        <script src="https://flightmap.ianrenton.com/airlinecodes.js"></script>
-        <script src="https://flightmap.ianrenton.com/typedesignators.js"></script>
-        <script src="https://flightmap.ianrenton.com/dbloader.js"></script>
+        </div><!-- todo -->
+        <div id="trackTablePanel" style="visibility: none;">
+            
+        </div><!-- todo -->
+
         <script src="code.js"></script>
     </body>
 </html>
