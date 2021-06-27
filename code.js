@@ -10,10 +10,12 @@
 const SERVER_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//mciserver.zapto.org/";
 const SERVER_URL_ALT = "http://127.0.0.1:81/";
 
-// Map layer URL - if re-using this code you will need to provide your own Mapbox
+// Map layer URLs - if re-using this code you will need to provide your own Mapbox
 // access token in the Mapbox URL. You can still use my styles.
-const MAPBOX_URL_DARK = ((window.location.protocol == "https:") ? "https:" : "http:") + "//api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
-const MAPBOX_URL_LIGHT = ((window.location.protocol == "https:") ? "https:" : "http:") + "//api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
+const MAPBOX_URL_DARK = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
+const MAPBOX_URL_LIGHT = "https://api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
+const OPENAIP_URL = "https://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png";
+const OPENSEAMAP_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
 
 // Map default position/zoom
 const START_LAT_LON = [50.68, -1.9];
@@ -483,11 +485,11 @@ function setLightTheme() {
   document.documentElement.setAttribute("color-mode", "light");
   var metaThemeColor = document.querySelector("meta[name=theme-color]");
   metaThemeColor.setAttribute("content", "#DDDDB9");
-  if (typeof tileLayer !== 'undefined') {
-    map.removeLayer(tileLayer);
+  if (typeof backgroundTileLayer !== 'undefined') {
+    map.removeLayer(backgroundTileLayer);
   }
-  tileLayer = L.tileLayer(MAPBOX_URL_LIGHT);
-  tileLayer.addTo(map);
+  backgroundTileLayer = L.tileLayer(MAPBOX_URL_LIGHT);
+  backgroundTileLayer.addTo(map);
   updateMap();
 }
 
@@ -496,11 +498,11 @@ function setDarkTheme() {
   document.documentElement.setAttribute("color-mode", "dark");
   var metaThemeColor = document.querySelector("meta[name=theme-color]");
   metaThemeColor.setAttribute("content", "#2C2C25");
-  if (typeof tileLayer !== 'undefined') {
-    map.removeLayer(tileLayer);
+  if (typeof backgroundTileLayer !== 'undefined') {
+    map.removeLayer(backgroundTileLayer);
   }
-  tileLayer = L.tileLayer(MAPBOX_URL_DARK);
-  tileLayer.addTo(map);
+  backgroundTileLayer = L.tileLayer(MAPBOX_URL_DARK);
+  backgroundTileLayer.addTo(map);
   updateMap();
 }
 
@@ -638,8 +640,26 @@ $("#darkButton").click(setDarkTheme);
 
 // Dead reckoning
 $("#enableDR").click(function() {
-  enableDeadReckoning = !enableDeadReckoning;
+  enableDeadReckoning = $(this).is(':checked');
   updateMap();
+});
+
+// Overlay layers
+$("#showAirspaceLayer").click(function() {
+  if ($(this).is(':checked')) {
+    airspaceLayer = L.tileLayer(OPENAIP_URL);
+    airspaceLayer.addTo(map);
+  } else if (typeof airspaceLayer !== 'undefined') {
+    map.removeLayer(airspaceLayer);
+  }
+});
+$("#showMaritimeLayer").click(function() {
+  if ($(this).is(':checked')) {
+    maritimeLayer = L.tileLayer(OPENSEAMAP_URL);
+    maritimeLayer.addTo(map);
+  } else if (typeof maritimeLayer !== 'undefined') {
+    map.removeLayer(maritimeLayer);
+  }
 });
 
 
