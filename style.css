@@ -140,7 +140,7 @@ div#infopanel p:not(:last-child) {
 div#infopanel p:last-child {
     margin-bottom: 0;
 }
-div#infopanel a, div#infopanel a:visited {
+div#infopanel a, div#infopanel a:visited, div#infopanel span.highlight {
     color: var(--text);
 }
 div#configpanel h2 {

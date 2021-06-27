@@ -39,6 +39,7 @@ const QUERY_SERVER_INTERVAL_MILLISEC = 10000;
 //      DATA STORAGE       //
 /////////////////////////////
 
+const VERSION = "2.0-SNAPSHOT";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -105,11 +106,15 @@ function fetchDataUpdate() {
 
 // Handle successful receive of first-time data. All we need to do is
 // dump the data into out "tracks" map, since it will be empty at
-// this point, and update the clock offset.
+// this point, and a few utility things to update the clock offset
+// and some GUI indicators
 async function handleDataFirst(result) {
-  clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
   tracks = objectToMap(result.tracks);
+
+  clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
   updateCounters();
+  $("#serverVersion").text(result.version);
+  $("#lastQueryTime").text(moment().format('lll'));
 }
 
 // Handle successful receive of update data. This is a bit more complex
@@ -660,3 +665,4 @@ if (location.protocol == 'https:') {
 fetchDataFirst();
 setInterval(fetchDataUpdate, QUERY_SERVER_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
+$("#clientVersion").text(VERSION);
