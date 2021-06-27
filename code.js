@@ -63,6 +63,7 @@ var enableDeadReckoning = true;
 // the server including base station/airports/seaports and full position
 // history
 function fetchDataFirst() {
+  flashLoadingIndicator();
   $.ajax({
     url: serverURL + "first",
     dataType: 'json',
@@ -73,9 +74,6 @@ function fetchDataFirst() {
     },
     error: function() {
       $("#serverOffline").css("display", "inline-block");
-    },
-    complete: function() {
-      $("#loading").css("display", "none");
     }
   });
 }
@@ -83,6 +81,7 @@ function fetchDataFirst() {
 // "Update" API call - called at regular intervals, this retrieves new data from
 // the server.
 function fetchDataUpdate() {
+  flashLoadingIndicator();
   $.ajax({
     url: serverURL + "update",
     dataType: 'json',
@@ -93,9 +92,6 @@ function fetchDataUpdate() {
     },
     error: function() {
       $("#serverOffline").css("display", "inline-block");
-    },
-    complete: function() {
-      $("#loading").css("display", "none");
     }
   });
 }
@@ -197,7 +193,7 @@ async function updateMap() {
         markersLayer.removeLayer(m);
         markers.delete(id);
       }
-      
+
     } else if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
       // No existing marker, data is valid, so create
       var m = getNewMarker(t, id);
@@ -237,6 +233,12 @@ async function iconSelect(id) {
     selectedTrackID = 0;
   }
   updateMap();
+}
+
+// Flashes the "loading" indicator once.
+async function flashLoadingIndicator() {
+  $("#loading").addClass("loadingblink");
+  setTimeout(function(){ $("#loading").removeClass("loadingblink"); }, 2000);
 }
 
 

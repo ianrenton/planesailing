@@ -90,7 +90,11 @@ div#menu button.loading {
     background-color: rgba(49, 33, 22, 0.4);
     border: 1px solid rgba(255, 200, 120, 1);
     color: rgba(255, 200, 120, 1);
-    animation: blinker 2s linear infinite;
+    display: none;
+}
+button.loadingblink {
+    animation: blinker 2s linear 1;
+    display: inline-block !important;
 }
 div#menu button.problem {
     background-color: rgba(80, 0, 0, 0.4);
@@ -106,9 +110,10 @@ button.colourtoggle {
 }
 
 @keyframes blinker {
-  25% { opacity: 1; }
-  50% { opacity: 0; }
-  75% { opacity: 1; }
+  0%   { opacity: 0; }
+  25%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Leaflet.js mods */
