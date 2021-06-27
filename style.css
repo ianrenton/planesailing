@@ -31,7 +31,7 @@ html, body, div#map {
     cursor: default;
 }
 
-/* Layout */
+/* Main layout */
 div#top {
     width: 100%;
     position: absolute;
@@ -58,8 +58,18 @@ div#map {
     margin:0; 
     overflow: hidden;
 }
+div.rightbox {
+    width: 500px;
+    position: absolute;
+    top: 50px;
+    right: 0px;
+    margin: 20px;
+    padding: 20px;
+    z-index: 1000;
+    display: none;
+}
 
-/* Styles */
+/* Top bar tyles */
 div#top {
     background-color: var(--box-background);
     background: rgb(0,0,0);
@@ -103,17 +113,59 @@ div#menu button.problem {
     animation: blinker 2s linear infinite;
     display: none;
 }
-button.colourtoggle {
-    background: none;
-    border: none;
-    font-size: 1.05em;
-}
-
 @keyframes blinker {
   0%   { opacity: 0; }
   25%  { opacity: 1; }
   75%  { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* Right box styles */
+div.rightbox {
+    background-color: var(--box-background);
+    border: 1px solid var(--highlight);
+    border-radius: 3px;
+    color: var(--highlight);
+}
+div#infopanel h2 {
+    margin: 0;
+    text-align: center;
+}
+div#infopanel p {
+    text-align: center;
+}
+div#infopanel p:not(:last-child) {
+    margin-bottom: 1em;
+}
+div#infopanel p:last-child {
+    margin-bottom: 0;
+}
+div#infopanel a, div#infopanel a:visited {
+    color: var(--text);
+}
+div#configpanel h2 {
+    margin: 0;
+    text-align: center;
+}
+div.configPanelSection {
+    margin-top: 1.5em;
+}
+div.configPanelSection p {
+    margin-bottom: 0.2em;
+}
+button.configButton {
+    margin-left: 0.5em;
+    padding: 0.3em;
+    font-family: Exo, Arial, sans-serif;
+    font-size: 0.9em;    
+    background-color: var(--box-background);
+    border: 1px solid var(--highlight);
+    border-radius: 3px;
+    color: var(--highlight);
+}
+label.configLabel {
+    margin-right: 0.5em;
+    display: inline-block;
 }
 
 /* Leaflet.js mods */
@@ -123,5 +175,7 @@ button.colourtoggle {
 
 /* Mobile */
 @media only screen and (max-width: 600px) {
-
+    div.rightbox {
+        width: 90%;
+    }
 }

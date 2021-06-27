@@ -23,32 +23,47 @@
     <body>
         <div id="top">
             <div id="menu">
-                <button class="loading" id="loading"><span class="menubuttonicon"><img src="icons/loading.png"/></span> <span class="menubuttontext">Loading...</span></button>
-                <button class="problem" id="serverOffline"><span class="menubuttonicon"><img src="icons/offline.png"/></span> <span class="menubuttontext">SERVER&nbsp;OFFLINE</span></button>
-                <button><span class="menubuttonicon"><img src="icons/info.png"/></span> <span class="menubuttontext">Info</span></button>
-                <button><span class="menubuttonicon"><img src="icons/config.png"/></span> <span class="menubuttontext">Config</span></button>
-                <button><span class="menubuttonicon"><img src="icons/tracktable.png"/></span> <span class="menubuttontext">Track Table</span></button>
+                <button id="loading" class="loading"><span class="menubuttonicon"><img src="icons/loading.png"/></span> <span class="menubuttontext">Loading...</span></button>
+                <button id="serverOffline" class="problem"><span class="menubuttonicon"><img src="icons/offline.png"/></span> <span class="menubuttontext">SERVER&nbsp;OFFLINE</span></button>
+                <button id="infoButton"><span class="menubuttonicon"><img src="icons/info.png"/></span> <span class="menubuttontext">Info</span></button>
+                <button id="configButton"><span class="menubuttonicon"><img src="icons/config.png"/></span> <span class="menubuttontext">Config</span></button>
+                <button id="trackTableButton"><span class="menubuttonicon"><img src="icons/tracktable.png"/></span> <span class="menubuttontext">Track Table</span></button>
             </div>
             <h1>PLANE&nbsp;/&nbsp;SAILING</h1>
         </div>
         <div id="map"></div>
-        <div id="infoPanel" style="visibility: none;"> <span class="tagline">The home situational awareness display nobody wanted or needed!</span> <span class="tagline">Made by <a href="https://ianrenton.com" target='_blank'>Ian Renton</a> | <a href="https://ianrenton.com/hardware/planesailing" target='_blank'>Hardware Setup</a> | <a href="https://github.com/ianrenton/planesailing" target='_blank'>Source Code</a></span></div><!-- todo -->
-        <div id="configPanel" style="visibility: none;">
-            <div class="bottompanel">
-                Theme: <button class="colourtoggle" id="light">☀️</button> | <button class="colourtoggle" id="dark">🌙</button>
+        <div id="infoPanel" class="rightbox">
+            <h2>PLANE&nbsp;/&nbsp;SAILING</h2>
+            <p>The home situational awareness display nobody wanted or needed!</p>
+            <p>Made by <a href="https://ianrenton.com" target='_blank'>Ian Renton</a></p>
+            <p><a href="https://ianrenton.com/hardware/planesailing" target='_blank'>Hardware Setup</a> | <a href="https://github.com/ianrenton/planesailing" target='_blank'>Client Source Code</a> | <a href="https://github.com/ianrenton/planesailing-server" target='_blank'>Server Source Code</a></p>
+            <p>This server is currently tracking <span id="aircraftCount"/>0</span>&nbsp;aircraft, <span id="shipCount"/>0</span>&nbsp;ships and <span id="aprsCount"/>0</span>&nbsp;APRS&nbsp;contacts.</p>
+        </div>
+
+        <div id="configPanel" class="rightbox">
+            <h2>CONFIGURATION</h2>
+            <div class="configPanelSection">
+                Select Theme:<button class="configButton" id="lightButton">☀️&nbsp;Light</button><button class="configButton" id="darkButton">🌙&nbsp;Dark</button>
             </div>
-            <div class="bottompanel">
-                Show: 
-                <label for="showAircraft"><input type="checkbox" id="showAircraft" name="showAircraft" checked="true"> Aircraft <span id="aircraftCount"/> </label>
-                <label for="showShips"><input type="checkbox" id="showShips" name="showShips" checked="true"> Ships <span id="shipCount"/> </label>
-                <label for="showAirports"><input type="checkbox" id="showAirports" name="showAirports" checked="true"> Airports </label>
-                <label for="showSeaPorts"><input type="checkbox" id="showSeaPorts" name="showSeaPorts" checked="true"> Sea Ports </label>
-                <label for="showBase"><input type="checkbox" id="showBase" name="showBase" checked="true"> Base Station </label>
+            <div class="configPanelSection">
+                <p>Show Track Types:</p> 
+                <label for="showAircraft" class="configLabel"><input type="checkbox" id="showAircraft" name="showAircraft" checked="true">&nbsp;Aircraft</label>
+                <label for="showShips" class="configLabel"><input type="checkbox" id="showShips" name="showShips" checked="true">&nbsp;Ships</label>
+                <label for="showAISShoreStations" class="configLabel"><input type="checkbox" id="showAISShoreStations" name="showAISShoreStations" checked="true">&nbsp;AIS&nbsp;Shore&nbsp;Stations</label>
+                <label for="showATONs" class="configLabel"><input type="checkbox" id="showATONs" name="showATONs" checked="true">&nbsp;AIS&nbsp;Aids&nbsp;to&nbsp;Navigation</label>
+                <label for="showAPRS" class="configLabel"><input type="checkbox" id="showAPRS" name="showAPRS" checked="true">&nbsp;APRS Tracks</label>
+                <label for="showAirports" class="configLabel"><input type="checkbox" id="showAirports" name="showAirports" checked="true">&nbsp;Airports</label>
+                <label for="showSeaPorts" class="configLabel"><input type="checkbox" id="showSeaPorts" name="showSeaPorts" checked="true">&nbsp;Sea&nbsp;Ports</label>
+                <label for="showBase" class="configLabel"><input type="checkbox" id="showBase" name="showBase" checked="true">&nbsp;Base&nbsp;Station</label>
             </div>
-        </div><!-- todo -->
-        <div id="trackTablePanel" style="visibility: none;">
+            <div class="configPanelSection">
+                <label for="enableDR" class="configLabel"><input type="checkbox" id="enableDR" name="enableDR" checked="true">&nbsp;Enable&nbsp;Dead&nbsp;Reckoning</label>
+            </div>
+        </div>
+
+        <div id="trackTablePanel" class="rightbox">
             
-        </div><!-- todo -->
+        </div>
 
         <script src="code.js"></script>
     </body>

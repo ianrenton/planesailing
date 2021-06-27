@@ -39,6 +39,7 @@ const QUERY_SERVER_INTERVAL_MILLISEC = 10000;
 //      DATA STORAGE       //
 /////////////////////////////
 
+var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
@@ -108,6 +109,7 @@ function fetchDataUpdate() {
 async function handleDataFirst(result) {
   clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
   tracks = objectToMap(result.tracks);
+  updateCounters();
 }
 
 // Handle successful receive of update data. This is a bit more complex
@@ -161,6 +163,8 @@ async function handleDataUpdate(result) {
       tracks.delete(id);
     }
   });
+
+  updateCounters();
 }
 
 
@@ -224,6 +228,25 @@ async function updateMap() {
   });
 }
 
+// Update the count of how many things we're tracking in the info panel.
+async function updateCounters() {
+  var aircraftCount = 0;
+  var shipCount = 0;
+  var aprsCount = 0;
+  tracks.forEach(function(t) {
+    if (t["tracktype"] == "AIRCRAFT") {
+      aircraftCount++;
+    } else if (t["tracktype"] == "SHIP") {
+      shipCount++;
+    } else if (t["tracktype"] == "APRS_TRACK") {
+      aprsCount++;
+    }
+  });
+  $("#aircraftCount").text(aircraftCount);
+  $("#shipCount").text(shipCount);
+  $("#aprsCount").text(aprsCount);
+}
+
 // Function called when an icon is clicked. Just set track as selected,
 // unless it already is, in which case deselect.
 async function iconSelect(id) {
@@ -265,7 +288,6 @@ function getIcon(t, id) {
   var detailedSymb = trackSelected(id);
 
   // Generate symbol for display
-  console.log(t["altitudeText"]);
   var mysymbol = new ms.Symbol(t["symbolcode"], {
     staffComments: detailedSymb ? t["desc1"] : "",
     additionalInformation: detailedSymb ? t["desc2"] : "",
@@ -358,10 +380,10 @@ function shouldShowName(t) {
   }
 }
 
-// Based on the selected type filters, should we be displaying this entity
+// Based on the selected type filters, should we be displaying this track
 // on the map?
 function shouldShowIcon(t) {
-  return true; // TODO
+  return trackTypesVisible.includes(t["tracktype"]);
 }
 
 // Get the latest known position of a track as a two-element list lat,lon
@@ -541,35 +563,80 @@ window.matchMedia("(prefers-color-scheme: dark)").addListener(setThemeToMatchOS)
 //     CONTROLS SETUP      //
 /////////////////////////////
 
+// Info, Config and Track Table panel show/hides
+$("#infoButton").click(function() {
+  if ($("#configPanel").is(":visible")) {
+    $("#configPanel").slideUp();
+  }
+  if ($("#trackTablePanel").is(":visible")) {
+    $("#trackTablePanel").slideUp();
+  }
+  $("#infoPanel").slideToggle();
+});
+$("#configButton").click(function() {
+  if ($("#infoPanel").is(":visible")) {
+    $("#infoPanel").slideUp();
+  }
+  if ($("#trackTablePanel").is(":visible")) {
+    $("#trackTablePanel").slideUp();
+  }
+  $("#configPanel").slideToggle();
+});
+$("#trackTableButton").click(function() {
+  if ($("#configPanel").is(":visible")) {
+    $("#configPanel").slideUp();
+  }
+  if ($("#infoPanel").is(":visible")) {
+    $("#infoPanel").slideUp();
+  }
+  $("#trackTablePanel").slideToggle();
+});
+
 // Types
 function setTypeEnable(type, enable) {
   if (enable) {
-    showTypes.push(type);
+    trackTypesVisible.push(type);
   } else {
-    for( var i = 0; i < showTypes.length; i++){ if ( showTypes[i] === type) { showTypes.splice(i, 1); }}
+    for( var i = 0; i < trackTypesVisible.length; i++){ if ( trackTypesVisible[i] === type) { trackTypesVisible.splice(i, 1); }}
   }
   updateMap();
 }
 
 $("#showAircraft").click(function() {
-  setTypeEnable(types.AIRCRAFT, $(this).is(':checked'));
+  setTypeEnable("AIRCRAFT", $(this).is(':checked'));
 });
 $("#showShips").click(function() {
-  setTypeEnable(types.SHIP, $(this).is(':checked'));
+  setTypeEnable("SHIP", $(this).is(':checked'));
+});
+$("#showAISShoreStations").click(function() {
+  setTypeEnable("AIS_SHORE_STATION", $(this).is(':checked'));
+});
+$("#showATONs").click(function() {
+  setTypeEnable("AIS_ATON", $(this).is(':checked'));
+});
+$("#showAPRS").click(function() {
+  setTypeEnable("APRS_TRACK", $(this).is(':checked'));
 });
 $("#showAirports").click(function() {
-  setTypeEnable(types.AIRPORT, $(this).is(':checked'));
+  setTypeEnable("AIRPORT", $(this).is(':checked'));
 });
 $("#showSeaPorts").click(function() {
-  setTypeEnable(types.SEAPORT, $(this).is(':checked'));
+  setTypeEnable("SEAPORT", $(this).is(':checked'));
 });
 $("#showBase").click(function() {
-  setTypeEnable(types.BASE, $(this).is(':checked'));
+  setTypeEnable("BASE_STATION", $(this).is(':checked'));
 });
 
 // Colour themes
-$("#light").click(setLightTheme);
-$("#dark").click(setDarkTheme);
+$("#lightButton").click(setLightTheme);
+$("#darkButton").click(setDarkTheme);
+
+// Dead reckoning
+$("#enableDR").click(function() {
+  enableDeadReckoning = !enableDeadReckoning;
+  updateMap();
+});
+
 
 
 /////////////////////////////
