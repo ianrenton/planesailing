@@ -10,6 +10,13 @@
 const SERVER_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//mciserver.zapto.org/";
 const SERVER_URL_ALT = "http://127.0.0.1:81/";
 
+// HTTP/HTTPS redirects. You may wish to force the user into the HTTPS version
+// of the site (for extra security) or to the HTTP version (in case you haven't
+// set up an HTTPS server or SSL certificate on your server).
+// Don't set both of these true or you will go into an infinite loop!
+const REDIRECT_TO_HTTP = true;
+const REDIRECT_TO_HTTPS = false;
+
 // Map layer URLs - if re-using this code you will need to provide your own Mapbox
 // access token in the Mapbox URL. You can still use my styles.
 const MAPBOX_URL_DARK = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
@@ -18,8 +25,8 @@ const OPENAIP_URL = "https://{s}.tile.maps.openaip.net/geowebcache/service/tms/1
 const OPENSEAMAP_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
 
 // Map default position/zoom
-const START_LAT_LON = [50.68, -1.9];
-const START_ZOOM = 12;
+const START_LAT_LON = [50.7, -1.8];
+const START_ZOOM = 11;
 
 // Zoom levels at which to show symbol names. Lower value for ships because ships
 // are very clustered inside harbours where I live. You may wish to change them,
@@ -114,16 +121,11 @@ function fetchDataUpdate() {
 
 // Handle successful receive of first-time data. All we need to do is
 // dump the data into out "tracks" map, since it will be empty at
-// this point, and a few utility things to update the clock offset
-// and some GUI indicators
+// this point, and call the standard GUI update functions.
 async function handleDataFirst(result) {
   tracks = objectToMap(result.tracks);
-
-  clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
-  trimPositionHistory();
-  updateCounters();
   $("#serverVersion").text(result.version);
-  $("#lastQueryTime").text(moment().format('lll'));
+  updateGUIAfterQuery(result.time);
 }
 
 // Handle successful receive of update data. This is a bit more complex
@@ -134,7 +136,6 @@ async function handleDataFirst(result) {
 // 3) Missing tracks - delete from our tracks list, unless they are
 //    config-created base station/airport/seaport.
 async function handleDataUpdate(result) {
-  clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
   trackUpdate = objectToMap(result.tracks);
 
   trackUpdate.forEach((newTrack, id) => {
@@ -178,14 +179,33 @@ async function handleDataUpdate(result) {
     }
   });
 
+  updateGUIAfterQuery(result.time);
+}
+
+// Standard set of code to call after receiving data and updating 
+// the tracks map with it. This method:
+// * Updates the clock offset, so we know the difference between
+//   our local clock and the server's
+// * Trims position history, removing any history older than the
+//   number of snail trail points we need to display
+// * Updates the track table GUI
+// * Updates the counters (e.g. "tracking 69 aircraft")
+// * Stores the current time as the time of the last query.
+// Note that this *doesn't* update the map itself - there's no
+// need to as it has its own update timer that's independent of
+// querying the server.
+async function updateGUIAfterQuery(serverTime) {
+  clockOffset = moment().diff(moment(serverTime).utc(), 'seconds');
   trimPositionHistory();
+  updateTrackTable();
   updateCounters();
+  $("#lastQueryTime").text(moment().format('lll'));
 }
 
 // Trim the position history to the user-configurable snail trail length,
 // to avoid filling up memory with loads of history over time.
 async function trimPositionHistory() {
-  tracks.forEach((t, id) => {
+  tracks.forEach((t) => {
     if (t["poshistory"]) {
       while (t["poshistory"].length >= snailTrailLength) {
         t["poshistory"].shift();
@@ -204,12 +224,12 @@ async function trimPositionHistory() {
 async function updateMap() {
   // Iterate through tracks. For each, update an existing marker
   // or create a new marker if required.
-  tracks.forEach(function(t, id) {
+  tracks.forEach(function(t) {
     var pos = getIconPosition(t);
-    var icon = getIcon(t, id);
+    var icon = getIcon(t);
 
-    if (markers.has(id)) {
-      var m = markers.get(id);
+    if (markers.has(t["id"])) {
+      var m = markers.get(t["id"]);
       if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
         // Update the icon if it's changed.
         if (icon != m.getIcon()) {
@@ -222,14 +242,14 @@ async function updateMap() {
       } else {
         // Existing marker, data invalid, so remove
         markersLayer.removeLayer(m);
-        markers.delete(id);
+        markers.delete(t["id"]);
       }
 
     } else if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
       // No existing marker, data is valid, so create
-      var m = getNewMarker(t, id);
+      var m = getNewMarker(t);
       markersLayer.addLayer(m);
-      markers.set(id, m);
+      markers.set(t["id"], m);
     }
   });
 
@@ -243,16 +263,79 @@ async function updateMap() {
 
   // Add snail trails to map for selected entity
   snailTrailLayer.clearLayers();
-  tracks.forEach(function(t, id) {
-    if (shouldShowTrail(t, id)) {
-      snailTrailLayer.addLayer(getTrail(t, id));
+  tracks.forEach(function(t) {
+    if (shouldShowTrail(t)) {
+      snailTrailLayer.addLayer(getTrail(t));
     }
   });
-  tracks.forEach(function(t, id) {
-    if (shouldShowTrail(t, id) && getDRTrail(t, id) != null) {
-      snailTrailLayer.addLayer(getDRTrail(t, id));
+  tracks.forEach(function(t) {
+    if (shouldShowTrail(t) && getDRTrail(t) != null) {
+      snailTrailLayer.addLayer(getDRTrail(t));
     }
   });
+}
+
+// Update track table on the GUI
+async function updateTrackTable() {
+  // Sort data for table
+  tableList = Array.from(tracks.values());
+  tableList.sort((a, b) => (a["name"] > b["name"]) ? 1 : -1);
+
+  // Create header
+  var table = $('<table>');
+  table.addClass('tracktable');
+  var headerFields = "<th class='name'>NAME</th><th>TYPE</th><th>LAT</th><th>LON</th><th>ALT<br>FL</th><th>HDG<br>DEG</th><th>SPD<br>KTS</th>";
+  var header = $('<tr>').html(headerFields);
+  table.append(header);
+
+  // Create table rows
+  var rows = 0;
+  tableList.forEach(function(t) {
+    // Only real detected tracks, not config-based ones
+    if (!t["createdByConfig"]) {
+      var pos = getLastKnownPosition(t);
+      // Type abbreviation
+      var typeAbbr = "";
+      if (t["tracktype"] == "SHIP") {
+        typeAbbr = "SEA";
+      } else if (t["tracktype"] == "AIRCRAFT") {
+        typeAbbr = "AIR";
+      } else {
+        // Anything else is ground domain
+        typeAbbr = "GND";
+      }
+      // Altitude rate symbol
+      var altRateSymb = "";
+      if (t["altrate"] != null && t["altrate"] > 2) {
+        altRateSymb = "\u25b2";
+      } else if (t["altrate"] != null && t["altrate"] < -2) {
+        altRateSymb = "\u25bc";
+      }
+
+      // Generate table row
+      var rowFields = "<td class='name'>" + t["name"].replaceAll(" ", "&nbsp;") + "</td>";
+      rowFields += "<td>" + typeAbbr + "</td>";
+      rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[0]).toFixed(4).padStart(7, '0') + ((pos[0] >= 0) ? 'N' : 'S')) : "---") + "</td>";
+      rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[1]).toFixed(4).padStart(8, '0') + ((pos[1] >= 0) ? 'E' : 'W')) : "---") + "</td>";
+      rowFields += "<td>" + ((t["altitude"] != null) ? ((t["altitude"] / 100).toFixed(0) + altRateSymb) : "---") + "</td>";
+      rowFields += "<td>" + ((t["heading"] != null) ? t["heading"].toFixed(0) : "---") + "</td>";
+      rowFields += "<td>" + ((t["speed"] != null) ? t["speed"].toFixed(0) : "---") + "</td>";
+      var row = $('<tr trackID=' + t["id"] + '>').html(rowFields);
+      if (trackSelected(t["id"])) {
+        row.addClass("selected");
+      }
+
+      // Add to table
+      table.append(row);
+      rows++;
+    }
+  });
+  if (rows == 0) {
+    table.append($('<tr>').html("<td colspan=12><div class='tablenodata'>NO DATA</div></td>"));
+  }
+
+  // Update DOM
+  $('#tracktablearea').html(table);
 }
 
 // Update the count of how many things we're tracking in the info panel.
@@ -277,12 +360,35 @@ async function updateCounters() {
 // Function called when an icon is clicked. Just set track as selected,
 // unless it already is, in which case deselect.
 async function iconSelect(id) {
+  select(id, false);
+}
+
+// Function called when a table row is clicked. Set track as selected and zoom
+// to it.
+async function tableSelect(id) {
+  select(id, true);
+}
+
+// Select or deselect the given track, optionally pan to it on selection.
+async function select(id, pan) {
   if (id != selectedTrackID) {
     selectedTrackID = id;
+    if (pan) {
+      panTo(id);
+    }
   } else {
     selectedTrackID = 0;
   }
   updateMap();
+  updateTrackTable();
+}
+
+// Pan to an entity, given its ID
+async function panTo(id) {
+  var t = tracks.get(id);
+  if (t != null && getIconPosition(t) != null) {
+    map.panTo(getIconPosition(t));
+  }
 }
 
 // Flashes the "loading" indicator once.
@@ -297,7 +403,7 @@ async function flashLoadingIndicator() {
 /////////////////////////////
 
 // Generate a Milsymbol icon for a track
-function getIcon(t, id) {
+function getIcon(t) {
   // No point returning an icon if we don't know where to draw it
   if (getLastKnownPosition(t) == null) {
     return null;
@@ -312,7 +418,7 @@ function getIcon(t, id) {
   
   // Decide how much detail to display
   var showName = shouldShowName(t);
-  var detailedSymb = trackSelected(id);
+  var detailedSymb = trackSelected(t["id"]);
 
   // Generate symbol for display
   var mysymbol = new ms.Symbol(t["symbolcode"], {
@@ -327,15 +433,15 @@ function getIcon(t, id) {
   });
 
   // Styles, some of which change when the track is selected and depending on the theme
-  var showLight = (darkTheme && trackSelected(id)) || (!darkTheme && !trackSelected(id));
+  var showLight = (darkTheme && trackSelected(t["id"])) || (!darkTheme && !trackSelected(t["id"]));
   mysymbol = mysymbol.setOptions({
     size: 30,
     civilianColor: false,
     colorMode: showLight ? "Light" : "Dark",
-    fillOpacity: trackSelected(id) ? 1 : 0.6,
-    infoBackground: trackSelected(id) ? (darkTheme ? "black" : "white") : "transparent",
+    fillOpacity: trackSelected(t["id"]) ? 1 : 0.6,
+    infoBackground: trackSelected(t["id"]) ? (darkTheme ? "black" : "white") : "transparent",
     infoColor: darkTheme ? "white" : "black",
-    outlineWidth: trackSelected(id) ? 5 : 0,
+    outlineWidth: trackSelected(t["id"]) ? 5 : 0,
     outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
   });
 
@@ -349,9 +455,9 @@ function getIcon(t, id) {
 // Generate a map marker (a positioned equivalent of icon()). This will be
 // placed at the last known position, or the dead reckoned position if DR
 // should be used
-function getNewMarker(t, id) {
+function getNewMarker(t) {
   var pos = getIconPosition(t);
-  var icon = getIcon(t, id);
+  var icon = getIcon(t);
   if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
     // Create marker
     var m = L.marker(pos, {
@@ -362,7 +468,7 @@ function getNewMarker(t, id) {
       return function() {
         iconSelect(id);
       };
-    })(id));
+    })(t["id"]));
     return m;
   } else {
     return null;
@@ -371,9 +477,9 @@ function getNewMarker(t, id) {
 
 // Generate a snail trail polyline for the track based on its
 // reported position history
-function getTrail(t, id) {
-  if (shouldShowTrail(t, id)) {
-    return L.polyline(t["poshistory"], { color: getTrailColour(id) });
+function getTrail(t) {
+  if (shouldShowTrail(t)) {
+    return L.polyline(t["poshistory"], { color: getTrailColour(t["id"]) });
   } else {
     return null;
   }
@@ -382,11 +488,11 @@ function getTrail(t, id) {
 // Generate a snail trail line for the track joining its
 // last reported position with the current dead reckoned
 // position, or null if not dead reckoning.
-function getDRTrail(t, id) {
-  if (shouldShowTrail(t, id) && enableDeadReckoning && getDRPosition(t) != null) {
+function getDRTrail(t) {
+  if (shouldShowTrail(t) && enableDeadReckoning && getDRPosition(t) != null) {
     var points = [getLastKnownPosition(t), getDRPosition(t)];
     return L.polyline(points, {
-      color: getTrailColour(id),
+      color: getTrailColour(t["id"]),
       dashArray: "5 5"
     });
   } else {
@@ -428,8 +534,8 @@ function shouldShowIcon(t) {
 
 // Based on the selected type filters, and snail trail mode, should we
 // be displaying this track's trail on the map?
-function shouldShowTrail(t, id) {
-  return shouldShowIcon(t) && t["poshistory"] && t["poshistory"].length > 0 && t["poshistory"][0]["lat"] != null && (snailTrailMode == 2 || (snailTrailMode == 1 && trackSelected(id)));
+function shouldShowTrail(t) {
+  return shouldShowIcon(t) && t["poshistory"] && t["poshistory"].length > 0 && t["poshistory"][0]["lat"] != null && (snailTrailMode == 2 || (snailTrailMode == 1 && trackSelected(t["id"])));
 }
 
 // Get the latest known position of a track as a two-element list lat,lon
@@ -610,32 +716,28 @@ window.matchMedia("(prefers-color-scheme: dark)").addListener(setThemeToMatchOS)
 /////////////////////////////
 
 // Info, Config and Track Table panel show/hides
+function manageRightBoxes(show, hide1, hide2) {
+  var showDelay = 0;
+  if ($(hide1).is(":visible")) {
+    $(hide1).slideUp();
+    showDelay = 600;
+  }
+  if ($(hide2).is(":visible")) {
+    $(hide2).slideUp();
+    showDelay = 600;
+  }
+
+  setTimeout(function(){ $(show).slideToggle(); }, showDelay);
+}
+
 $("#infoButton").click(function() {
-  if ($("#configPanel").is(":visible")) {
-    $("#configPanel").slideUp();
-  }
-  if ($("#trackTablePanel").is(":visible")) {
-    $("#trackTablePanel").slideUp();
-  }
-  $("#infoPanel").slideToggle();
+  manageRightBoxes("#infoPanel", "#configPanel", "#trackTablePanel");
 });
 $("#configButton").click(function() {
-  if ($("#infoPanel").is(":visible")) {
-    $("#infoPanel").slideUp();
-  }
-  if ($("#trackTablePanel").is(":visible")) {
-    $("#trackTablePanel").slideUp();
-  }
-  $("#configPanel").slideToggle();
+  manageRightBoxes("#configPanel", "#infoPanel", "#trackTablePanel");
 });
 $("#trackTableButton").click(function() {
-  if ($("#configPanel").is(":visible")) {
-    $("#configPanel").slideUp();
-  }
-  if ($("#infoPanel").is(":visible")) {
-    $("#infoPanel").slideUp();
-  }
-  $("#trackTablePanel").slideToggle();
+  manageRightBoxes("#trackTablePanel", "#configPanel", "#infoPanel");
 });
 
 // Types
@@ -712,19 +814,20 @@ $("#showMaritimeLayer").click(function() {
   }
 });
 
+// Table row click selects the track
+$(document).on("click", "tr", function(e) {
+  tableSelect($(e.currentTarget).attr("trackID"));
+});
 
 
 /////////////////////////////
-//     REDIRECT TO HTTP    //
+//   REDIRECT TO HTTP(S)   //
 /////////////////////////////
 
-// Unfortunately HTTPS isn't working well on my home server, so redirect
-// HTTPS requests to HTTP. (You can't just make HTTP requests from a page
-// that's served as HTTPS unfortunately, so we must redirect the user.)
-// If you are running this software yourself and HTTPS to your server
-// works better, please remove this.
-if (location.protocol == 'https:') {
+if (REDIRECT_TO_HTTP && location.protocol == 'https:') {
     location.replace(`http:${location.href.substring(location.protocol.length)}`);
+} else if (REDIRECT_TO_HTTPS && location.protocol == 'http:') {
+    location.replace(`https:${location.href.substring(location.protocol.length)}`);
 }
 
 
@@ -736,3 +839,8 @@ fetchDataFirst();
 setInterval(fetchDataUpdate, QUERY_SERVER_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 $("#clientVersion").text(VERSION);
+
+// Pop out track table by default on desktop browsers
+if (window.matchMedia('screen and (min-width: 601px)').matches) {
+  $("#trackTablePanel").slideDown();
+}
