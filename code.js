@@ -1,5 +1,5 @@
 /////////////////////////////
-//      GLOBAL VARS        //
+// USER-CONFIGURABLE VARS  //
 /////////////////////////////
 
 // You can provide a main and alternate URL, e.g. one for use from the public internet
@@ -12,30 +12,47 @@ const SERVER_URL_ALT = "http://127.0.0.1:81/";
 
 // Map layer URL - if re-using this code you will need to provide your own Mapbox
 // access token in the Mapbox URL. You can still use my styles.
-//const MAPBOX_URL_DARK = ((window.location.protocol == "https:") ? "https:" : "http:") + "//api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
-//const MAPBOX_URL_LIGHT = ((window.location.protocol == "https:") ? "https:" : "http:") + "//api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
-// TODO put Mapbox URLs back for release
-const MAPBOX_URL_DARK = ((window.location.protocol == "https:") ? "https:" : "http:") + "//tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg";
-const MAPBOX_URL_LIGHT = ((window.location.protocol == "https:") ? "https:" : "http:") + "//tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg";
+const MAPBOX_URL_DARK = ((window.location.protocol == "https:") ? "https:" : "http:") + "//api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
+const MAPBOX_URL_LIGHT = ((window.location.protocol == "https:") ? "https:" : "http:") + "//api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
 
 // Map default position/zoom
 const START_LAT_LON = [50.68, -1.9];
 const START_ZOOM = 12;
 
-// More globals - you should not have to edit beyond this point unless you want
-// to change how the software works!
-const KNOTS_TO_MPS = 0.514444;
+// Zoom levels at which to show symbol names. Lower value for ships because ships
+// are very clustered inside harbours where I live. You may wish to change them,
+// decrease the numbers to show names when more zoomed out.
+const ZOOM_LEVEL_FOR_LAND_AIR_SYMBOL_NAMES = 9; // If zoomed in at least this far, show all land & air symbol names. Decrease this to show names at lower zooms.
+const ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES = 12; // If zoomed in at least this far, show all ship symbol names. Decrease this to show names at lower zooms.
 
-var tracks = new Map(); // uid -> Track
-var markers = new Map(); // uid -> Marker
-var darkTheme = true;
-var zoomLevelForLandAirSymbolNames = 9; // If zoomed in at least this far, show all land & air symbol names. Decrease this to show names at lower zooms.
-var zoomLevelForShipSymbolNames = 12; // If zoomed in at least this far, show all ship symbol names. Decrease this to show names at lower zooms.
+// Update timings. Map updating every second is a good balance of smoothness
+// and not killing your CPU. Query the server more often only if your server
+// PC performance allows, remember you may not be the only active user!
+const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
+const QUERY_SERVER_INTERVAL_MILLISEC = 10000;
+
+
+
+
+
+/////////////////////////////
+//      DATA STORAGE       //
+/////////////////////////////
+
+var tracks = new Map(); // id -> Track object
+var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
+
+
+/////////////////////////////
+//  UI CONFIGURABLE VARS   //
+/////////////////////////////
+
+// These are all parameters that can be changed by the user by clicking buttons on the GUI
+
+var darkTheme = true;
 var selectedTrackID = "";
 var enableDeadReckoning = true;
-var updateMapIntervalMS = 1000;
-var queryServerIntervalMS = 10000;
 
 
 /////////////////////////////
@@ -161,10 +178,9 @@ async function updateMap() {
   // Iterate through tracks. For each, update an existing marker
   // or create a new marker if required.
   tracks.forEach(function(t, id) {
-    var pos = [t["lat"], t["lon"]];
-    var icon = getIcon(t);
+    var pos = getIconPosition(t);
+    var icon = getIcon(t, id);
 
-      console.log(t["lat"])
     if (markers.has(id)) {
       var m = markers.get(id);
       if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
@@ -173,16 +189,18 @@ async function updateMap() {
           m.setIcon(icon);
         }
 
-        // Calculate the current dead reckoned position and move the icon there
-        m.setLatLng(pos); // TODO DR
+        // Move the icon to its new position
+        m.setLatLng(pos);
+
       } else {
         // Existing marker, data invalid, so remove
         markersLayer.removeLayer(m);
         markers.delete(id);
       }
+      
     } else if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
       // No existing marker, data is valid, so create
-      var m = getNewMarker(t);
+      var m = getNewMarker(t, id);
       markersLayer.addLayer(m);
       markers.set(id, m);
     }
@@ -227,42 +245,47 @@ async function iconSelect(id) {
 /////////////////////////////
 
 // Generate a Milsymbol icon for a track
-function getIcon(t) {
+function getIcon(t, id) {
   // No point returning an icon if we don't know where to draw it
-  if (t["lat"] == null || t["lon"] == null) {
+  if (getLastKnownPosition(t) == null) {
     return null;
   }
 
-  // Get position for display
-  var lat = t["lat"];
-  var lon = t["lon"];
+  // Get position for text display - we are going to display the last known
+  // position and time on the symbol, even though it moves when dead
+  // reckoning without these values updating, otherwise it gives a false
+  // impression of receiving real position updates.
+  var lat = getLastKnownPosition(t)[0];
+  var lon = getLastKnownPosition(t)[1];
   
   // Decide how much detail to display
   var showName = shouldShowName(t);
-  var detailedSymb = trackSelected(t);
+  var detailedSymb = trackSelected(id);
 
   // Generate symbol for display
+  console.log(t["altitudeText"]);
   var mysymbol = new ms.Symbol(t["symbolcode"], {
     staffComments: detailedSymb ? t["desc1"] : "",
     additionalInformation: detailedSymb ? t["desc2"] : "",
     direction: t["headingText"],
-    //altitudeDepth: t["altitudeText"], TODO
+    altitudeDepth: detailedSymb ? t["altitudeText"] : "",
     speed: detailedSymb ? t["speedText"] : "",
-    type: t["name"],
+    type: (showName || detailedSymb) ? t["name"] : "",
     dtg: ((!t["fixed"] && t["postime"] != null && detailedSymb) ? moment(t["postime"]).utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
     location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + " " + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
   });
+
   // Styles, some of which change when the track is selected and depending on the theme
-  var showLight = (darkTheme && trackSelected(t)) || (!darkTheme && !trackSelected(t));
+  var showLight = (darkTheme && trackSelected(id)) || (!darkTheme && !trackSelected(id));
   mysymbol = mysymbol.setOptions({
     size: 30,
     civilianColor: false,
     colorMode: showLight ? "Light" : "Dark",
-    fillOpacity: trackSelected(t) ? 1 : 0.6,
-    infoBackground: trackSelected(t) ? (darkTheme ? "black" : "white") : "transparent",
+    fillOpacity: trackSelected(id) ? 1 : 0.6,
+    infoBackground: trackSelected(id) ? (darkTheme ? "black" : "white") : "transparent",
     infoColor: darkTheme ? "white" : "black",
-    outlineWidth: trackSelected(t) ? 5 : 0,
-    outlineColor: '#007F0E',
+    outlineWidth: trackSelected(id) ? 5 : 0,
+    outlineColor: '#4581CC',
   });
 
   // Build into a Leaflet icon and return
@@ -276,8 +299,8 @@ function getIcon(t) {
 // placed at the last known position, or the dead reckoned position if DR
 // should be used
 function getNewMarker(t, id) {
-  var pos = [t["lat"], t["lon"]];
-  var icon = getIcon(t);
+  var pos = getIconPosition(t);
+  var icon = getIcon(t, id);
   if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
     // Create marker
     var m = L.marker(pos, {
@@ -307,8 +330,8 @@ function getTrail(t) {
 // last reported position with the current dead reckoned
 // position, or null if not dead reckoning.
 function getDRTrail(t) {
-  if (shouldShowIcon(t) && t["poshistory"].length > 0 && shouldDeadReckon(t) && drPosition(t) != null) {
-    var points = [[t["lat"], t["lon"]], drPosition(t)];
+  if (shouldShowIcon(t) && t["poshistory"].length > 0 && enableDeadReckoning && getDRPosition(t) != null) {
+    var points = [getLastKnownPosition(t), getDRPosition(t)];
     return L.polyline(points, {
       color: '#4581CC',
       dashArray: "5 5"
@@ -327,9 +350,9 @@ function trackSelected(id) {
 // names are always shown if the track is selected)
 function shouldShowName(t) {
   if (t["tracktype"] == "SHIP") {
-    return map.getZoom() >= zoomLevelForShipSymbolNames;
+    return map.getZoom() >= ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES;
   } else {
-    return map.getZoom() >= zoomLevelForLandAirSymbolNames;
+    return map.getZoom() >= ZOOM_LEVEL_FOR_LAND_AIR_SYMBOL_NAMES;
   }
 }
 
@@ -337,6 +360,44 @@ function shouldShowName(t) {
 // on the map?
 function shouldShowIcon(t) {
   return true; // TODO
+}
+
+// Get the latest known position of a track as a two-element list lat,lon
+function getLastKnownPosition(t) {
+  if (t["lat"] != null) {
+    return [t["lat"], t["lon"]];
+  } else {
+    return null;
+  }
+}
+
+// Get the dead reckoned position of a track based on its last position
+// update plus course and speed at that time.
+function getDRPosition(t) {
+  if (getLastKnownPosition(t) != null && t["postime"] != null && t["course"] != null && t["speed"] != null) {
+    // Can dead reckon
+    var timePassedSec = getTimeInServerRefFrame().diff(t["postime"]) / 1000.0;
+    var speedMps = t["speed"] * 0.514444;
+    var newPos = dest(t["lat"], t["lon"], t["course"], timePassedSec * speedMps);
+    return newPos;
+  } else {
+    return null;
+  }
+}
+
+// Get the position to show the track's icon at. Equal to either the
+// last known position or the dead reckoned position, depending on
+// whether DR is enabled and the data to use it is available.
+function getIconPosition(t) {
+  if (t["lat"] != null && t["lon"] != null) {
+    if (enableDeadReckoning && t["postime"] != null && t["course"] != null && t["speed"] != null) {
+      return getDRPosition(t);
+    } else {
+      return getLastKnownPosition(t);
+    }
+  } else {
+    return null;
+  }
 }
 
 
@@ -528,5 +589,5 @@ if (location.protocol == 'https:') {
 /////////////////////////////
 
 fetchDataFirst();
-setInterval(fetchDataUpdate, queryServerIntervalMS);
-setInterval(updateMap, updateMapIntervalMS);
+setInterval(fetchDataUpdate, QUERY_SERVER_INTERVAL_MILLISEC);
+setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
