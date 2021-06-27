@@ -2,12 +2,13 @@
 // USER-CONFIGURABLE VARS  //
 /////////////////////////////
 
+// Most important config item - the address of the Plane/Sailing server instance.
 // You can provide a main and alternate URL, e.g. one for use from the public internet
-// and one for use when you are on the same LAN as the machine running the servers.
-// Select the alternate URL by appending ?alt=true to the URL for Plane Sailing.
+// and one for use when you are on the same LAN as the machine running the server.
+// Select the alternate URL by appending ?alt=true to the URL of the client webpage.
 // Normal users won't do this and will therefore use the main public URL, but you
 // can bookmark the "alt" version to always use your LAN address for testing.
-const SERVER_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//mciserver.zapto.org/";
+const SERVER_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//planesailingserver.ianrenton.com/";
 const SERVER_URL_ALT = "http://127.0.0.1:81/";
 
 // HTTP/HTTPS redirects. You may wish to force the user into the HTTPS version
@@ -21,8 +22,8 @@ const REDIRECT_TO_HTTPS = false;
 // access token in the Mapbox URL. You can still use my styles.
 const MAPBOX_URL_DARK = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
 const MAPBOX_URL_LIGHT = "https://api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
-const OPENAIP_URL = "https://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png";
-const OPENSEAMAP_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
+const OPENAIP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png";
+const OPENSEAMAP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
 
 // Map default position/zoom
 const START_LAT_LON = [50.7, -1.8];
@@ -57,6 +58,7 @@ var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "A
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
+var onMobile = false;
 
 
 /////////////////////////////
@@ -104,7 +106,7 @@ function fetchDataUpdate() {
     dataType: 'json',
     timeout: 5000,
     success: async function(result) {
-      $("#serverOffline").css("display", "none");
+      showServerOffline(false)
       handleDataUpdate(result);
     },
     error: function() {
@@ -391,10 +393,23 @@ async function panTo(id) {
   }
 }
 
-// Flashes the "loading" indicator once.
+// Flashes the "loading" indicator once. This will only be
+// shown on desktop, not on mobile.
 async function flashLoadingIndicator() {
-  $("#loading").addClass("loadingblink");
-  setTimeout(function(){ $("#loading").removeClass("loadingblink"); }, 2000);
+  if (!onMobile) {
+    $("#loading").addClass("loadingblink");
+    setTimeout(function(){ $("#loading").removeClass("loadingblink"); }, 2000);
+  }
+}
+
+// Shows or hides the "server offline" indicator. This will only be
+// shown on desktop, not on mobile.
+async function showServerOffline(offline) {
+  if (offline && !onMobile) {
+    $("#serverOffline").css("display", "inline-block");
+  } else {
+    $("#serverOffline").css("display", "none");
+  }
 }
 
 
@@ -651,14 +666,6 @@ function setDarkTheme() {
   updateMap();
 }
 
-function setThemeToMatchOS() {
-  if (!window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    setDarkTheme();
-  } else {
-    setLightTheme();
-  }
-}
-
 
 /////////////////////////////
 //        API SETUP        //
@@ -704,11 +711,13 @@ map.on("zoomend", function (e) { updateMap(); });
 
 
 /////////////////////////////
-//       THEME SETUP       //
+//         GUI SETUP       //
 /////////////////////////////
 
-setThemeToMatchOS();
-window.matchMedia("(prefers-color-scheme: dark)").addListener(setThemeToMatchOS);
+if (window.matchMedia('screen and (max-width: 600px)').matches) {
+  onMobile = true;
+}
+setDarkTheme();
 
 
 /////////////////////////////
@@ -841,6 +850,6 @@ setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 $("#clientVersion").text(VERSION);
 
 // Pop out track table by default on desktop browsers
-if (window.matchMedia('screen and (min-width: 601px)').matches) {
+if (!onMobile) {
   $("#trackTablePanel").slideDown();
 }

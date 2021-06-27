@@ -36,6 +36,7 @@ html, body, div#map {
 /* Main layout */
 div#top {
     width: 100%;
+    height: 54px;
     position: absolute;
     top: 0;
     left: 0;
@@ -219,7 +220,18 @@ table.trackTable th.name {
 
 /* Mobile */
 @media only screen and (max-width: 600px) {
+    div#top h1 {
+        display: none;
+    }
     div.rightbox {
-        width: 90%;
+        width: 70%;
+        font-size: 0.6em;
+    }
+    #tracktablearea {
+        overflow-x: scroll;
+    }
+    table.trackTable {
+        width: 0px;
+        font-size: 0.7em;
     }
 }
