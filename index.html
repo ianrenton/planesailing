@@ -67,6 +67,24 @@
             <div class="configPanelSection">
                 <label for="enableDR" class="configLabel"><input type="checkbox" id="enableDR" name="enableDR" checked="true">&nbsp;Enable&nbsp;Dead&nbsp;Reckoning</label>
             </div>
+            <div class="configPanelSection">
+                <label for="snailTrails">Snail Trails:</label>
+                <select id="snailTrails" class="configSelect">
+                    <option value="0">None</option>
+                    <option value="1" selected="selected">Only Selected</option>
+                    <option value="2">All Tracks</option>
+                </select>
+                <select id="snailTrailLength" class="configSelect">
+                    <option value="10">10 points</option>
+                    <option value="20">20 points</option>
+                    <option value="50">50 points</option>
+                    <option value="100">100 points</option>
+                    <option value="200">200 points</option>
+                    <option value="500" selected="selected">500 points</option>
+                    <option value="999999">Forever</option>
+                </select>
+            </div>
+
         </div>
 
         <div id="trackTablePanel" class="rightbox">

@@ -167,6 +167,16 @@ label.configLabel {
     margin-right: 0.5em;
     display: inline-block;
 }
+select.configSelect {
+    margin-left: 0.5em;
+    padding: 0.3em;
+    font-family: Exo, Arial, sans-serif;
+    font-size: 0.9em;    
+    background-color: var(--box-background);
+    border: 1px solid var(--highlight);
+    border-radius: 3px;
+    color: var(--highlight);
+}
 
 /* Leaflet.js mods */
 .leaflet-container .leaflet-control-attribution {

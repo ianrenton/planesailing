@@ -33,6 +33,10 @@ const ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES = 12; // If zoomed in at least this far, 
 const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
 const QUERY_SERVER_INTERVAL_MILLISEC = 10000;
 
+// Colours you may wish to tweak to your liking
+const SELECTED_TRACK_HIGHLIGHT_COLOUR = "#4581CC";
+const UNSELECTED_TRACK_TRAIL_COLOUR_DARK = "#1F3A5B";
+const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 
 
 
@@ -57,6 +61,8 @@ var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dea
 var darkTheme = true;
 var selectedTrackID = "";
 var enableDeadReckoning = true;
+var snailTrailLength = 500;
+var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
 
 
 /////////////////////////////
@@ -114,6 +120,7 @@ async function handleDataFirst(result) {
   tracks = objectToMap(result.tracks);
 
   clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
+  trimPositionHistory();
   updateCounters();
   $("#serverVersion").text(result.version);
   $("#lastQueryTime").text(moment().format('lll'));
@@ -171,7 +178,20 @@ async function handleDataUpdate(result) {
     }
   });
 
+  trimPositionHistory();
   updateCounters();
+}
+
+// Trim the position history to the user-configurable snail trail length,
+// to avoid filling up memory with loads of history over time.
+async function trimPositionHistory() {
+  tracks.forEach((t, id) => {
+    if (t["poshistory"]) {
+      while (t["poshistory"].length >= snailTrailLength) {
+        t["poshistory"].shift();
+      }
+    }
+  });
 }
 
 
@@ -224,13 +244,13 @@ async function updateMap() {
   // Add snail trails to map for selected entity
   snailTrailLayer.clearLayers();
   tracks.forEach(function(t, id) {
-    if (trackSelected(id)) {
-      snailTrailLayer.addLayer(getTrail(t));
+    if (shouldShowTrail(t, id)) {
+      snailTrailLayer.addLayer(getTrail(t, id));
     }
   });
   tracks.forEach(function(t, id) {
-    if (trackSelected(id) && getDRTrail(t) != null) {
-      snailTrailLayer.addLayer(getDRTrail(t));
+    if (shouldShowTrail(t, id) && getDRTrail(t, id) != null) {
+      snailTrailLayer.addLayer(getDRTrail(t, id));
     }
   });
 }
@@ -316,7 +336,7 @@ function getIcon(t, id) {
     infoBackground: trackSelected(id) ? (darkTheme ? "black" : "white") : "transparent",
     infoColor: darkTheme ? "white" : "black",
     outlineWidth: trackSelected(id) ? 5 : 0,
-    outlineColor: '#4581CC',
+    outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
   });
 
   // Build into a Leaflet icon and return
@@ -351,24 +371,37 @@ function getNewMarker(t, id) {
 
 // Generate a snail trail polyline for the track based on its
 // reported position history
-function getTrail(t) {
-  if (shouldShowIcon(t)) {
-    return L.polyline(t["poshistory"], { color: '#4581CC' });
+function getTrail(t, id) {
+  if (shouldShowTrail(t, id)) {
+    return L.polyline(t["poshistory"], { color: getTrailColour(id) });
+  } else {
+    return null;
   }
 }
 
 // Generate a snail trail line for the track joining its
 // last reported position with the current dead reckoned
 // position, or null if not dead reckoning.
-function getDRTrail(t) {
-  if (shouldShowIcon(t) && t["poshistory"].length > 0 && enableDeadReckoning && getDRPosition(t) != null) {
+function getDRTrail(t, id) {
+  if (shouldShowTrail(t, id) && enableDeadReckoning && getDRPosition(t) != null) {
     var points = [getLastKnownPosition(t), getDRPosition(t)];
     return L.polyline(points, {
-      color: '#4581CC',
+      color: getTrailColour(id),
       dashArray: "5 5"
     });
   } else {
     return null;
+  }
+}
+
+// Get the appropriate trail colour.
+function getTrailColour(id) {
+  if (trackSelected(id)) {
+    return SELECTED_TRACK_HIGHLIGHT_COLOUR;
+  } else if (darkTheme) {
+    return UNSELECTED_TRACK_TRAIL_COLOUR_DARK;
+  } else {
+    return UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT;
   }
 }
 
@@ -391,6 +424,12 @@ function shouldShowName(t) {
 // on the map?
 function shouldShowIcon(t) {
   return trackTypesVisible.includes(t["tracktype"]);
+}
+
+// Based on the selected type filters, and snail trail mode, should we
+// be displaying this track's trail on the map?
+function shouldShowTrail(t, id) {
+  return shouldShowIcon(t) && t["poshistory"] && t["poshistory"].length > 0 && t["poshistory"][0]["lat"] != null && (snailTrailMode == 2 || (snailTrailMode == 1 && trackSelected(id)));
 }
 
 // Get the latest known position of a track as a two-element list lat,lon
@@ -641,6 +680,17 @@ $("#darkButton").click(setDarkTheme);
 // Dead reckoning
 $("#enableDR").click(function() {
   enableDeadReckoning = $(this).is(':checked');
+  updateMap();
+});
+
+// Snail trails
+$("#snailTrails").change(function() {
+  snailTrailMode = parseInt($(this).val());
+  updateMap();
+});
+$("#snailTrailLength").change(function() {
+  snailTrailLength = parseInt($(this).val());
+  trimPositionHistory();
   updateMap();
 });
 
