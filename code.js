@@ -318,7 +318,7 @@ async function updateTrackTable() {
       rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[0]).toFixed(4).padStart(7, '0') + ((pos[0] >= 0) ? 'N' : 'S')) : "---") + "</td>";
       rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[1]).toFixed(4).padStart(8, '0') + ((pos[1] >= 0) ? 'E' : 'W')) : "---") + "</td>";
       rowFields += "<td>" + ((t["altitude"] != null) ? ((t["altitude"] / 100).toFixed(0) + altRateSymb) : "---") + "</td>";
-      rowFields += "<td>" + ((t["heading"] != null) ? t["heading"].toFixed(0) : "---") + "</td>";
+      rowFields += "<td>" + ((t["heading"] != null) ? t["heading"].toString().padStart(3, "0") : "---") + "</td>";
       rowFields += "<td>" + ((t["speed"] != null) ? t["speed"].toFixed(0) : "---") + "</td>";
       var row = $('<tr trackID=' + t["id"] + '>').html(rowFields);
       if (trackSelected(t["id"])) {
@@ -424,9 +424,9 @@ function getIcon(t) {
   var mysymbol = new ms.Symbol(t["symbolcode"], {
     staffComments: detailedSymb ? t["desc1"] : "",
     additionalInformation: detailedSymb ? t["desc2"] : "",
-    direction: t["headingText"],
-    altitudeDepth: detailedSymb ? t["altitudeText"] : "",
-    speed: detailedSymb ? t["speedText"] : "",
+    direction: t["heading"],
+    altitudeDepth: (detailedSymb && t["altitude"] != null) ? "FL" + (t["altitude"] / 100).toFixed(0) : "",
+    speed: (detailedSymb && t["speed"] != null) ? t["speed"].toFixed(0) + "KTS" : "",
     type: (showName || detailedSymb) ? t["name"] : "",
     dtg: ((!t["fixed"] && t["postime"] != null && detailedSymb) ? moment(t["postime"]).utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
     location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + " " + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
