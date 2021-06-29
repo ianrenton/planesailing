@@ -9,7 +9,7 @@
 // Normal users won't do this and will therefore use the main public URL, but you
 // can bookmark the "alt" version to always use your LAN address for testing.
 const SERVER_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//planesailingserver.ianrenton.com/";
-const SERVER_URL_ALT = "http://127.0.0.1:81/";
+const SERVER_URL_ALT = "http://192.168.1.240/";
 
 // HTTP/HTTPS redirects. You may wish to force the user into the HTTPS version
 // of the site (for extra security) or to the HTTP version (in case you haven't
