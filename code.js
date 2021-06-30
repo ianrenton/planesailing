@@ -444,7 +444,7 @@ function getIcon(t) {
   var mysymbol = new ms.Symbol(t["symbolcode"], {
     staffComments: detailedSymb ? t["desc1"] : "",
     additionalInformation: detailedSymb ? t["desc2"] : "",
-    direction: t["heading"],
+    direction: (t["heading"] != null) ? t["heading"] : "",
     altitudeDepth: (detailedSymb && t["altitude"] != null) ? "FL" + (t["altitude"] / 100).toFixed(0) : "",
     speed: (detailedSymb && t["speed"] != null) ? t["speed"].toFixed(0) + "KTS" : "",
     type: (showName || detailedSymb) ? t["name"] : "",
