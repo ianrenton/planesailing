@@ -9,7 +9,7 @@
 // Normal users won't do this and will therefore use the main public URL, but you
 // can bookmark the "alt" version to always use your LAN address for testing.
 const SERVER_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//planesailingserver.ianrenton.com/";
-const SERVER_URL_ALT = "http://192.168.1.240/";
+const SERVER_URL_ALT = ((window.location.protocol == "https:") ? "https:" : "http:") + "//192.168.1.240/";
 
 // HTTP/HTTPS redirects. You may wish to force the user into the HTTPS version
 // of the site (for extra security) or to the HTTP version (in case you haven't
@@ -22,7 +22,7 @@ const REDIRECT_TO_HTTPS = false;
 // access token in the Mapbox URL. You can still use my styles.
 const MAPBOX_URL_DARK = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
 const MAPBOX_URL_LIGHT = "https://api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
-const OPENAIP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png";
+const OPENAIP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//1.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png";
 const OPENSEAMAP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
 
 // Map default position/zoom
