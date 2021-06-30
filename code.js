@@ -90,6 +90,11 @@ function fetchDataFirst() {
     success: async function(result) {
       $("#serverOffline").css("display", "none");
       handleDataFirst(result);
+      // Pop out track table by default on desktop browsers after first
+      // successful load.
+      if (!onMobile) {
+        $("#trackTablePanel").slideDown();
+      }
     },
     error: function() {
       $("#serverOffline").css("display", "inline-block");
@@ -848,8 +853,3 @@ fetchDataFirst();
 setInterval(fetchDataUpdate, QUERY_SERVER_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 $("#clientVersion").text(VERSION);
-
-// Pop out track table by default on desktop browsers
-if (!onMobile) {
-  $("#trackTablePanel").slideDown();
-}

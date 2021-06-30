@@ -208,6 +208,8 @@ table.trackTable td {
 }
 table.trackTable td.name {
     text-align: left;
+    max-width: 140px;
+    overflow: hidden;
 }
 table.trackTable th.name {
     text-align: left;
