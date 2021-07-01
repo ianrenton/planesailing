@@ -85,7 +85,7 @@ div#top h1 {
     font-size: 1.7em;
     font-weight: bold;
     text-align: left;
-    text-shadow: text-shadow: -3px 0 2px var(--box-background), 0 3px 2px var(--box-background), 3px 0 2px var(--box-background), 0 -3px 2px var(--box-background);
+    text-shadow: -3px 0 2px var(--box-background), 0 3px 2px var(--box-background), 3px 0 2px var(--box-background), 0 -3px 2px var(--box-background);
 }
 div#menu button {
     font-family: Exo, Arial, sans-serif;
