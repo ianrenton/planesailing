@@ -35,6 +35,13 @@ const ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES = 12; // If zoomed in at least this far, 
 const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
 const QUERY_SERVER_INTERVAL_MILLISEC = 10000;
 
+// Times after which to show tracks as 'anticipated' (dotted outline).
+// Technically we are anticipating position immediately when dead
+// reckoning is enabled, but we use these values as a rough indication
+// of "there should have been an update by now".
+const AIR_SHOW_ANTICIPATED_AFTER_MILLISEC = 60000;
+const SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC = 300000;
+
 // Colours you may wish to tweak to your liking
 const SELECTED_TRACK_HIGHLIGHT_COLOUR = "#4581CC";
 const UNSELECTED_TRACK_TRAIL_COLOUR_DARK = "#1F3A5B";
@@ -433,9 +440,15 @@ function getIcon(t) {
   // Decide how much detail to display
   var showName = shouldShowName(t);
   var detailedSymb = trackSelected(t["id"]);
+  
+  // Change symbol to "anticipated" if old enough
+  var symbol = t["symbolcode"];
+  if (oldEnoughToShowAnticipated(t)) {
+    symbol = symbol.substr(0, 3) + "A" + symbol.substr(4);
+  }
 
   // Generate symbol for display
-  var mysymbol = new ms.Symbol(t["symbolcode"], {
+  var mysymbol = new ms.Symbol(symbol, {
     staffComments: detailedSymb ? t["desc1"] : "",
     additionalInformation: detailedSymb ? t["desc2"] : "",
     direction: (t["heading"] != null) ? t["heading"] : "",
@@ -587,6 +600,18 @@ function getIconPosition(t) {
     }
   } else {
     return null;
+  }
+}
+
+// Is the track old enough that we should display the track as an anticipated
+// position?
+function oldEnoughToShowAnticipated(t) {
+  if (t["fixed"]) {
+    return false;
+  } else if (t["tracktype"] == "AIRCRAFT") {
+    return t["postime"] != null && getTimeInServerRefFrame().diff(t["postime"]) > AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
+  } else {
+    return t["postime"] != null && getTimeInServerRefFrame().diff(t["postime"]) > SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC;
   }
 }
 
