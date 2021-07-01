@@ -54,7 +54,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.0.1";
+const VERSION = "2.0.2";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -606,7 +606,7 @@ function getIconPosition(t) {
 // Is the track old enough that we should display the track as an anticipated
 // position?
 function oldEnoughToShowAnticipated(t) {
-  if (t["fixed"]) {
+  if (!enableDeadReckoning || t["fixed"]) {
     return false;
   } else if (t["tracktype"] == "AIRCRAFT") {
     return t["postime"] != null && getTimeInServerRefFrame().diff(t["postime"]) > AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
