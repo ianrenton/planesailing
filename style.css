@@ -1,9 +1,6 @@
 /* Colour modes */
 :root[color-mode="dark"] {
     --background: #081217;
-    --shade-top: rgba(66,66,66,1);
-    --shade-bottom: rgba(22,22,22,1);
-    --shade-border: black;
     --box-background: rgba(22, 22, 22, 0.8);
     --highlight: rgba(120, 200, 255, 1);
     --text: white;
@@ -11,9 +8,6 @@
 }
 :root[color-mode="light"] {
     --background: #95C8EE;
-    --shade-top: rgba(224,224,224,1);
-    --shade-bottom: rgba(163,163,163,1);
-    --shade-border: darkgray;
     --box-background: rgba(224, 224, 224, 0.8);
     --highlight: rgba(0, 40, 120, 1);
     --text: black;
@@ -82,10 +76,6 @@ table.trackTable {
 
 /* Top bar tyles */
 div#top {
-    background-color: var(--box-background);
-    background: rgb(0,0,0);
-    background: linear-gradient(0deg, var(--shade-bottom) 0%, var(--shade-top) 100%);
-    border-bottom: 1px solid var(--shade-border);
     color: var(--highlight);
     box-sizing: border-box;
     display: inline-block;
@@ -93,7 +83,9 @@ div#top {
 }
 div#top h1 {
     font-size: 1.7em;
+    font-weight: bold;
     text-align: left;
+    text-shadow: text-shadow: -3px 0 2px var(--box-background), 0 3px 2px var(--box-background), 3px 0 2px var(--box-background), 0 -3px 2px var(--box-background);
 }
 div#menu button {
     font-family: Exo, Arial, sans-serif;
