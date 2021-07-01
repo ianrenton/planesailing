@@ -4,26 +4,20 @@
 
 // Most important config item - the address of the Plane/Sailing server instance.
 // You can provide a main and alternate URL, e.g. one for use from the public internet
-// and one for use when you are on the same LAN as the machine running the server.
+// and one for use when you are on the same LAN as the machine running the server,
+// where the main URL won't work.
 // Select the alternate URL by appending ?alt=true to the URL of the client webpage.
 // Normal users won't do this and will therefore use the main public URL, but you
 // can bookmark the "alt" version to always use your LAN address for testing.
-const SERVER_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//planesailingserver.ianrenton.com/";
-const SERVER_URL_ALT = ((window.location.protocol == "https:") ? "https:" : "http:") + "//192.168.1.240/";
-
-// HTTP/HTTPS redirects. You may wish to force the user into the HTTPS version
-// of the site (for extra security) or to the HTTP version (in case you haven't
-// set up an HTTPS server or SSL certificate on your server).
-// Don't set both of these true or you will go into an infinite loop!
-const REDIRECT_TO_HTTP = true;
-const REDIRECT_TO_HTTPS = false;
+const SERVER_URL = "https://planesailingserver.ianrenton.com/";
+const SERVER_URL_ALT = "https://192.168.1.240/";
 
 // Map layer URLs - if re-using this code you will need to provide your own Mapbox
 // access token in the Mapbox URL. You can still use my styles.
 const MAPBOX_URL_DARK = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
 const MAPBOX_URL_LIGHT = "https://api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
-const OPENAIP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//1.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png";
-const OPENSEAMAP_URL = ((window.location.protocol == "https:") ? "https:" : "http:") + "//tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
+const OPENAIP_URL = "https://1.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png";
+const OPENSEAMAP_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
 
 // Map default position/zoom
 const START_LAT_LON = [50.7, -1.8];
@@ -832,17 +826,6 @@ $("#showMaritimeLayer").click(function() {
 $(document).on("click", "tr", function(e) {
   tableSelect($(e.currentTarget).attr("trackID"));
 });
-
-
-/////////////////////////////
-//   REDIRECT TO HTTP(S)   //
-/////////////////////////////
-
-if (REDIRECT_TO_HTTP && location.protocol == 'https:') {
-    location.replace(`http:${location.href.substring(location.protocol.length)}`);
-} else if (REDIRECT_TO_HTTPS && location.protocol == 'http:') {
-    location.replace(`https:${location.href.substring(location.protocol.length)}`);
-}
 
 
 /////////////////////////////
