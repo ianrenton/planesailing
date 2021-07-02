@@ -10,7 +10,7 @@
 // Normal users won't do this and will therefore use the main public URL, but you
 // can bookmark the "alt" version to always use your LAN address for testing.
 const SERVER_URL = "https://planesailingserver.ianrenton.com/";
-const SERVER_URL_ALT = "https://192.168.1.240/";
+const SERVER_URL_ALT = "http://192.168.1.240/";
 
 // Map layer URLs - if re-using this code you will need to provide your own Mapbox
 // access token in the Mapbox URL. You can still use my styles.
