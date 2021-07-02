@@ -35,6 +35,14 @@ const ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES = 12; // If zoomed in at least this far, 
 const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
 const QUERY_SERVER_INTERVAL_MILLISEC = 10000;
 
+// Times after which icons should be shown as anticipated positions (dotted
+// outline). Technically it should be immediately because we dead reckon every
+// second, but we use it to show when data is "pretty old but not dropped-track
+// old".
+const AIR_LAND_SHOW_ANTICIPATED_AFTER = 60000;
+const SHIP_SHOW_ANTICIPATED_AFTER = 300000;
+
+
 // Colours you may wish to tweak to your liking
 const SELECTED_TRACK_HIGHLIGHT_COLOUR = "#4581CC";
 const UNSELECTED_TRACK_TRAIL_COLOUR_DARK = "#1F3A5B";
@@ -47,7 +55,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.0.1";
+const VERSION = "2.0.2";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -82,7 +90,7 @@ function fetchDataFirst() {
     dataType: 'json',
     timeout: 10000,
     success: async function(result) {
-      $("#serverOffline").css("display", "none");
+      showServerOffline(false);
       handleDataFirst(result);
       // Pop out track table by default on desktop browsers after first
       // successful load.
@@ -91,7 +99,7 @@ function fetchDataFirst() {
       }
     },
     error: function() {
-      $("#serverOffline").css("display", "inline-block");
+      showServerOffline(true);
     }
   });
 }
@@ -109,7 +117,7 @@ function fetchDataUpdate() {
       handleDataUpdate(result);
     },
     error: function() {
-      $("#serverOffline").css("display", "inline-block");
+      showServerOffline(true);
     }
   });
 }
@@ -396,8 +404,8 @@ async function panTo(id) {
 // shown on desktop, not on mobile.
 async function flashLoadingIndicator() {
   if (!onMobile) {
-    $("#loading").addClass("loadingblink");
-    setTimeout(function(){ $("#loading").removeClass("loadingblink"); }, 2000);
+    $("#loading").fadeIn();
+    setTimeout(function(){ $("#loading").fadeOut(); }, 2000);
   }
 }
 
@@ -405,9 +413,9 @@ async function flashLoadingIndicator() {
 // shown on desktop, not on mobile.
 async function showServerOffline(offline) {
   if (offline && !onMobile) {
-    $("#serverOffline").css("display", "inline-block");
+    $("#serverOffline").fadeIn();
   } else {
-    $("#serverOffline").css("display", "none");
+    $("#serverOffline").fadeOut();
   }
 }
 
