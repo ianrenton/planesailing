@@ -778,6 +778,7 @@ function setTypeEnable(type, enable) {
   } else {
     for( var i = 0; i < trackTypesVisible.length; i++){ if ( trackTypesVisible[i] === type) { trackTypesVisible.splice(i, 1); }}
   }
+  localStorage.setItem('trackTypesVisible', JSON.stringify(trackTypesVisible));
   updateMap();
 }
 
@@ -838,6 +839,7 @@ $("#showAirspaceLayer").click(function() {
   } else if (typeof airspaceLayer !== 'undefined') {
     map.removeLayer(airspaceLayer);
   }
+  localStorage.setItem('showAirspaceLayer', $(this).is(':checked'));
 });
 $("#showMaritimeLayer").click(function() {
   if ($(this).is(':checked')) {
@@ -846,6 +848,7 @@ $("#showMaritimeLayer").click(function() {
   } else if (typeof maritimeLayer !== 'undefined') {
     map.removeLayer(maritimeLayer);
   }
+  localStorage.setItem('showMaritimeLayer', $(this).is(':checked'));
 });
 
 // LAN mode switch
@@ -868,11 +871,12 @@ $(document).on("click", "tr", function(e) {
 // Load from local storage or use default
 function localStorageGetOrDefault(key, defaultVal) {
   var valStr = localStorage.getItem(key);
-  if(null === valStr)
-  {
-    valStr = defaultVal;
+  console.log(key + " " + defaultVal);
+  if (null === valStr) {
+    return defaultVal;
+  } else {
+    return JSON.parse(valStr);
   }
-  return JSON.parse(valStr);
 }
 
 // Load from local storage and set GUI up appropriately
@@ -882,6 +886,9 @@ function loadLocalStorage() {
   snailTrailMode = localStorageGetOrDefault('snailTrailMode', snailTrailMode);
   snailTrailLength = localStorageGetOrDefault('snailTrailLength', snailTrailLength);
   lanMode = localStorageGetOrDefault('lanMode', lanMode);
+  trackTypesVisible = localStorageGetOrDefault('trackTypesVisible', trackTypesVisible);
+  var showAirspaceLayer = localStorageGetOrDefault('showAirspaceLayer', false);
+  var showMaritimeLayer = localStorageGetOrDefault('showMaritimeLayer', false);
 
   if (darkTheme) {
     setDarkTheme();
@@ -892,6 +899,18 @@ function loadLocalStorage() {
   $("#snailTrails").val(snailTrailMode);
   $("#snailTrailLength").val(snailTrailLength);
   $("#lanMode").prop('checked', lanMode);
+
+  $("#showAircraft").prop('checked', trackTypesVisible.includes("AIRCRAFT"));
+  $("#showShips").prop('checked', trackTypesVisible.includes("SHIP"));
+  $("#showAISShoreStations").prop('checked', trackTypesVisible.includes("AIS_SHORE_STATION"));
+  $("#showATONs").prop('checked', trackTypesVisible.includes("AIS_ATON"));
+  $("#showAPRS").prop('checked', trackTypesVisible.includes("APRS_TRACK"));
+  $("#showAirports").prop('checked', trackTypesVisible.includes("AIRPORT"));
+  $("#showSeaPorts").prop('checked', trackTypesVisible.includes("SEAPORT"));
+  $("#showBase").prop('checked', trackTypesVisible.includes("BASE_STATION"));
+
+  $("#showAirspaceLayer").prop('checked', showAirspaceLayer);
+  $("#showMaritimeLayer").prop('checked', showMaritimeLayer);
 }
 
 
