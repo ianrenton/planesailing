@@ -782,28 +782,28 @@ function setTypeEnable(type, enable) {
   updateMap();
 }
 
-$("#showAircraft").click(function() {
+$("#showAircraft").change(function() {
   setTypeEnable("AIRCRAFT", $(this).is(':checked'));
 });
-$("#showShips").click(function() {
+$("#showShips").change(function() {
   setTypeEnable("SHIP", $(this).is(':checked'));
 });
-$("#showAISShoreStations").click(function() {
+$("#showAISShoreStations").change(function() {
   setTypeEnable("AIS_SHORE_STATION", $(this).is(':checked'));
 });
-$("#showATONs").click(function() {
+$("#showATONs").change(function() {
   setTypeEnable("AIS_ATON", $(this).is(':checked'));
 });
-$("#showAPRS").click(function() {
+$("#showAPRS").change(function() {
   setTypeEnable("APRS_TRACK", $(this).is(':checked'));
 });
-$("#showAirports").click(function() {
+$("#showAirports").change(function() {
   setTypeEnable("AIRPORT", $(this).is(':checked'));
 });
-$("#showSeaPorts").click(function() {
+$("#showSeaPorts").change(function() {
   setTypeEnable("SEAPORT", $(this).is(':checked'));
 });
-$("#showBase").click(function() {
+$("#showBase").change(function() {
   setTypeEnable("BASE_STATION", $(this).is(':checked'));
 });
 
@@ -812,7 +812,7 @@ $("#lightButton").click(setLightTheme);
 $("#darkButton").click(setDarkTheme);
 
 // Dead reckoning
-$("#enableDR").click(function() {
+$("#enableDR").change(function() {
   enableDeadReckoning = $(this).is(':checked');
   localStorage.setItem('enableDeadReckoning', enableDeadReckoning);
   updateMap();
@@ -832,7 +832,7 @@ $("#snailTrailLength").change(function() {
 });
 
 // Overlay layers
-$("#showAirspaceLayer").click(function() {
+$("#showAirspaceLayer").change(function() {
   if ($(this).is(':checked')) {
     airspaceLayer = L.tileLayer(OPENAIP_URL);
     airspaceLayer.addTo(map);
@@ -841,7 +841,7 @@ $("#showAirspaceLayer").click(function() {
   }
   localStorage.setItem('showAirspaceLayer', $(this).is(':checked'));
 });
-$("#showMaritimeLayer").click(function() {
+$("#showMaritimeLayer").change(function() {
   if ($(this).is(':checked')) {
     maritimeLayer = L.tileLayer(OPENSEAMAP_URL);
     maritimeLayer.addTo(map);
@@ -852,7 +852,7 @@ $("#showMaritimeLayer").click(function() {
 });
 
 // LAN mode switch
-$("#lanMode").click(function() {
+$("#lanMode").change(function() {
   lanMode = $(this).is(':checked');
   localStorage.setItem('lanMode', lanMode);
   fetchDataFirst();
@@ -871,7 +871,6 @@ $(document).on("click", "tr", function(e) {
 // Load from local storage or use default
 function localStorageGetOrDefault(key, defaultVal) {
   var valStr = localStorage.getItem(key);
-  console.log(key + " " + defaultVal);
   if (null === valStr) {
     return defaultVal;
   } else {
@@ -909,8 +908,8 @@ function loadLocalStorage() {
   $("#showSeaPorts").prop('checked', trackTypesVisible.includes("SEAPORT"));
   $("#showBase").prop('checked', trackTypesVisible.includes("BASE_STATION"));
 
-  $("#showAirspaceLayer").prop('checked', showAirspaceLayer);
-  $("#showMaritimeLayer").prop('checked', showMaritimeLayer);
+  $("#showAirspaceLayer").prop('checked', showAirspaceLayer).change();
+  $("#showMaritimeLayer").prop('checked', showMaritimeLayer).change();
 }
 
 
