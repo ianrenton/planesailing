@@ -19,6 +19,7 @@
 
         <link rel="icon" type="image/svg+xml" href="favicon.svg">
         <link rel="alternate icon" type="image/png" href="favicon.png">
+        <link rel="manifest" href="manifest.webmanifest">
     </head>
     <body>
         <div id="top">
@@ -95,5 +96,10 @@
         </div>
 
         <script src="code.js"></script>
+        <script>
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('service-worker.js');
+            }
+        </script>
     </body>
 </html>
