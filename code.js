@@ -314,8 +314,9 @@ async function updateTrackTable() {
   // Create table rows
   var rows = 0;
   tableList.forEach(function(t) {
-    // Only real detected tracks, not config-based ones
-    if (!t["createdByConfig"]) {
+    // Only real detected tracks, not config-based ones, and only if their
+    // visibility is turned on
+    if (!t["createdByConfig"] && shouldShowIcon(t)) {
       var pos = getLastKnownPosition(t);
       // Type abbreviation
       var typeAbbr = "";
@@ -573,7 +574,7 @@ function shouldShowName(t) {
 }
 
 // Based on the selected type filters, should we be displaying this track
-// on the map?
+// on the map and the track table?
 function shouldShowIcon(t) {
   return trackTypesVisible.includes(t["tracktype"]);
 }
