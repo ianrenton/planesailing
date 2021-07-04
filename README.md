@@ -34,7 +34,7 @@ You can check out the hardware and build guide at https://ianrenton.com/hardware
 
 My code in this project is subject to "The Unlicence", i.e. it's public domain and you can do what you want with it.
 
-If you want to use this for yourself, go right ahead. There are some static variables at the top of code.js that you will need to tweak to match your install, in particular the URL of the Plane/Sailing server that it should talk to.
+If you want to use this for yourself, go right ahead. There are some static variables at the top of `code.js` that you will need to tweak to match your install, in particular the URL of the Plane/Sailing server that it should talk to. Note that if you're making your server accessible on the web and you want to use it from inside your LAN as well, you set up *two* URLs in `code.js` and use the "LAN mode" switch in the Config panel to ensure you're using the right one.
 
 Note that this repository only provides the web-based user interface, and so is only part of the whole system. If you want to recreate the whole thing for yourself, you will need to set up the [server](https://github.com/ianrenton/planesailing-server) so the client has something to talk to, and set up other ADS-B, AIS and/or APRS decoding applications, and provide radio receivers and antennas. Plane/Sailing is not pulling data from sites with global coverage APIs like FlightRadar24 or MarineTraffic. Check out the [build guide](https://ianrenton.com/hardware/planesailing/) for more information.
 

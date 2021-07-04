@@ -3,14 +3,12 @@
 /////////////////////////////
 
 // Most important config item - the address of the Plane/Sailing server instance.
-// You can provide a main and alternate URL, e.g. one for use from the public internet
-// and one for use when you are on the same LAN as the machine running the server,
-// where the main URL won't work.
-// Select the alternate URL by appending ?alt=true to the URL of the client webpage.
-// Normal users won't do this and will therefore use the main public URL, but you
-// can bookmark the "alt" version to always use your LAN address for testing.
+// You can provide a main and LAN URL, i.e. one normal addressfor use from the public
+// internet and one for use when you are on the same LAN as the machine running the
+// server, where the main URL won't work. There is a switch in the Configuration
+// panel to toggle between them.
 const SERVER_URL = "https://planesailingserver.ianrenton.com/";
-const SERVER_URL_ALT = "http://192.168.1.240/";
+const SERVER_URL_LAN = "http://192.168.1.240/";
 
 // Map layer URLs - if re-using this code you will need to provide your own Mapbox
 // access token in the Mapbox URL. You can still use my styles.
@@ -73,6 +71,7 @@ var selectedTrackID = "";
 var enableDeadReckoning = true;
 var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
+var lanMode = false;
 
 
 /////////////////////////////
@@ -83,9 +82,9 @@ var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
 // the server including base station/airports/seaports and full position
 // history
 function fetchDataFirst() {
-  flashLoadingIndicator();
+  showLoadingIndicator(true);
   $.ajax({
-    url: serverURL + "first",
+    url: getServerURL() + "first",
     dataType: 'json',
     timeout: 10000,
     success: async function(result) {
@@ -94,11 +93,14 @@ function fetchDataFirst() {
       // Pop out track table by default on desktop browsers after first
       // successful load.
       if (!onMobile) {
-        $("#trackTablePanel").slideDown();
+        manageRightBoxes("#trackTablePanel", "#configPanel", "#infoPanel");
       }
     },
     error: function() {
       showServerOffline(true);
+    },
+    complete: function() {
+      showLoadingIndicator(false);
     }
   });
 }
@@ -106,9 +108,9 @@ function fetchDataFirst() {
 // "Update" API call - called at regular intervals, this retrieves new data from
 // the server.
 function fetchDataUpdate() {
-  flashLoadingIndicator();
+  showLoadingIndicator(true);
   $.ajax({
-    url: serverURL + "update",
+    url: getServerURL() + "update",
     dataType: 'json',
     timeout: 5000,
     success: async function(result) {
@@ -117,8 +119,20 @@ function fetchDataUpdate() {
     },
     error: function() {
       showServerOffline(true);
+    },
+    complete: function() {
+      showLoadingIndicator(false);
     }
   });
+}
+
+// Get the URL for the server based on whether we're in LAN mode or not
+function getServerURL() {
+  if (lanMode) {
+    return SERVER_URL_LAN;
+  } else {
+    return SERVER_URL;
+  }
 }
 
 
@@ -128,9 +142,10 @@ function fetchDataUpdate() {
 /////////////////////////////
 
 // Handle successful receive of first-time data. All we need to do is
-// dump the data into out "tracks" map, since it will be empty at
-// this point, and call the standard GUI update functions.
+// dump the data into out "tracks" map and call the standard GUI update
+// functions.
 async function handleDataFirst(result) {
+  tracks.clear();
   tracks = objectToMap(result.tracks);
   $("#serverVersion").text(result.version);
   updateGUIAfterQuery(result.time);
@@ -399,12 +414,16 @@ async function panTo(id) {
   }
 }
 
-// Flashes the "loading" indicator once. This will only be
-// shown on desktop, not on mobile.
-async function flashLoadingIndicator() {
-  if (!onMobile) {
+// Show or hide the "loading" indicator. This will only be
+// shown on desktop, not on mobile. When hiding, this actually
+// waits one second before hiding because querying the server
+// is normally very quick, and the ~100ms flash looks ugly, so
+// we pad it out a bit.
+async function showLoadingIndicator(show) {
+  if (show && !onMobile) {
     $("#loading").fadeIn();
-    setTimeout(function(){ $("#loading").fadeOut(); }, 2000);
+  } else {
+    setTimeout(function(){ $("#loading").fadeOut(); }, 1000);
   }
 }
 
@@ -692,19 +711,6 @@ function setDarkTheme() {
 
 
 /////////////////////////////
-//        API SETUP        //
-/////////////////////////////
-
-// Pick which URL to use based on the query string parameters
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
-var serverURL = SERVER_URL;
-if (urlParams.get("alt") == "true") {
-  serverURL = SERVER_URL_ALT;
-}
-
-
-/////////////////////////////
 //       MAP SETUP         //
 /////////////////////////////
 
@@ -845,6 +851,12 @@ $("#showMaritimeLayer").click(function() {
   } else if (typeof maritimeLayer !== 'undefined') {
     map.removeLayer(maritimeLayer);
   }
+});
+
+// LAN mode switch
+$("#lanMode").click(function() {
+  lanMode = $(this).is(':checked');
+  fetchDataFirst();
 });
 
 // Table row click selects the track
