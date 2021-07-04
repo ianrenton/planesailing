@@ -415,23 +415,21 @@ async function panTo(id) {
   }
 }
 
-// Show or hide the "loading" indicator. This will only be
-// shown on desktop, not on mobile. When hiding, this actually
+// Show or hide the "loading" indicator. When hiding, this actually
 // waits one second before hiding because querying the server
 // is normally very quick, and the ~100ms flash looks ugly, so
 // we pad it out a bit.
 async function showLoadingIndicator(show) {
-  if (show && !onMobile) {
+  if (show) {
     $("#loading").fadeIn();
   } else {
     setTimeout(function(){ $("#loading").fadeOut(); }, 1000);
   }
 }
 
-// Shows or hides the "server offline" indicator. This will only be
-// shown on desktop, not on mobile.
+// Shows or hides the "server offline" indicator.
 async function showServerOffline(offline) {
-  if (offline && !onMobile) {
+  if (offline) {
     $("#serverOffline").fadeIn();
   } else {
     $("#serverOffline").fadeOut();

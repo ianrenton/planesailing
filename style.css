@@ -48,6 +48,7 @@ div#menu {
 div#menu button {
     margin-left: 0.5em;
     padding: 0.5em;
+    height: 45px;
 }
 div#map { 
     width:auto; 
@@ -204,6 +205,9 @@ table.trackTable th.name {
 /* Mobile */
 @media only screen and (max-width: 600px) {
     div#top h1 {
+        display: none;
+    }
+    span.hideonmobile {
         display: none;
     }
     div.rightbox {
