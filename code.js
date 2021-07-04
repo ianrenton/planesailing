@@ -52,26 +52,26 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.0.3";
+const VERSION = "2.0.4";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
-var onMobile = false;
+var onMobile = window.matchMedia('screen and (max-width: 600px)').matches;
 
 
 /////////////////////////////
 //  UI CONFIGURABLE VARS   //
 /////////////////////////////
 
-// These are all parameters that can be changed by the user by clicking buttons on the GUI
-
+// These are all parameters that can be changed by the user by clicking buttons on the GUI,
+// and all (except selected track ID) are persisted in local storage.
 var darkTheme = true;
-var selectedTrackID = "";
 var enableDeadReckoning = true;
 var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
 var lanMode = false;
+var selectedTrackID = "";
 
 
 /////////////////////////////
@@ -685,6 +685,7 @@ function objectToMap(o) {
 
 function setLightTheme() {
   darkTheme = false;
+  localStorage.setItem('darkTheme', darkTheme);
   document.documentElement.setAttribute("color-mode", "light");
   var metaThemeColor = document.querySelector("meta[name=theme-color]");
   metaThemeColor.setAttribute("content", "#DDDDB9");
@@ -698,6 +699,7 @@ function setLightTheme() {
 
 function setDarkTheme() {
   darkTheme = true;
+  localStorage.setItem('darkTheme', darkTheme);
   document.documentElement.setAttribute("color-mode", "dark");
   var metaThemeColor = document.querySelector("meta[name=theme-color]");
   metaThemeColor.setAttribute("content", "#2C2C25");
@@ -738,16 +740,6 @@ snailTrailLayer.addTo(map);
 // Zooming affects the level of detail shown on icons, so we need to update the map
 // on a zoom change.
 map.on("zoomend", function (e) { updateMap(); });
-
-
-/////////////////////////////
-//         GUI SETUP       //
-/////////////////////////////
-
-if (window.matchMedia('screen and (max-width: 600px)').matches) {
-  onMobile = true;
-}
-setDarkTheme();
 
 
 /////////////////////////////
@@ -821,16 +813,19 @@ $("#darkButton").click(setDarkTheme);
 // Dead reckoning
 $("#enableDR").click(function() {
   enableDeadReckoning = $(this).is(':checked');
+  localStorage.setItem('enableDeadReckoning', enableDeadReckoning);
   updateMap();
 });
 
 // Snail trails
 $("#snailTrails").change(function() {
   snailTrailMode = parseInt($(this).val());
+  localStorage.setItem('snailTrailMode', snailTrailMode);
   updateMap();
 });
 $("#snailTrailLength").change(function() {
   snailTrailLength = parseInt($(this).val());
+  localStorage.setItem('snailTrailLength', snailTrailLength);
   trimPositionHistory();
   updateMap();
 });
@@ -856,6 +851,7 @@ $("#showMaritimeLayer").click(function() {
 // LAN mode switch
 $("#lanMode").click(function() {
   lanMode = $(this).is(':checked');
+  localStorage.setItem('lanMode', lanMode);
   fetchDataFirst();
 });
 
@@ -866,9 +862,44 @@ $(document).on("click", "tr", function(e) {
 
 
 /////////////////////////////
+// LOCAL STORAGE FUNCTIONS //
+/////////////////////////////
+
+// Load from local storage or use default
+function localStorageGetOrDefault(key, defaultVal) {
+  var valStr = localStorage.getItem(key);
+  if(null === valStr)
+  {
+    valStr = defaultVal;
+  }
+  return JSON.parse(valStr);
+}
+
+// Load from local storage and set GUI up appropriately
+function loadLocalStorage() {
+  darkTheme = localStorageGetOrDefault('darkTheme', darkTheme);
+  enableDeadReckoning = localStorageGetOrDefault('enableDeadReckoning', enableDeadReckoning);
+  snailTrailMode = localStorageGetOrDefault('snailTrailMode', snailTrailMode);
+  snailTrailLength = localStorageGetOrDefault('snailTrailLength', snailTrailLength);
+  lanMode = localStorageGetOrDefault('lanMode', lanMode);
+
+  if (darkTheme) {
+    setDarkTheme();
+  } else {
+    setLightTheme();
+  }
+  $("#enableDR").prop('checked', enableDeadReckoning);
+  $("#snailTrails").val(snailTrailMode);
+  $("#snailTrailLength").val(snailTrailLength);
+  $("#lanMode").prop('checked', lanMode);
+}
+
+
+/////////////////////////////
 //        KICK-OFF         //
 /////////////////////////////
 
+loadLocalStorage();
 fetchDataFirst();
 setInterval(fetchDataUpdate, QUERY_SERVER_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
