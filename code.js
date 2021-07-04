@@ -57,7 +57,7 @@ var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "A
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
-var onMobile = window.matchMedia('screen and (max-width: 600px)').matches;
+var onMobile = window.matchMedia('screen and (max-width: 800px)').matches;
 
 
 /////////////////////////////
@@ -921,3 +921,4 @@ fetchDataFirst();
 setInterval(fetchDataUpdate, QUERY_SERVER_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 $("#clientVersion").text(VERSION);
+setTimeout(function(){ $("#appname").fadeOut(); }, 8000);

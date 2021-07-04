@@ -203,7 +203,7 @@ table.trackTable th.name {
 }
 
 /* Mobile */
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 800px) {
     div#top h1 {
         display: none;
     }
