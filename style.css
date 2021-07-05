@@ -217,8 +217,4 @@ table#trackTable th.name {
     #tracktablearea {
         overflow-x: scroll;
     }
-    table.trackTable {
-        width: 0px;
-        font-size: 0.7em;
-    }
 }
