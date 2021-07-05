@@ -654,7 +654,7 @@ function getFormattedAge(t) {
     return "---";
   } else {
     var age = getTimeInServerRefFrame().valueOf() - time;
-    if (age < QUERY_SERVER_INTERVAL_MILLISEC) {
+    if (!oldEnoughToShowAnticipated(t)) {
       return "Live";
     } else if (age < 60000) {
       return Math.floor(age / 1000) + "s";
