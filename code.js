@@ -52,7 +52,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.0.4";
+const VERSION = "2.0.5";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -305,11 +305,7 @@ async function updateTrackTable() {
   tableList.sort((a, b) => (a["name"] > b["name"]) ? 1 : -1);
 
   // Create header
-  var table = $('<table>');
-  table.addClass('tracktable');
-  var headerFields = "<th class='name'>NAME</th><th>TYPE</th><th>LAT</th><th>LON</th><th>ALT<br>FL</th><th>HDG<br>DEG</th><th>SPD<br>KTS</th>";
-  var header = $('<tr>').html(headerFields);
-  table.append(header);
+  var tableContent = "<tr><th class='name'>NAME</th><th>TYPE</th><th>LAT</th><th>LON</th><th>ALT<br>FL</th><th>HDG<br>DEG</th><th>SPD<br>KTS</th><th>AGE</th></tr>";
 
   // Create table rows
   var rows = 0;
@@ -336,30 +332,32 @@ async function updateTrackTable() {
         altRateSymb = "\u25bc";
       }
 
+
       // Generate table row
-      var rowFields = "<td class='name'>" + t["name"].replaceAll(" ", "&nbsp;") + "</td>";
+      var rowFields = "<tr trackID='" + t["id"] + "'";
+      if (trackSelected(t["id"])) {
+        rowFields += " class='selected'";
+      }
+      rowFields += "><td class='name'>" + t["name"].replaceAll(" ", "&nbsp;") + "</td>";
       rowFields += "<td>" + typeAbbr + "</td>";
       rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[0]).toFixed(4).padStart(7, '0') + ((pos[0] >= 0) ? 'N' : 'S')) : "---") + "</td>";
       rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[1]).toFixed(4).padStart(8, '0') + ((pos[1] >= 0) ? 'E' : 'W')) : "---") + "</td>";
       rowFields += "<td>" + ((t["altitude"] != null) ? ((t["altitude"] / 100).toFixed(0) + altRateSymb) : "---") + "</td>";
       rowFields += "<td>" + ((t["heading"] != null) ? t["heading"].toString().padStart(3, "0") : "---") + "</td>";
       rowFields += "<td>" + ((t["speed"] != null) ? t["speed"].toFixed(0) : "---") + "</td>";
-      var row = $('<tr trackID=' + t["id"] + '>').html(rowFields);
-      if (trackSelected(t["id"])) {
-        row.addClass("selected");
-      }
+      rowFields += "<td>" + getFormattedAge(t) + "</td></tr>";
 
       // Add to table
-      table.append(row);
+      tableContent += rowFields;
       rows++;
     }
   });
   if (rows == 0) {
-    table.append($('<tr>').html("<td colspan=12><div class='tablenodata'>NO DATA</div></td>"));
+    tableContent += "<tr><td colspan=8><div class='tablenodata'>NO DATA</div></td></tr>";
   }
 
   // Update DOM
-  $('#tracktablearea').html(table);
+  $('#tracktable').html(tableContent);
 }
 
 // Update the count of how many things we're tracking in the info panel.
@@ -630,6 +628,28 @@ function oldEnoughToShowAnticipated(t) {
     return t["postime"] != null && getTimeInServerRefFrame().diff(t["postime"]) > AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
   } else {
     return t["postime"] != null && getTimeInServerRefFrame().diff(t["postime"]) > SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC;
+  }
+}
+
+// Get an age for the track, formatted for display
+function getFormattedAge(t) {
+  var time = 0;
+  if (t["postime"] != null) {
+    time = t["postime"];
+  } else if (t["datatime"] != null) {
+    time = t["datatime"];
+  }
+  if (time == 0) {
+    return "---";
+  } else {
+    var age = getTimeInServerRefFrame().valueOf() - time;
+    if (age < 60000) {
+      return Math.floor(age / 1000) + "s";
+    } else if (age < 3600000) {
+      return Math.floor(age / 60000) + "m";
+    } else {
+      return Math.floor(age / 3600000) + "h";
+    }
   }
 }
 

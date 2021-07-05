@@ -57,7 +57,7 @@ div#map {
     overflow: hidden;
 }
 div.rightbox {
-    width: 500px;
+    width: 550px;
     position: absolute;
     top: 50px;
     right: 0px;
@@ -71,11 +71,11 @@ div.rightbox {
     overflow-y: scroll;
     overflow-x: hidden;
 }
-table.trackTable {
-    width: 460px;
+table#trackTable {
+    width: 530px;
 }
 
-/* Top bar tyles */
+/* Top bar styles */
 div#top {
     color: var(--highlight);
     box-sizing: border-box;
@@ -170,30 +170,30 @@ select.configSelect {
     border-radius: 3px;
     color: var(--highlight);
 }
-table.trackTable {
+table#trackTable {
     height: 90%;
     overflow-y: scroll;
     color: var(--highlight);
 }
-table.trackTable tr {
+table#trackTable tr {
     color: var(--text);
 }
-table.trackTable th {
+table#trackTable th {
     color: var(--highlight);
 }
-table.trackTable tr.selected {
+table#trackTable tr.selected {
     background-color: var(--highlight);
     color: var(--text-inverted);
 }
-table.trackTable td {
+table#trackTable td {
     text-align: center;
 }
-table.trackTable td.name {
+table#trackTable td.name {
     text-align: left;
     max-width: 140px;
     overflow: hidden;
 }
-table.trackTable th.name {
+table#trackTable th.name {
     text-align: left;
 }
 
