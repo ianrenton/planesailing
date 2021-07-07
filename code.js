@@ -339,11 +339,14 @@ async function updateTrackTable() {
 
 
       // Generate table row
-      var rowFields = "<tr trackID='" + t["id"] + "'";
+      var rowFields = "<tr trackID='" + t["id"] + "' class='";
       if (trackSelected(t["id"])) {
-        rowFields += " class='selected'";
+        rowFields += "selected";
       }
-      rowFields += "><td class='name'>" + t["name"].replaceAll(" ", "&nbsp;") + "</td>";
+      if (oldEnoughToShowAnticipated(t)) {
+        rowFields += " anticipated";
+      }
+      rowFields += "'><td class='name'>" + t["name"].replaceAll(" ", "&nbsp;") + "</td>";
       rowFields += "<td>" + typeAbbr + "</td>";
       rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[0]).toFixed(4).padStart(7, '0') + ((pos[0] >= 0) ? 'N' : 'S')) : "---") + "</td>";
       rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[1]).toFixed(4).padStart(8, '0') + ((pos[1] >= 0) ? 'E' : 'W')) : "---") + "</td>";
@@ -627,27 +630,39 @@ function getIconPosition(t) {
 // Is the track old enough that we should display the track as an anticipated
 // position?
 function oldEnoughToShowAnticipated(t) {
+  var time = getBestTime(t);
   if (!enableDeadReckoning || t["fixed"]) {
     return false;
   } else if (t["tracktype"] == "AIRCRAFT") {
-    return t["postime"] != null && getTimeInServerRefFrame().diff(t["postime"]) > AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
+    return time != null && getTimeInServerRefFrame().diff(time) > AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
   } else {
-    return t["postime"] != null && getTimeInServerRefFrame().diff(t["postime"]) > SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC;
+    return time != null && getTimeInServerRefFrame().diff(time) > SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC;
   }
 }
 
-// Get an age for the track, formatted for display
-function getFormattedAge(t) {
-  var time = 0;
+// Get the position time if it exists, otherwise get the metadata time.
+// If that doesn't exist either, return null.
+function getBestTime(t) {
+  var time = null;
   if (t["postime"] != null) {
     time = t["postime"];
   } else if (t["datatime"] != null) {
     time = t["datatime"];
   }
-  if (time == 0) {
+  return time;
+}
+
+// Get an age for the track, formatted for display
+function getFormattedAge(t) {
+  var time = getBestTime(t);
+  if (time == null) {
     return "---";
   } else {
-    return getFormattedDuration(getTimeInServerRefFrame().valueOf() - time, false);
+    if (!oldEnoughToShowAnticipated(t)) {
+      return "Live";
+    } else {
+      return getFormattedDuration(getTimeInServerRefFrame().valueOf() - time, false);
+    }
   }
 }
 

@@ -185,6 +185,9 @@ table#trackTable tr.selected {
     background-color: var(--highlight);
     color: var(--text-inverted);
 }
+table#trackTable tr.anticipated {
+    color: gray;
+}
 table#trackTable td {
     text-align: center;
 }
