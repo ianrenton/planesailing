@@ -672,7 +672,7 @@ function getFormattedDuration(millis, long) {
     return Math.floor(millis / 1000) + (long ? " seconds" : "s");
   } else if (millis < 3600000) {
     return Math.floor(millis / 60000) + (long ? " minutes" : "m");
-  } else if (millis < 86400000) {
+  } else if (millis < 172800000) {
     return Math.floor(millis / 3600000) + (long ? " hours" : "h");
   } else {
     return Math.floor(millis / 86400000) + (long ? " days" : "d");
