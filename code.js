@@ -52,7 +52,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.0.5";
+const VERSION = "2.0.6";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -148,7 +148,7 @@ async function handleDataFirst(result) {
   tracks.clear();
   tracks = objectToMap(result.tracks);
   $("#serverVersion").text(result.version);
-  updateGUIAfterQuery(result.time);
+  updateGUIAfterQuery(result);
 }
 
 // Handle successful receive of update data. This is a bit more complex
@@ -202,7 +202,7 @@ async function handleDataUpdate(result) {
     }
   });
 
-  updateGUIAfterQuery(result.time);
+  updateGUIAfterQuery(result);
 }
 
 // Standard set of code to call after receiving data and updating 
@@ -213,15 +213,20 @@ async function handleDataUpdate(result) {
 //   number of snail trail points we need to display
 // * Updates the track table GUI
 // * Updates the counters (e.g. "tracking 69 aircraft")
+// * Updates GUI display uptime & resource utilisation parameters
 // * Stores the current time as the time of the last query.
 // Note that this *doesn't* update the map itself - there's no
 // need to as it has its own update timer that's independent of
 // querying the server.
-async function updateGUIAfterQuery(serverTime) {
-  clockOffset = moment().diff(moment(serverTime).utc(), 'seconds');
+async function updateGUIAfterQuery(result) {
+  clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
   trimPositionHistory();
   updateTrackTable();
   updateCounters();
+  $("#uptime").text(getFormattedDuration(result.stats["uptime"], true));
+  $("#cpuLoad").text(result.stats["cpuLoad"] + "%");
+  $("#memUsed").text(result.stats["memUsed"] + "%");
+  $("#diskUsed").text(result.stats["diskUsed"] + "%");
   $("#lastQueryTime").text(moment().format('lll'));
 }
 
@@ -642,14 +647,20 @@ function getFormattedAge(t) {
   if (time == 0) {
     return "---";
   } else {
-    var age = getTimeInServerRefFrame().valueOf() - time;
-    if (age < 60000) {
-      return Math.floor(age / 1000) + "s";
-    } else if (age < 3600000) {
-      return Math.floor(age / 60000) + "m";
-    } else {
-      return Math.floor(age / 3600000) + "h";
-    }
+    return getFormattedDuration(getTimeInServerRefFrame().valueOf() - time, false);
+  }
+}
+
+// Get a duration formatted for display
+function getFormattedDuration(millis, long) {
+  if (millis < 60000) {
+    return Math.floor(millis / 1000) + (long ? " seconds" : "s");
+  } else if (millis < 3600000) {
+    return Math.floor(millis / 60000) + (long ? " minutes" : "m");
+  } else if (millis < 86400000) {
+    return Math.floor(millis / 3600000) + (long ? " hours" : "h");
+  } else {
+    return Math.floor(millis / 86400000) + (long ? " days" : "d");
   }
 }
 

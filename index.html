@@ -39,10 +39,12 @@
             <p>The home situational awareness display nobody wanted or needed!</p>
             <p>This software displays what's currently being tracked by ADS-B, AIS and APRS radio packet receivers at the base station.</p>
             <p>Made by <a href="https://ianrenton.com" target='_blank'>Ian Renton</a></p>
-            <p><a href="https://ianrenton.com/hardware/planesailing" target='_blank'>Project Info</a> | <a href="https://github.com/ianrenton/planesailing" target='_blank'>Client Source Code</a> | <a href="https://github.com/ianrenton/planesailing-server" target='_blank'>Server Source Code</a></p>
-            <p>Client version: <span id="clientVersion" class="highlight">Unknown</span> | Server version: <span id="serverVersion" class="highlight">Unknown</span></p>
+            <p><a href="https://ianrenton.com/hardware/planesailing" target='_blank'>Project Info</a> &nbsp; &nbsp; <a href="https://github.com/ianrenton/planesailing" target='_blank'>Client Source Code</a> &nbsp; &nbsp; <a href="https://github.com/ianrenton/planesailing-server" target='_blank'>Server Source Code</a></p>
+            <p>Client version: <span id="clientVersion" class="highlight">Unknown</span> &nbsp; Server version: <span id="serverVersion" class="highlight">Unknown</span></p>
             <p>Last queried the server at: <span id="lastQueryTime" class="highlight">Never</span></p>
             <p>This instance is currently tracking <span id="aircraftCount" class="highlight">0</span>&nbsp;aircraft, <span id="shipCount" class="highlight">0</span>&nbsp;ships and <span id="aprsCount" class="highlight">0</span>&nbsp;APRS&nbsp;contacts.</p>
+            <p>Uptime: <span id="uptime" class="highlight">Unknown</span></p>
+            <p>Server resource utilisation: &nbsp;<span id="cpuLoad" class="highlight">0%</span>&nbsp;CPU&nbsp; <span id="memUsed" class="highlight">0%</span>&nbsp;memory&nbsp; <span id="diskUsed" class="highlight">0%</span>&nbsp;disk</p>
         </div>
 
         <div id="configPanel" class="rightbox">
@@ -98,7 +100,7 @@
 
         <script src="code.js"></script>
         <script>
-            if ('serviceWorker' in navigator) {
+            if ((window.location.protocol == "http:" || window.location.protocol == "https:") && 'serviceWorker' in navigator) {
               navigator.serviceWorker.register('service-worker.js');
             }
         </script>
