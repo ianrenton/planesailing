@@ -601,7 +601,7 @@ function getLastKnownPosition(t) {
 // Get the dead reckoned position of a track based on its last position
 // update plus course and speed at that time.
 function getDRPosition(t) {
-  if (getLastKnownPosition(t) != null && t["postime"] != null && t["course"] != null && t["speed"] != null && t["speed"] >= 1.0) {
+  if (getLastKnownPosition(t) != null && t["postime"] != null && t["course"] != null && t["speed"] != null && t["speed"] > 1.0) {
     // Can dead reckon
     var timePassedSec = getTimeInServerRefFrame().diff(t["postime"]) / 1000.0;
     var speedMps = t["speed"] * 0.514444;
@@ -617,7 +617,7 @@ function getDRPosition(t) {
 // whether DR is enabled and the data to use it is available.
 function getIconPosition(t) {
   if (t["lat"] != null && t["lon"] != null) {
-    if (enableDeadReckoning && t["postime"] != null && t["course"] != null && t["speed"] != null && t["speed"] >= 1.0) {
+    if (enableDeadReckoning && t["postime"] != null && t["course"] != null && t["speed"] != null && t["speed"] > 1.0) {
       return getDRPosition(t);
     } else {
       return getLastKnownPosition(t);
