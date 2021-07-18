@@ -32,6 +32,7 @@ const ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES = 12; // If zoomed in at least this far, 
 // PC performance allows, remember you may not be the only active user!
 const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
 const QUERY_SERVER_INTERVAL_MILLISEC = 10000;
+const QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC = 30000;
 
 // Times after which to show tracks as 'anticipated' (dotted outline).
 // Technically we are anticipating position immediately when dead
@@ -52,7 +53,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.0.6";
+const VERSION = "2.1.0";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -71,6 +72,7 @@ var enableDeadReckoning = true;
 var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
 var lanMode = false;
+var showTelemetry = false;
 var selectedTrackID = "";
 
 
@@ -126,6 +128,21 @@ function fetchDataUpdate() {
   });
 }
 
+// "Telemetry" API call - called at regular intervals but only effective if
+// showTelemetry is enabled.
+function fetchTelemetry() {
+  if (showTelemetry) {
+    $.ajax({
+      url: getServerURL() + "telemetry",
+      dataType: 'json',
+      timeout: 5000,
+      success: async function(result) {
+        handleTelemetry(result);
+      }
+    });
+  }
+}
+
 // Get the URL for the server based on whether we're in LAN mode or not
 function getServerURL() {
   if (lanMode) {
@@ -148,7 +165,7 @@ async function handleDataFirst(result) {
   tracks.clear();
   tracks = objectToMap(result.tracks);
   $("#serverVersion").text(result.version);
-  updateGUIAfterQuery(result);
+  updateGUIAfterDataQuery(result);
 }
 
 // Handle successful receive of update data. This is a bit more complex
@@ -202,32 +219,19 @@ async function handleDataUpdate(result) {
     }
   });
 
-  updateGUIAfterQuery(result);
+  updateGUIAfterDataQuery(result);
 }
 
-// Standard set of code to call after receiving data and updating 
-// the tracks map with it. This method:
-// * Updates the clock offset, so we know the difference between
-//   our local clock and the server's
-// * Trims position history, removing any history older than the
-//   number of snail trail points we need to display
-// * Updates the track table GUI
-// * Updates the counters (e.g. "tracking 69 aircraft")
-// * Updates GUI display uptime & resource utilisation parameters
-// * Stores the current time as the time of the last query.
-// Note that this *doesn't* update the map itself - there's no
-// need to as it has its own update timer that's independent of
-// querying the server.
-async function updateGUIAfterQuery(result) {
-  clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
-  trimPositionHistory();
-  updateTrackTable();
-  updateCounters();
-  $("#uptime").text(getFormattedDuration(result.stats["uptime"], true));
-  $("#cpuLoad").text(result.stats["cpuLoad"] + "%");
-  $("#memUsed").text(result.stats["memUsed"] + "%");
-  $("#diskUsed").text(result.stats["diskUsed"] + "%");
-  $("#lastQueryTime").text(moment().format('lll'));
+// Handle successful receive of telemetry data.
+async function handleTelemetry(result) {
+  $("#uptime").text(getFormattedDuration(result.uptime, true));
+  $("#cpuLoad").text(result.cpuLoad + "%");
+  $("#memUsed").text(result.memUsed + "%");
+  $("#diskUsed").text(result.diskUsed + "%");
+  $("#adsbStatus").text(result.adsbReceiverStatus);
+  $("#mlatStatus").text(result.mlatReceiverStatus);
+  $("#aisStatus").text(result.aisReceiverStatus);
+  $("#aprsStatus").text(result.aprsReceiverStatus);
 }
 
 // Trim the position history to the user-configurable snail trail length,
@@ -240,6 +244,27 @@ async function trimPositionHistory() {
       }
     }
   });
+}
+
+// Standard set of code to call after receiving data and updating 
+// the tracks map with it. This method:
+// * Updates the clock offset, so we know the difference between
+//   our local clock and the server's
+// * Trims position history, removing any history older than the
+//   number of snail trail points we need to display
+// * Updates the track table GUI
+// * Updates the counters (e.g. "tracking 69 aircraft") and last
+//   server query time
+// * Stores the current time as the time of the last query.
+// Note that this *doesn't* update the map itself - there's no
+// need to as it has its own update timer that's independent of
+// querying the server.
+async function updateGUIAfterDataQuery(result) {
+  clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
+  trimPositionHistory();
+  updateTrackTable();
+  updateCounters();
+  $("#lastQueryTime").text(moment().format('lll'));
 }
 
 
@@ -903,6 +928,20 @@ $("#lanMode").change(function() {
   fetchDataFirst();
 });
 
+// Show Telemetry switch
+$("#showTelemetry").change(function() {
+  showTelemetry = $(this).is(':checked');
+  localStorage.setItem('showTelemetry', showTelemetry);
+  if (showTelemetry) {
+    $("#telemetry").show();
+    fetchTelemetry();
+    // Go to the info panel as presumably you wanted to see it
+    manageRightBoxes("#infoPanel", "#configPanel", "#trackTablePanel");
+  } else {
+    $("#telemetry").hide();
+  }
+});
+
 // Table row click selects the track
 $(document).on("click", "tr", function(e) {
   tableSelect($(e.currentTarget).attr("trackID"));
@@ -930,6 +969,7 @@ function loadLocalStorage() {
   snailTrailMode = localStorageGetOrDefault('snailTrailMode', snailTrailMode);
   snailTrailLength = localStorageGetOrDefault('snailTrailLength', snailTrailLength);
   lanMode = localStorageGetOrDefault('lanMode', lanMode);
+  showTelemetry = localStorageGetOrDefault('showTelemetry', showTelemetry);
   trackTypesVisible = localStorageGetOrDefault('trackTypesVisible', trackTypesVisible);
   var showAirspaceLayer = localStorageGetOrDefault('showAirspaceLayer', false);
   var showMaritimeLayer = localStorageGetOrDefault('showMaritimeLayer', false);
@@ -939,10 +979,17 @@ function loadLocalStorage() {
   } else {
     setLightTheme();
   }
+  if (showTelemetry) {
+    $("#telemetry").show();
+  } else {
+    $("#telemetry").hide();
+  }
+
   $("#enableDR").prop('checked', enableDeadReckoning);
   $("#snailTrails").val(snailTrailMode);
   $("#snailTrailLength").val(snailTrailLength);
   $("#lanMode").prop('checked', lanMode);
+  $("#showTelemetry").prop('checked', showTelemetry);
 
   $("#showAircraft").prop('checked', trackTypesVisible.includes("AIRCRAFT"));
   $("#showShips").prop('checked', trackTypesVisible.includes("SHIP"));
@@ -964,7 +1011,9 @@ function loadLocalStorage() {
 
 loadLocalStorage();
 fetchDataFirst();
+fetchTelemetry();
 setInterval(fetchDataUpdate, QUERY_SERVER_INTERVAL_MILLISEC);
+setInterval(fetchTelemetry, QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 $("#clientVersion").text(VERSION);
 setTimeout(function(){ $("#appname").fadeOut(); }, 8000);

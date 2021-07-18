@@ -45,8 +45,11 @@
             <p>Client version: <span id="clientVersion" class="highlight">Unknown</span> &nbsp; Server version: <span id="serverVersion" class="highlight">Unknown</span></p>
             <p>Last queried the server at: <span id="lastQueryTime" class="highlight">Never</span></p>
             <p>This instance is currently tracking <span id="aircraftCount" class="highlight">0</span>&nbsp;aircraft, <span id="shipCount" class="highlight">0</span>&nbsp;ships and <span id="aprsCount" class="highlight">0</span>&nbsp;APRS&nbsp;contacts.</p>
-            <p>Uptime: <span id="uptime" class="highlight">Unknown</span></p>
-            <p>Server resource utilisation: &nbsp;<span id="cpuLoad" class="highlight">0%</span>&nbsp;CPU&nbsp; <span id="memUsed" class="highlight">0%</span>&nbsp;memory&nbsp; <span id="diskUsed" class="highlight">0%</span>&nbsp;disk</p>
+            <div id="telemetry">
+                <p>Uptime: <span id="uptime" class="highlight">Unknown</span></p>
+                <p>Server resource utilisation: &nbsp;<span id="cpuLoad" class="highlight">0%</span>&nbsp;CPU&nbsp; <span id="memUsed" class="highlight">0%</span>&nbsp;memory&nbsp; <span id="diskUsed" class="highlight">0%</span>&nbsp;disk</p>
+                <p>Dump1090:&nbsp;<span id="adsbStatus" class="highlight">Unknown</span>&nbsp; PiAware:&nbsp;<span id="mlatStatus" class="highlight">Unknown</span><br/>rtl_ais:&nbsp;<span id="aisStatus" class="highlight">Unknown</span>&nbsp; Direwolf:&nbsp;<span id="aprsStatus" class="highlight">Unknown</span></p>
+            </div>
         </div>
 
         <div id="configPanel" class="rightbox">
@@ -91,7 +94,8 @@
                 </select>
             </div>
             <div class="configPanelSection">
-                <label for="lanMode" class="configLabel"><input type="checkbox" id="lanMode" name="lanMode">&nbsp;LAN&nbsp;Mode</label>
+                <label for="lanMode" class="configLabel"><input type="checkbox" id="lanMode" name="lanMode">&nbsp;LAN&nbsp;Mode</label> &nbsp;
+                <label for="showTelemetry" class="configLabel"><input type="checkbox" id="showTelemetry" name="showTelemetry">&nbsp;Show&nbsp;Telemetry</label>
             </div>
 
         </div>
