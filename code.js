@@ -8,7 +8,7 @@
 // server, where the main URL won't work. There is a switch in the Configuration
 // panel to toggle between them.
 const SERVER_URL = "https://planesailingserver.ianrenton.com/";
-const SERVER_URL_LAN = "http://127.0.0.1:8090/";
+const SERVER_URL_LAN = "http://192.168.1.240:8090/";
 
 // Map layer URLs - if re-using this code you will need to provide your own Mapbox
 // access token in the Mapbox URL. You can still use my styles.
