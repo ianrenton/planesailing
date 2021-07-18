@@ -53,12 +53,14 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.1.0";
+const VERSION = "2.1.1";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
 var onMobile = window.matchMedia('screen and (max-width: 800px)').matches;
+var firstVisit = false;
+var selectedTrackID = "";
 
 
 /////////////////////////////
@@ -66,14 +68,13 @@ var onMobile = window.matchMedia('screen and (max-width: 800px)').matches;
 /////////////////////////////
 
 // These are all parameters that can be changed by the user by clicking buttons on the GUI,
-// and all (except selected track ID) are persisted in local storage.
+// and are persisted in local storage.
 var darkTheme = true;
 var enableDeadReckoning = true;
 var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
 var lanMode = false;
 var showTelemetry = false;
-var selectedTrackID = "";
 
 
 /////////////////////////////
@@ -93,8 +94,9 @@ function fetchDataFirst() {
       showServerOffline(false);
       handleDataFirst(result);
       // Pop out track table by default on desktop browsers after first
-      // successful load.
-      if (!onMobile) {
+      // successful load, so long as it's not the user's first visit (in
+      // which case the info panel will be on display)
+      if (!onMobile && !firstVisit) {
         manageRightBoxes("#trackTablePanel", "#configPanel", "#infoPanel");
       }
     },
@@ -964,6 +966,10 @@ function localStorageGetOrDefault(key, defaultVal) {
 
 // Load from local storage and set GUI up appropriately
 function loadLocalStorage() {
+  if (localStorage.length == 0) {
+    firstVisit = true;
+  }
+
   darkTheme = localStorageGetOrDefault('darkTheme', darkTheme);
   enableDeadReckoning = localStorageGetOrDefault('enableDeadReckoning', enableDeadReckoning);
   snailTrailMode = localStorageGetOrDefault('snailTrailMode', snailTrailMode);
@@ -1017,3 +1023,8 @@ setInterval(fetchTelemetry, QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 $("#clientVersion").text(VERSION);
 setTimeout(function(){ $("#appname").fadeOut(); }, 8000);
+
+// Show info if this is a user's first visit
+if (firstVisit) {
+  manageRightBoxes("#infoPanel", "#configPanel", "#trackTablePanel");
+}
