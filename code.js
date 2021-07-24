@@ -53,8 +53,8 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.1.1";
-var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_TRACK", "BASE_STATION", "AIRPORT", "SEAPORT"];
+const VERSION = "2.1.2";
+var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
@@ -399,19 +399,27 @@ async function updateTrackTable() {
 async function updateCounters() {
   var aircraftCount = 0;
   var shipCount = 0;
-  var aprsCount = 0;
+  var aprsMobileCount = 0;
+  var aisShoreCount = 0;
+  var aprsBaseCount = 0;
   tracks.forEach(function(t) {
     if (t["tracktype"] == "AIRCRAFT") {
       aircraftCount++;
     } else if (t["tracktype"] == "SHIP") {
       shipCount++;
-    } else if (t["tracktype"] == "APRS_TRACK") {
-      aprsCount++;
+    } else if (t["tracktype"] == "APRS_MOBILE") {
+      aprsMobileCount++;
+    } else if (t["tracktype"] == "AIS_SHORE_STATION") {
+      aisShoreCount++;
+    } else if (t["tracktype"] == "APRS_BASE_STATION") {
+      aprsBaseCount++;
     }
   });
   $("#aircraftCount").text(aircraftCount);
   $("#shipCount").text(shipCount);
-  $("#aprsCount").text(aprsCount);
+  $("#aprsMobileCount").text(aprsMobileCount);
+  $("#aisShoreCount").text(aisShoreCount);
+  $("#aprsBaseCount").text(aprsBaseCount);
 }
 
 // Function called when an icon is clicked. Just set track as selected,
@@ -866,8 +874,11 @@ $("#showAISShoreStations").change(function() {
 $("#showATONs").change(function() {
   setTypeEnable("AIS_ATON", $(this).is(':checked'));
 });
-$("#showAPRS").change(function() {
-  setTypeEnable("APRS_TRACK", $(this).is(':checked'));
+$("#showAPRSMobile").change(function() {
+  setTypeEnable("APRS_MOBILE", $(this).is(':checked'));
+});
+$("#showAPRSBase").change(function() {
+  setTypeEnable("APRS_BASE_STATION", $(this).is(':checked'));
 });
 $("#showAirports").change(function() {
   setTypeEnable("AIRPORT", $(this).is(':checked'));
@@ -1001,7 +1012,8 @@ function loadLocalStorage() {
   $("#showShips").prop('checked', trackTypesVisible.includes("SHIP"));
   $("#showAISShoreStations").prop('checked', trackTypesVisible.includes("AIS_SHORE_STATION"));
   $("#showATONs").prop('checked', trackTypesVisible.includes("AIS_ATON"));
-  $("#showAPRS").prop('checked', trackTypesVisible.includes("APRS_TRACK"));
+  $("#showAPRSMobile").prop('checked', trackTypesVisible.includes("APRS_MOBILE"));
+  $("#showAPRSBase").prop('checked', trackTypesVisible.includes("APRS_BASE_STATION"));
   $("#showAirports").prop('checked', trackTypesVisible.includes("AIRPORT"));
   $("#showSeaPorts").prop('checked', trackTypesVisible.includes("SEAPORT"));
   $("#showBase").prop('checked', trackTypesVisible.includes("BASE_STATION"));
