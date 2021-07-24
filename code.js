@@ -348,7 +348,7 @@ async function updateTrackTable() {
       var pos = getLastKnownPosition(t);
       // Type abbreviation
       var typeAbbr = "";
-      if (t["tracktype"] == "SHIP") {
+      if (t["tracktype"] == "SHIP" || t["tracktype"] == "AIS_ATON") {
         typeAbbr = "SEA";
       } else if (t["tracktype"] == "AIRCRAFT") {
         typeAbbr = "AIR";
