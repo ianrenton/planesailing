@@ -687,13 +687,18 @@ function getBestTime(t) {
   return time;
 }
 
-// Get an age for the track, formatted for display
+// Get an age for the track, formatted for display.
+// This will be a normal formatted duration, unless the age is unknown,
+// in which case "---" is returned, or if the track is non-fixed and
+// not old enough to show as anticipated, in which case "Live" is returned
+// to make clear to the user that the track is live without them having
+// to worry about how many seconds old it is.
 function getFormattedAge(t) {
   var time = getBestTime(t);
   if (time == null) {
     return "---";
   } else {
-    if (!oldEnoughToShowAnticipated(t)) {
+    if (!t["fixed"] && !oldEnoughToShowAnticipated(t)) {
       return "Live";
     } else {
       return getFormattedDuration(getTimeInServerRefFrame().valueOf() - time, false);
