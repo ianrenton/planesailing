@@ -370,8 +370,8 @@ async function updateTrackTable() {
       if (trackSelected(t["id"])) {
         rowFields += "selected";
       }
-      if (oldEnoughToShowAnticipated(t)) {
-        rowFields += " anticipated";
+      if (!youngEnoughToShowLive(t)) {
+        rowFields += " notlive";
       }
       rowFields += "'><td class='name'>" + t["name"].replaceAll(" ", "&nbsp;") + "</td>";
       rowFields += "<td>" + typeAbbr + "</td>";
@@ -662,8 +662,26 @@ function getIconPosition(t) {
   }
 }
 
+// Is the track young enough that we should display the track age as "live"?
+// This simplifies the display for the user so they don't have to think
+// about "how many seconds old does it have to be before it's not live?"
+// This is roughly the inverse of oldEnoughToShowAnticipated, but does not
+// take into acount fixed tracks as a special case or whether dead
+// reckoning is enabled.
+function youngEnoughToShowLive(t) {
+  var time = getBestTime(t);
+  if (t["tracktype"] == "AIRCRAFT") {
+    return time != null && getTimeInServerRefFrame().diff(time) <= AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
+  } else {
+    return time != null && getTimeInServerRefFrame().diff(time) <= SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC;
+  }
+}
+
 // Is the track old enough that we should display the track as an anticipated
 // position?
+// This is roughly the inverse of youngEnoughToShowLive, but if a track is fixed
+// or dead reckoning is disabled, then the track will never be shown as
+// anticipated.
 function oldEnoughToShowAnticipated(t) {
   var time = getBestTime(t);
   if (!enableDeadReckoning || t["fixed"]) {
@@ -698,7 +716,7 @@ function getFormattedAge(t) {
   if (time == null) {
     return "---";
   } else {
-    if (!t["fixed"] && !oldEnoughToShowAnticipated(t)) {
+    if (youngEnoughToShowLive(t)) {
       return "Live";
     } else {
       return getFormattedDuration(getTimeInServerRefFrame().valueOf() - time, false);

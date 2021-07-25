@@ -188,7 +188,7 @@ table#trackTable tr.selected {
     background-color: var(--highlight);
     color: var(--text-inverted);
 }
-table#trackTable tr.anticipated {
+table#trackTable tr.notlive {
     color: gray;
 }
 table#trackTable td {
