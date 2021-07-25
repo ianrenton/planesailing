@@ -53,7 +53,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.1.3";
+const VERSION = "2.2.0";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -508,12 +508,13 @@ function getIcon(t) {
 
   // Generate symbol for display
   var mysymbol = new ms.Symbol(symbol, {
-    staffComments: detailedSymb ? t["desc1"] : "",
-    additionalInformation: detailedSymb ? t["desc2"] : "",
     direction: (t["heading"] != null) ? t["heading"] : "",
     altitudeDepth: (detailedSymb && t["altitude"] != null) ? "FL" + (t["altitude"] / 100).toFixed(0) : "",
     speed: (detailedSymb && t["speed"] != null) ? t["speed"].toFixed(0) + "KTS" : "",
-    type: (showName || detailedSymb) ? t["name"] : "",
+    uniqueDesignation: (showName || detailedSymb) ? t["name"] : "",
+    type: detailedSymb ? t["typeDesc"] : "",
+    staffComments: detailedSymb ? t["info1"] : "",
+    additionalInformation: detailedSymb ? t["info2"] : "",
     dtg: ((!t["fixed"] && t["postime"] != null && detailedSymb) ? moment(t["postime"]).utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
     location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + " " + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
   });
