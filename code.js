@@ -53,7 +53,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.2.0";
+const VERSION = "2.2.1";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -191,13 +191,15 @@ async function handleDataUpdate(result) {
       // Then add a new value to the position history if the track has moved,
       // or if we don't know its old position.
       if (!newTrack["fixed"]) {
-        if (oldTrack["poshistory"].length > 0) {
-          var oldPos = oldTrack["poshistory"][oldTrack["poshistory"].length - 1];
-          if (oldPos["lat"] != newTrack["lat"] || oldPos["lon"] != newTrack["lon"]) {
+        if (newTrack["lat"] != null && newTrack["lon"] != null) {
+          if (oldTrack["poshistory"].length > 0) {
+            var oldPos = oldTrack["poshistory"][oldTrack["poshistory"].length - 1];
+            if (oldPos["lat"] != newTrack["lat"] || oldPos["lon"] != newTrack["lon"]) {
+              oldTrack["poshistory"].push({lat: newTrack["lat"], lon: newTrack["lon"]});
+            }
+          } else {
             oldTrack["poshistory"].push({lat: newTrack["lat"], lon: newTrack["lon"]});
           }
-        } else {
-          oldTrack["poshistory"].push({lat: newTrack["lat"], lon: newTrack["lon"]});
         }
       }
 
@@ -206,7 +208,9 @@ async function handleDataUpdate(result) {
       // make sure it has a position history array - if it didn't
       // come across in the "first" call, it won't have one.
       newTrack["poshistory"] = new Array();
-      newTrack["poshistory"].push({lat: newTrack["lat"], lon: newTrack["lon"]});
+      if (newTrack["lat"] != null && newTrack["lon"] != null) {
+        newTrack["poshistory"].push({lat: newTrack["lat"], lon: newTrack["lon"]});
+      }
       tracks.set(id, newTrack);
     }
   });
