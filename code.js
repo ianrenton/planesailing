@@ -379,11 +379,11 @@ async function updateTrackTable() {
       }
       rowFields += "'><td class='name'>" + t["name"].replaceAll(" ", "&nbsp;") + "</td>";
       rowFields += "<td>" + typeAbbr + "</td>";
-      rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[0]).toFixed(4).padStart(7, '0') + ((pos[0] >= 0) ? 'N' : 'S')) : "---") + "</td>";
-      rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[1]).toFixed(4).padStart(8, '0') + ((pos[1] >= 0) ? 'E' : 'W')) : "---") + "</td>";
-      rowFields += "<td>" + ((t["altitude"] != null) ? ((t["altitude"] / 100).toFixed(0) + altRateSymb) : "---") + "</td>";
-      rowFields += "<td>" + ((t["heading"] != null) ? t["heading"].toString().padStart(3, "0") : "---") + "</td>";
-      rowFields += "<td>" + ((t["speed"] != null) ? t["speed"].toFixed(0) : "---") + "</td>";
+      rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[0]).toFixed(4).padStart(7, '0') + ((pos[0] >= 0) ? 'N' : 'S')) : "&mdash;") + "</td>";
+      rowFields += "<td>" + ((pos != null) ? (Math.abs(pos[1]).toFixed(4).padStart(8, '0') + ((pos[1] >= 0) ? 'E' : 'W')) : "&mdash;") + "</td>";
+      rowFields += "<td>" + ((t["altitude"] != null) ? ((t["altitude"] / 100).toFixed(0) + altRateSymb) : "&mdash;") + "</td>";
+      rowFields += "<td>" + ((t["heading"] != null) ? t["heading"].toString().padStart(3, "0") : "&mdash;") + "</td>";
+      rowFields += "<td>" + ((t["speed"] != null) ? t["speed"].toFixed(0) : "&mdash;") + "</td>";
       rowFields += "<td>" + getFormattedAge(t) + "</td></tr>";
 
       // Add to table
