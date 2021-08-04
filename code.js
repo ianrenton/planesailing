@@ -53,7 +53,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.2.1";
+const VERSION = "2.2.2";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -61,6 +61,7 @@ var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dea
 var onMobile = window.matchMedia('screen and (max-width: 800px)').matches;
 var firstVisit = false;
 var selectedTrackID = "";
+var lastQueryTime = moment();
 
 
 /////////////////////////////
@@ -112,6 +113,18 @@ function fetchDataFirst() {
 // "Update" API call - called at regular intervals, this retrieves new data from
 // the server.
 function fetchDataUpdate() {
+  // First check how long it's been since we last did an update call.
+  // If it's been a long time, this represents a tab that was in the
+  // background or a PWA that was closed and re-opened, so instead of
+  // an update we should do a first load instead so we get the full
+  // history for the time we missed.
+  if (moment().diff(lastQueryTime, 'milliseconds') > (10 * QUERY_SERVER_INTERVAL_MILLISEC)) {
+    fetchDataFirst();
+    fetchTelemetry();
+    return;
+  }
+
+  // OK, time for a real update call then
   showLoadingIndicator(true);
   $.ajax({
     url: getServerURL() + "update",
@@ -270,6 +283,7 @@ async function updateGUIAfterDataQuery(result) {
   trimPositionHistory();
   updateTrackTable();
   updateCounters();
+  lastQueryTime = moment();
   $("#lastQueryTime").text(moment().format('lll'));
 }
 
