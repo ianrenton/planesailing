@@ -37,6 +37,7 @@ div#top {
     right: 0;
     margin: 0;
     z-index: 1000;
+    pointer-events: none;
 }
 div#top h1 {
     margin: 0.3em 0.5em 0.3em 0.5em;
@@ -49,6 +50,7 @@ div#menu button {
     margin-left: 0.5em;
     padding: 0.5em;
     height: 43px;
+    pointer-events: auto;
 }
 div#map { 
     width:auto; 
