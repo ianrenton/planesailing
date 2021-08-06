@@ -440,30 +440,38 @@ async function updateCounters() {
   $("#aprsBaseCount").text(aprsBaseCount);
 }
 
-// Function called when an icon is clicked. Just set track as selected,
-// unless it already is, in which case deselect.
+// Function called when an icon is clicked. Set track as selected and scroll,
+// the table to it, unless it already is selected, in which case deselect.
 async function iconSelect(id) {
   select(id, false);
 }
 
-// Function called when a table row is clicked. Set track as selected and zoom
-// to it.
+// Function called when a table row is clicked. Set track as selected and pan
+// the map to it.
 async function tableSelect(id) {
   select(id, true);
 }
 
-// Select or deselect the given track, optionally pan to it on selection.
-async function select(id, pan) {
+// Select or deselect the given track.
+// If the selection came from the table, pan the map to the selected ID;
+// if the selection didn't come from the table (i.e. it came from the map),
+// scroll the table to it.
+async function select(id, selectionCameFromTable) {
   if (id != selectedTrackID) {
     selectedTrackID = id;
-    if (pan) {
-      panTo(id);
-    }
   } else {
     selectedTrackID = 0;
   }
   updateMap();
   updateTrackTable();
+
+  if (selectedTrackID != 0) {
+    if (selectionCameFromTable) {
+      panTo(id);
+    } else {
+      $("tr.selected").get(0).scrollIntoView({behavior: "smooth", block: "center"});
+    }
+  }
 }
 
 // Pan to an entity, given its ID
