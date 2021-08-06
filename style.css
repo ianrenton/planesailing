@@ -210,6 +210,23 @@ table#trackTable th.name {
     background: none;
 }
 
+/* Right-click menu */
+.leaflet-contextmenu a.leaflet-contextmenu-item-disabled {
+    opacity: 1;
+    font-weight: bold;
+}
+.leaflet-contextmenu a.leaflet-contextmenu-item.over {
+    background-color: rgba(120, 200, 255, 1);
+    border-top: 1px solid rgba(120, 200, 255, 1);
+    border-bottom: 1px solid rgba(120, 200, 255, 1);
+}
+.leaflet-contextmenu a.leaflet-contextmenu-item-disabled.over {
+    background-color: white;
+    border-top: 1px solid white;
+    border-bottom: 1px solid white;
+}
+
+
 /* Mobile */
 @media only screen and (max-width: 800px) {
     div#top h1 {

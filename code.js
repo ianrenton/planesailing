@@ -53,7 +53,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.2.2";
+const VERSION = "2.3.0";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -572,20 +572,64 @@ function getNewMarker(t) {
   var pos = getIconPosition(t);
   var icon = getIcon(t);
   if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
-    // Create marker
+    // Create marker, including default context menu (right-click)
     var m = L.marker(pos, {
-      icon: icon
+      icon: icon,
+      contextmenu: true,
+      contextmenuItems: getContextMenuItems(t)
     });
-    // Set the click action for the marker
+
+    // Set the left-click action for the marker
     m.on('click', (function(id) {
       return function() {
         iconSelect(id);
       };
     })(t["id"]));
+
     return m;
   } else {
     return null;
   }
+}
+
+// Generate the context menu items for a track.
+function getContextMenuItems(t) {
+      var contextMenuItems = [{
+        text: t["name"],
+        disabled: true
+      }, {
+        separator: true
+      }, {
+        text: "Select/Deselect",
+        hideOnSelect: true,
+        callback: async function(result) { iconSelect(t["id"]); }
+      }, {
+        text: "Clear Snail Trail",
+        hideOnSelect: true,
+        callback: async function(result) { t["poshistory"] = new Array(); }
+      }];
+
+    // Add extra actions to the context menu if required
+    if (t["tracktype"] == "SHIP") {
+      contextMenuItems.push({
+        text: "Look up on MarineTraffic...",
+        hideOnSelect: true,
+        callback: async function(result) { window.open("https://www.marinetraffic.com/en/ais/details/ships/mmsi:" + t["id"]); }
+      });
+    } else if (t["tracktype"] == "AIRCRAFT" && !t["name"].startsWith("ICAO ")) {
+      contextMenuItems.push({
+        text: "Look up on FlightAware...",
+        hideOnSelect: true,
+        callback: async function(result) { window.open("https://uk.flightaware.com/live/flight/" + t["name"]); }
+      });
+    } else if (t["tracktype"] == "APRS_MOBILE" || t["tracktype"] == "APRS_BASE_STATION" || t["tracktype"] == "BASE_STATION") {
+      contextMenuItems.push({
+        text: "Look up on QRZ...",
+        hideOnSelect: true,
+        callback: async function(result) { window.open("https://www.qrz.com/db/" + t["name"].split('-')[0]); }
+      });
+    }
+    return contextMenuItems;
 }
 
 // Generate a snail trail polyline for the track based on its
@@ -846,10 +890,12 @@ function setDarkTheme() {
 //       MAP SETUP         //
 /////////////////////////////
 
-// Create map and set initial view. Zoom out one level if on mobile
+// Create map
 var map = L.map('map', {
-  zoomControl: false
+  zoomControl: false,
+  contextmenu: true
 })
+// Set initial view. Zoom out one level if on mobile
 var startZoom = START_ZOOM;
 var screenWidth = (window.innerWidth > 0) ? window.innerWidth : screen.width;
 if (screenWidth <= 600) {
