@@ -601,10 +601,12 @@ function getContextMenuItems(t) {
         separator: true
       }, {
         text: "Select/Deselect",
+        icon: "icons/select.png",
         hideOnSelect: true,
         callback: async function(result) { iconSelect(t["id"]); }
       }, {
         text: "Clear Snail Trail",
+        icon: "icons/clear.png",
         hideOnSelect: true,
         callback: async function(result) { t["poshistory"] = new Array(); }
       }];
@@ -613,18 +615,21 @@ function getContextMenuItems(t) {
     if (t["tracktype"] == "SHIP") {
       contextMenuItems.push({
         text: "Look up on MarineTraffic...",
+        icon: "icons/marinetraffic.png",
         hideOnSelect: true,
         callback: async function(result) { window.open("https://www.marinetraffic.com/en/ais/details/ships/mmsi:" + t["id"]); }
       });
     } else if (t["tracktype"] == "AIRCRAFT" && !t["name"].startsWith("ICAO ")) {
       contextMenuItems.push({
         text: "Look up on FlightAware...",
+        icon: "icons/flightaware.png",
         hideOnSelect: true,
         callback: async function(result) { window.open("https://uk.flightaware.com/live/flight/" + t["name"]); }
       });
     } else if (t["tracktype"] == "APRS_MOBILE" || t["tracktype"] == "APRS_BASE_STATION" || t["tracktype"] == "BASE_STATION") {
       contextMenuItems.push({
         text: "Look up on QRZ...",
+        icon: "icons/qrz.png",
         hideOnSelect: true,
         callback: async function(result) { window.open("https://www.qrz.com/db/" + t["name"].split('-')[0]); }
       });
