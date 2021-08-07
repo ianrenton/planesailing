@@ -4,7 +4,7 @@
     "name": "Plane/Sailing",
     "short_name": "Plane/Sailing",
     "scope": "/",
-    "display": "standalone",
+    "display": "fullscreen",
     "start_url": "https://planesailing.ianrenton.com/",
     "background_color": "#081217",
     "theme_color": "#78C8FF",
