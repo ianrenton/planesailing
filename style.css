@@ -38,6 +38,7 @@ div#top {
     margin: 0;
     z-index: 1000;
     pointer-events: none;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
 }
 div#top h1 {
     margin: 0.3em 0.5em 0.3em 0.5em;
