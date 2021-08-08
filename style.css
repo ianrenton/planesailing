@@ -3,18 +3,24 @@
     --background: #081217;
     --box-background: rgba(22, 22, 22, 0.8);
     --highlight: rgba(120, 200, 255, 1);
-    --loading: rgba(128, 100, 60, 1);
+    --loading: rgba(255, 200, 120, 1);
     --problem: rgba(255, 0, 0, 1);
-    --text: white;
+    --text: rgba(120, 200, 255, 1);
+    --text-highlight: white;
+    --table-heading: rgba(120, 200, 255, 1);
+    --table-row: white;
     --text-inverted: black;
 }
 :root[color-mode="light"] {
     --background: #95C8EE;
     --box-background: rgba(255, 255, 255, 0.8);
     --highlight: rgba(0, 40, 200, 1);
-    --loading: rgba(255, 200, 120, 1);
+    --loading: rgba(128, 100, 60, 1);
     --problem: rgba(255, 0, 0, 1);
     --text: black;
+    --text-highlight: rgba(0, 40, 200, 1);
+    --table-heading: rgba(0, 40, 200, 1);
+    --table-row: black;
     --text-inverted: white;
 }
 
@@ -104,7 +110,7 @@ div#menu button {
     background-color: var(--box-background);
     border: 1px solid var(--highlight);
     border-radius: 3px;
-    color: var(--highlight);
+    color: var(--text);
 }
 span.menubuttonicon {
     position: relative;
@@ -126,7 +132,7 @@ div.rightbox {
     background-color: var(--box-background);
     border: 1px solid var(--highlight);
     border-radius: 3px;
-    color: var(--highlight);
+    color: var(--text);
 }
 div#infopanel h2 {
     margin: 0;
@@ -142,7 +148,7 @@ div#infopanel p:last-child {
     margin-bottom: 0;
 }
 div#infopanel a, div#infopanel a:visited, div#infopanel span.highlight {
-    color: var(--text);
+    color: var(--text-highlight);
 }
 div#configpanel h2 {
     margin: 0;
@@ -163,9 +169,9 @@ button.configButton {
     font-family: Exo, Arial, sans-serif;
     font-size: 0.9em;    
     background-color: var(--box-background);
-    border: 1px solid var(--highlight);
+    border: 1px solid var(--text);
     border-radius: 3px;
-    color: var(--highlight);
+    color: var(--text);
 }
 label.configLabel {
     margin-right: 0.5em;
@@ -177,20 +183,20 @@ select.configSelect {
     font-family: Exo, Arial, sans-serif;
     font-size: 0.9em;    
     background-color: var(--box-background);
-    border: 1px solid var(--highlight);
+    border: 1px solid var(--text);
     border-radius: 3px;
-    color: var(--highlight);
+    color: var(--text);
 }
 table#trackTable {
     height: 90%;
     overflow-y: scroll;
-    color: var(--highlight);
-}
-table#trackTable tr {
     color: var(--text);
 }
+table#trackTable tr {
+    color: var(--table-row);
+}
 table#trackTable th {
-    color: var(--highlight);
+    color: var(--table-heading);
 }
 table#trackTable tr.selected {
     background-color: var(--highlight);
@@ -222,9 +228,9 @@ table#trackTable th.name {
     font-weight: bold;
 }
 .leaflet-contextmenu a.leaflet-contextmenu-item.over {
-    background-color: rgba(120, 200, 255, 1);
-    border-top: 1px solid rgba(120, 200, 255, 1);
-    border-bottom: 1px solid rgba(120, 200, 255, 1);
+    background-color: var(--highlight);
+    border-top: 1px solid var(--highlight);
+    border-bottom: 1px solid var(--highlight);
 }
 .leaflet-contextmenu a.leaflet-contextmenu-item-disabled.over {
     background-color: white;

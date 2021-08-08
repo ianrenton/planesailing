@@ -294,17 +294,16 @@ async function updateMap() {
   // or create a new marker if required.
   tracks.forEach(function(t) {
     var pos = getIconPosition(t);
-    var icon = getIcon(t);
 
     if (markers.has(t["id"])) {
       var m = markers.get(t["id"]);
-      if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
-        // Update the icon if it's changed.
-        if (icon != m.getIcon()) {
-          m.setIcon(icon);
-        }
+      if (shouldShowIcon(t) && pos != null) {
+        // Update the icon. Would be nice not to regenerate this all the time but
+        // to do that we'd need to maintain a shadow copy of everything and check
+        // for data changes.
+        m.setIcon(getIcon(t));
 
-        // Move the icon to its new position
+        // Move the icon to its new position.
         m.setLatLng(pos);
 
       } else {
@@ -313,7 +312,7 @@ async function updateMap() {
         markers.delete(t["id"]);
       }
 
-    } else if (shouldShowIcon(t) && pos != null && !isNaN(pos[0]) && !isNaN(pos[1]) && icon != null) {
+    } else if (shouldShowIcon(t) && pos != null) {
       // No existing marker, data is valid, so create
       var m = getNewMarker(t);
       markersLayer.addLayer(m);
@@ -329,7 +328,7 @@ async function updateMap() {
     }
   });
 
-  // Add snail trails to map for selected entity
+  // Add snail trails to map for entities that require them
   snailTrailLayer.clearLayers();
   tracks.forEach(function(t) {
     if (shouldShowTrail(t)) {
@@ -551,8 +550,7 @@ function getIcon(t) {
     infoBackground: trackSelected(t["id"]) ? (darkSymbols ? "black" : "white") : "transparent",
     infoColor: showInfoColorWhite,
     outlineWidth: trackSelected(t["id"]) ? 5 : 0,
-    outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
-    fontfamily: 'Exo, Arial, sans-serif'
+    outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR
   });
 
   // Build into a Leaflet icon and return
@@ -890,8 +888,10 @@ function setBasemap(basemapname) {
   if (typeof backgroundTileLayer !== 'undefined') {
     map.removeLayer(backgroundTileLayer);
   }
-  backgroundTileLayer = L.tileLayer.provider(basemapname);
-  backgroundTileLayer.setOpacity(basemapOpacity);
+  backgroundTileLayer = L.tileLayer.provider(basemapname, {
+    opacity: basemapOpacity,
+    edgeBufferTiles: 1
+  });
   backgroundTileLayer.addTo(map);
 
   // Identify dark basemaps to ensure we use white text for unselected icons
@@ -1100,7 +1100,6 @@ function localStorageGetOrDefault(key, defaultVal) {
   if (null === valStr) {
     return defaultVal;
   } else {
-    console.log(key + " " + valStr + " " + typeof(valStr));
     return JSON.parse(valStr);
   }
 }
