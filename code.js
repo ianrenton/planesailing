@@ -589,6 +589,7 @@ function getNewMarker(t) {
     // Create marker, including default context menu (right-click)
     var m = L.marker(pos, {
       icon: icon,
+      zIndexOffset: t["fixed"] ? -100 : 0,
       contextmenu: true,
       contextmenuItems: getContextMenuItems(t)
     });
