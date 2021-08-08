@@ -71,6 +71,7 @@ var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
 var lanMode = false;
 var showTelemetry = false;
+var symbolOverrides = new Map(); // id -> symbol code
 
 
 /////////////////////////////
@@ -486,7 +487,9 @@ async function select(id, selectionCameFromTable) {
     if (selectionCameFromTable) {
       panTo(id);
     } else {
-      $("tr.selected").get(0).scrollIntoView({behavior: "smooth", block: "center"});
+      if ($("tr.selected") != null && $("tr.selected").get(0) != null) {
+        $("tr.selected").get(0).scrollIntoView({behavior: "smooth", block: "center"});
+      }
     }
   }
 }
@@ -543,11 +546,7 @@ function getIcon(t) {
   var showName = shouldShowName(t);
   var detailedSymb = trackSelected(t["id"]);
   
-  // Change symbol to "anticipated" if old enough
-  var symbol = t["symbolcode"];
-  if (oldEnoughToShowAnticipated(t)) {
-    symbol = symbol.substr(0, 3) + "A" + symbol.substr(4);
-  }
+  var symbol = getSymbolCode(t);
 
   // Generate symbol for display
   var mysymbol = new ms.Symbol(symbol, {
@@ -573,7 +572,8 @@ function getIcon(t) {
     infoBackground: trackSelected(t["id"]) ? (darkSymbols ? "black" : "white") : "transparent",
     infoColor: showInfoColorWhite,
     outlineWidth: trackSelected(t["id"]) ? 5 : 0,
-    outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR
+    outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
+    quantity: (t["quantity"] != null) ? t["quantity"] : ""
   });
 
   // Build into a Leaflet icon and return
@@ -615,9 +615,7 @@ function getContextMenuItems(t) {
       var contextMenuItems = [{
         text: t["name"],
         disabled: true
-      }, {
-        separator: true
-      }, {
+      }, "-", {
         text: "Select/Deselect",
         icon: "icons/select.png",
         hideOnSelect: true,
@@ -627,10 +625,31 @@ function getContextMenuItems(t) {
         icon: "icons/clear.png",
         hideOnSelect: true,
         callback: async function(result) { t["poshistory"] = new Array(); }
+      }, "-", {
+        text: "Designate Friend",
+        icon: "icons/friend.png",
+        hideOnSelect: true,
+        callback: async function(result) { setAffiliation(t, "F"); }
+      }, {
+        text: "Designate Neutral",
+        icon: "icons/neutral.png",
+        hideOnSelect: true,
+        callback: async function(result) { setAffiliation(t, "N"); }
+      }, {
+        text: "Designate Hostile",
+        icon: "icons/hostile.png",
+        hideOnSelect: true,
+        callback: async function(result) { setAffiliation(t, "H"); }
+      }, {
+        text: "Designate Unknown",
+        icon: "icons/unknown.png",
+        hideOnSelect: true,
+        callback: async function(result) { setAffiliation(t, "U"); }
       }];
 
     // Add extra actions to the context menu if required
     if (t["tracktype"] == "SHIP") {
+      contextMenuItems.push("-");
       contextMenuItems.push({
         text: "Look up on MarineTraffic...",
         icon: "icons/marinetraffic.png",
@@ -638,6 +657,7 @@ function getContextMenuItems(t) {
         callback: async function(result) { window.open("https://www.marinetraffic.com/en/ais/details/ships/mmsi:" + t["id"]); }
       });
     } else if (t["tracktype"] == "AIRCRAFT" && !t["name"].startsWith("ICAO ")) {
+      contextMenuItems.push("-");
       contextMenuItems.push({
         text: "Look up on FlightAware...",
         icon: "icons/flightaware.png",
@@ -645,6 +665,7 @@ function getContextMenuItems(t) {
         callback: async function(result) { window.open("https://uk.flightaware.com/live/flight/" + t["name"]); }
       });
     } else if (t["tracktype"] == "APRS_MOBILE" || t["tracktype"] == "APRS_BASE_STATION" || t["tracktype"] == "BASE_STATION") {
+      contextMenuItems.push("-");
       contextMenuItems.push({
         text: "Look up on QRZ...",
         icon: "icons/qrz.png",
@@ -710,6 +731,21 @@ function shouldShowName(t) {
 // on the map and the track table?
 function shouldShowIcon(t) {
   return trackTypesVisible.includes(t["tracktype"]);
+}
+
+// Get the symbol for the track, which may be manually overridden by the
+// user or set anticipated by data age.
+function getSymbolCode(t) {
+  var symbol = t["symbolcode"];
+  // Check for symbol overrides
+  if (symbolOverrides.has(t["id"])) {
+    symbol = symbolOverrides.get(t["id"]);
+  }
+  // Change symbol to "anticipated" if old enough
+  if (oldEnoughToShowAnticipated(t)) {
+    symbol = symbol.substr(0, 3) + "A" + symbol.substr(4);
+  }
+  return symbol;
 }
 
 // Based on the selected type filters, and snail trail mode, should we
@@ -829,6 +865,19 @@ function getFormattedDuration(millis, long) {
   } else {
     return Math.floor(millis / 86400000) + (long ? " days" : "d");
   }
+}
+
+// Designate track as a new affiliation. Must be a MIL-STD2525 affiliation character
+// e.g. "H" = hostile.
+async function setAffiliation(t, aff) {
+  var symbol = t["symbolcode"];
+  if (symbol != null && symbol.length > 4) {
+    // Always store "present" version of the symbol, not anticipated
+    symbol = symbol.substr(0, 1) + aff + symbol.substr(2, 1) + "P" + symbol.substr(4);
+    symbolOverrides.set(t["id"], symbol);
+  }
+  updateMapObjects();
+  localStorage.setItem('symbolOverrides', JSON.stringify(Array.from(symbolOverrides)));
 }
 
 
@@ -1147,6 +1196,7 @@ function loadLocalStorage() {
   trackTypesVisible = localStorageGetOrDefault('trackTypesVisible', trackTypesVisible);
   var showAirspaceLayer = localStorageGetOrDefault('showAirspaceLayer', false);
   var showMaritimeLayer = localStorageGetOrDefault('showMaritimeLayer', false);
+  symbolOverrides = new Map(localStorageGetOrDefault('symbolOverrides', symbolOverrides));
 
   if (darkUI) {
     setDarkUI();
