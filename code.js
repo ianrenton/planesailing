@@ -311,6 +311,10 @@ async function updateMapObjects() {
         // Move the icon to its new position.
         m.setLatLng(pos);
 
+        // Set z index, which may have changed because selected markers are brought
+        // to the top
+        m.options.zIndexOffset = trackSelected(t["id"]) ? 100 : (t["fixed"] ? -100 : 0);
+
       } else {
         // Existing marker, data invalid, so remove
         markersLayer.removeLayer(m);
@@ -589,7 +593,6 @@ function getNewMarker(t) {
     // Create marker, including default context menu (right-click)
     var m = L.marker(pos, {
       icon: icon,
-      zIndexOffset: t["fixed"] ? -100 : 0,
       contextmenu: true,
       contextmenuItems: getContextMenuItems(t)
     });
