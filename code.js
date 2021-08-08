@@ -10,13 +10,6 @@
 const SERVER_URL = "https://planesailingserver.ianrenton.com/";
 const SERVER_URL_LAN = "http://192.168.1.240:8090/";
 
-// Map layer URLs - if re-using this code you will need to provide your own Mapbox
-// access token in the Mapbox URL. You can still use my styles.
-const MAPBOX_URL_DARK = "https://api.mapbox.com/styles/v1/ianrenton/ck6weg73u0mvo1ipl5lygf05t/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
-const MAPBOX_URL_LIGHT = "https://api.mapbox.com/styles/v1/ianrenton/ckchhz5ks23or1ipf1le41g56/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaWFucmVudG9uIiwiYSI6ImNrcTl3bHJrcDAydGsyb2sxb3h2cHE4bGgifQ.UzgaBetIhhTUGBOtLSlYDg";
-const OPENAIP_URL = "https://1.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png";
-const OPENSEAMAP_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
-
 // Map default position/zoom
 const START_LAT_LON = [50.7, -1.8];
 const START_ZOOM = 11;
@@ -556,6 +549,7 @@ function getIcon(t) {
     infoColor: darkTheme ? "white" : "black",
     outlineWidth: trackSelected(t["id"]) ? 5 : 0,
     outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
+    fontfamily: 'Exo, Arial, sans-serif'
   });
 
   // Build into a Leaflet icon and return
@@ -871,7 +865,7 @@ function setLightTheme() {
   if (typeof backgroundTileLayer !== 'undefined') {
     map.removeLayer(backgroundTileLayer);
   }
-  backgroundTileLayer = L.tileLayer(MAPBOX_URL_LIGHT);
+  backgroundTileLayer = L.tileLayer.provider('CartoDB.Voyager');
   backgroundTileLayer.addTo(map);
   updateMap();
 }
@@ -885,7 +879,7 @@ function setDarkTheme() {
   if (typeof backgroundTileLayer !== 'undefined') {
     map.removeLayer(backgroundTileLayer);
   }
-  backgroundTileLayer = L.tileLayer(MAPBOX_URL_DARK);
+  backgroundTileLayer = L.tileLayer.provider('CartoDB.DarkMatter');
   backgroundTileLayer.addTo(map);
   updateMap();
 }
@@ -1018,7 +1012,7 @@ $("#snailTrailLength").change(function() {
 // Overlay layers
 $("#showAirspaceLayer").change(function() {
   if ($(this).is(':checked')) {
-    airspaceLayer = L.tileLayer(OPENAIP_URL);
+    airspaceLayer = L.tileLayer.provider('OpenAIP')
     airspaceLayer.addTo(map);
   } else if (typeof airspaceLayer !== 'undefined') {
     map.removeLayer(airspaceLayer);
@@ -1027,7 +1021,7 @@ $("#showAirspaceLayer").change(function() {
 });
 $("#showMaritimeLayer").change(function() {
   if ($(this).is(':checked')) {
-    maritimeLayer = L.tileLayer(OPENSEAMAP_URL);
+    maritimeLayer = L.tileLayer.provider('OpenSeaMap');
     maritimeLayer.addTo(map);
   } else if (typeof maritimeLayer !== 'undefined') {
     map.removeLayer(maritimeLayer);
