@@ -24,7 +24,9 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-providers/1.3.0/leaflet-providers.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-contextmenu/1.4.0/leaflet.contextmenu.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/leaflet-edgebuffer@1.0.6/src/leaflet.edgebuffer.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/Leaflet-MovingMaker@0.0.1/MovingMarker.js"></script>
         <script src='https://unpkg.com/leaflet.gridlayer.fadeout@0.1.0/Leaflet.GridLayer.FadeOut.js'></script>
+        <script src='https://unpkg.com/leaflet-arc/bin/leaflet-arc.min.js'></script>
 
         <link rel="icon" type="image/svg+xml" href="favicon.svg">
         <link rel="alternate icon" type="image/png" href="favicon.png">
@@ -127,6 +129,7 @@
             <div class="configPanelSection">
                 <label for="lanMode" class="configLabel"><input type="checkbox" id="lanMode" name="lanMode">&nbsp;Connect&nbsp;via&nbsp;LAN</label> &nbsp;
                 <label for="showTelemetry" class="configLabel"><input type="checkbox" id="showTelemetry" name="showTelemetry">&nbsp;Show&nbsp;Server&nbsp;Telemetry</label>
+                <label for="easterEggs" class="configLabel"><input type="checkbox" id="easterEggs" name="easterEggs">&nbsp;Easter&nbsp;Eggs</label>
             </div>
 
         </div>
@@ -136,6 +139,7 @@
         </div>
 
         <script src="code.js"></script>
+        <script src="eastereggs.js"></script>
         <script>
             if ((window.location.protocol == "http:" || window.location.protocol == "https:") && 'serviceWorker' in navigator) {
               navigator.serviceWorker.register('service-worker.js');

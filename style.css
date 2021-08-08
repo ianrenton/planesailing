@@ -1,6 +1,6 @@
 /* Colour modes */
 :root[color-mode="dark"] {
-    --background: #081217;
+    --background: black;
     --box-background: rgba(22, 22, 22, 0.8);
     --highlight: rgba(120, 200, 255, 1);
     --loading: rgba(255, 200, 120, 1);
@@ -12,7 +12,7 @@
     --text-inverted: black;
 }
 :root[color-mode="light"] {
-    --background: #95C8EE;
+    --background: white;
     --box-background: rgba(255, 255, 255, 0.8);
     --highlight: rgba(0, 40, 200, 1);
     --loading: rgba(128, 100, 60, 1);
@@ -255,3 +255,7 @@ table#trackTable th.name {
         overflow-x: scroll;
     }
 }
+
+
+/* Animations */
+@keyframes blink {0%{opacity:0.8;} 20%{opacity:0.8;} 50%{opacity:0.2;} 70%{opacity:0.8;} 100%{opacity:0.8;}}
