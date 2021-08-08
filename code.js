@@ -266,16 +266,14 @@ async function trimPositionHistory() {
 //   our local clock and the server's
 // * Trims position history, removing any history older than the
 //   number of snail trail points we need to display
-// * Updates the track table GUI
+// * Updates the map and the track table GUI
 // * Updates the counters (e.g. "tracking 69 aircraft") and last
 //   server query time
 // * Stores the current time as the time of the last query.
-// Note that this *doesn't* update the map itself - there's no
-// need to as it has its own update timer that's independent of
-// querying the server.
 async function updateGUIAfterDataQuery(result) {
   clockOffset = moment().diff(moment(result.time).utc(), 'seconds');
   trimPositionHistory();
+  updateMapObjects();
   updateTrackTable();
   updateCounters();
   lastQueryTime = moment();
@@ -288,8 +286,15 @@ async function updateGUIAfterDataQuery(result) {
 //   UI UPDATE FUNCTIONS   //
 /////////////////////////////
 
-// Update map, clearing old markers and drawing new ones
-async function updateMap() {
+// Update the objects that are rendered on the map. Clear old markers and draw new ones,
+// as well as updating icons, positions and trails for ones that already exist. This is
+// called when the data model changes due to a server query, or a UI interaction that
+// changes the icons e.g. a selection event or theme change.
+// Contrast with "updateMap()" (which this method calls, but is also called every second)
+// which just moves existing markers and updates dead reckoning trails, since the
+// icons don't change unless this method gets called.
+async function updateMapObjects() {
+  snailTrailLayer.clearLayers();
   // Iterate through tracks. For each, update an existing marker
   // or create a new marker if required.
   tracks.forEach(function(t) {
@@ -318,6 +323,11 @@ async function updateMap() {
       markersLayer.addLayer(m);
       markers.set(t["id"], m);
     }
+
+    // Update "real data" snail trails to map for entities that require them
+    if (shouldShowTrail(t)) {
+      snailTrailLayer.addLayer(getTrail(t));
+    }
   });
 
   // Iterate through markers. If one corresponds to a dropped entity, delete it
@@ -328,16 +338,25 @@ async function updateMap() {
     }
   });
 
-  // Add snail trails to map for entities that require them
-  snailTrailLayer.clearLayers();
+  updateMap();
+}
+
+// Move markers to their current position and update dead reckoning snail trails.
+// This gets fired every second, when since no changes have occurred to the
+// data model, that's all we need to update. Contrast with "updateMapObjects()"
+// which does create new markers, remove old ones, update icons etc. but is only
+// called when the data model has changed due to a new set of data from the
+// server or UI interaction.
+async function updateMap() {
+  drSnailTrailLayer.clearLayers();
   tracks.forEach(function(t) {
-    if (shouldShowTrail(t)) {
-      snailTrailLayer.addLayer(getTrail(t));
-    }
-  });
-  tracks.forEach(function(t) {
-    if (shouldShowTrail(t) && getDRTrail(t) != null) {
-      snailTrailLayer.addLayer(getDRTrail(t));
+    var pos = getIconPosition(t);
+    if (markers.has(t["id"]) && shouldShowIcon(t) && pos != null) {
+      markers.get(t["id"]).setLatLng(pos);
+
+      if (shouldShowTrail(t) && getDRTrail(t) != null) {
+        drSnailTrailLayer.addLayer(getDRTrail(t));
+      }
     }
   });
 }
@@ -456,7 +475,7 @@ async function select(id, selectionCameFromTable) {
   } else {
     selectedTrackID = 0;
   }
-  updateMap();
+  updateMapObjects();
   updateTrackTable();
 
   if (selectedTrackID != 0) {
@@ -874,13 +893,13 @@ function setDarkUI() {
 function setLightSymbols() {
   darkSymbols = false;
   localStorage.setItem('darkSymbols', false);
-  updateMap();
+  updateMapObjects();
 }
 
 function setDarkSymbols() {
   darkSymbols = true;
   localStorage.setItem('darkSymbols', true);
-  updateMap();
+  updateMapObjects();
 }
 
 function setBasemap(basemapname) {
@@ -899,7 +918,7 @@ function setBasemap(basemapname) {
   baseMapIsDark = (basemapname == "CartoDB.DarkMatter" || basemapname == "Esri.WorldImagery");
   $("#map").css('background-color', baseMapIsDark ? "black" : "white");
 
-  updateMap();
+  updateMapObjects();
 }
 
 function setBasemapOpacity(opacity) {
@@ -932,13 +951,15 @@ map.setView(START_LAT_LON, startZoom);
 var markersLayer = new L.LayerGroup();
 markersLayer.addTo(map);
 
-// Add snail trail layer
+// Add snail trail layers
 var snailTrailLayer = new L.LayerGroup();
 snailTrailLayer.addTo(map);
+var drSnailTrailLayer = new L.LayerGroup();
+drSnailTrailLayer.addTo(map);
 
 // Zooming affects the level of detail shown on icons, so we need to update the map
 // on a zoom change.
-map.on("zoomend", function (e) { updateMap(); });
+map.on("zoomend", function (e) { updateMapObjects(); });
 
 
 /////////////////////////////
@@ -978,7 +999,7 @@ function setTypeEnable(type, enable) {
     for( var i = 0; i < trackTypesVisible.length; i++){ if ( trackTypesVisible[i] === type) { trackTypesVisible.splice(i, 1); }}
   }
   localStorage.setItem('trackTypesVisible', JSON.stringify(trackTypesVisible));
-  updateMap();
+  updateMapObjects();
 }
 
 $("#showAircraft").change(function() {
@@ -1019,20 +1040,20 @@ $("#darkSymbolButton").click(setDarkSymbols);
 $("#enableDR").change(function() {
   enableDeadReckoning = $(this).is(':checked');
   localStorage.setItem('enableDeadReckoning', enableDeadReckoning);
-  updateMap();
+  updateMapObjects();
 });
 
 // Snail trails
 $("#snailTrails").change(function() {
   snailTrailMode = parseInt($(this).val());
   localStorage.setItem('snailTrailMode', snailTrailMode);
-  updateMap();
+  updateMapObjects();
 });
 $("#snailTrailLength").change(function() {
   snailTrailLength = parseInt($(this).val());
   localStorage.setItem('snailTrailLength', snailTrailLength);
   trimPositionHistory();
-  updateMap();
+  updateMapObjects();
 });
 
 // Basemap
