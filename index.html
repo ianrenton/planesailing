@@ -62,10 +62,31 @@
         <div id="configPanel" class="rightbox">
             <h2>CONFIGURATION</h2>
             <div class="configPanelSection">
-                Select Theme:<button class="configButton" id="lightButton">☀️&nbsp;Light</button><button class="configButton" id="darkButton">🌙&nbsp;Dark</button>
+                UI Theme:<button class="configButton" id="lightUIButton">☀️&nbsp;Light</button><button class="configButton" id="darkUIButton">🌙&nbsp;Dark</button>
+                <span style="padding-left: 3em;"></span>
+                Symbols:<button class="configButton" id="lightSymbolButton">☀️&nbsp;Light</button><button class="configButton" id="darkSymbolButton">🌙&nbsp;Dark</button>
             </div>
             <div class="configPanelSection">
-                <p>Show Overlays:</p> 
+                <label for="basemap">Basemap:</label>
+                <select id="basemap" class="configSelect">
+                    <option value="CartoDB.DarkMatter" selected="selected">CartoDB DarkMatter</option>
+                    <option value="CartoDB.Voyager">CartoDB Voyager</option>
+                    <option value="Esri.NatGeoWorldMap">ESRI NatGeo World Map</option>
+                    <option value="Esri.WorldTopoMap">ESRI World Topo Map</option>
+                    <option value="Esri.WorldShadedRelief">ESRI World Shaded Relief</option>
+                    <option value="Esri.WorldImagery">ESRI World Imagery</option>
+                    <option value="OpenStreetMap.Mapnik">OpenStreetMap Mapnik</option>
+                </select>
+                <span style="padding-left: 1em;"></span>
+                <label for="basemapOpacity">Opacity:</label>
+                <select id="basemapOpacity" class="configSelect">
+                    <option value="1" selected="selected">100%</option>
+                    <option value="0.75">75%</option>
+                    <option value="0.5">50%</option>
+                </select>
+            </div>
+            <div class="configPanelSection">
+                <p>Overlays:</p> 
                 <label for="showAirspaceLayer" class="configLabel"><input type="checkbox" id="showAirspaceLayer" name="showAirspaceLayer">&nbsp;Airspace (OpenAIP)</label>
                 <label for="showMaritimeLayer" class="configLabel"><input type="checkbox" id="showMaritimeLayer" name="showMaritimeLayer">&nbsp;Maritime (OpenSeaMap)</label>
             </div>

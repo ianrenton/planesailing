@@ -46,7 +46,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.0";
+const VERSION = "2.3.1";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -63,7 +63,9 @@ var lastQueryTime = moment();
 
 // These are all parameters that can be changed by the user by clicking buttons on the GUI,
 // and are persisted in local storage.
-var darkTheme = true;
+var darkSymbols = true;
+var basemapOpacity = 1;
+var baseMapIsDark = true; // Set when basemap changes, affects text colour of non-selected symbols to ensure it contrasts
 var enableDeadReckoning = true;
 var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
@@ -539,14 +541,15 @@ function getIcon(t) {
   });
 
   // Styles, some of which change when the track is selected and depending on the theme
-  var showLight = (darkTheme && trackSelected(t["id"])) || (!darkTheme && !trackSelected(t["id"]));
+  var showSymbolLight = (darkSymbols && trackSelected(t["id"])) || (!darkSymbols && !trackSelected(t["id"]));
+  var showInfoColorWhite = trackSelected(t["id"]) ? (darkSymbols ? "white" : "black") : (baseMapIsDark ? "white" : "black");
   mysymbol = mysymbol.setOptions({
     size: 30,
     civilianColor: false,
-    colorMode: showLight ? "Light" : "Dark",
+    colorMode: showSymbolLight ? "Light" : "Dark",
     fillOpacity: trackSelected(t["id"]) ? 1 : 0.6,
-    infoBackground: trackSelected(t["id"]) ? (darkTheme ? "black" : "white") : "transparent",
-    infoColor: darkTheme ? "white" : "black",
+    infoBackground: trackSelected(t["id"]) ? (darkSymbols ? "black" : "white") : "transparent",
+    infoColor: showInfoColorWhite,
     outlineWidth: trackSelected(t["id"]) ? 5 : 0,
     outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
     fontfamily: 'Exo, Arial, sans-serif'
@@ -660,7 +663,7 @@ function getDRTrail(t) {
 function getTrailColour(id) {
   if (trackSelected(id)) {
     return SELECTED_TRACK_HIGHLIGHT_COLOUR;
-  } else if (darkTheme) {
+  } else if (darkSymbols) {
     return UNSELECTED_TRACK_TRAIL_COLOUR_DARK;
   } else {
     return UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT;
@@ -856,32 +859,55 @@ function objectToMap(o) {
 //   THEMEING FUNCTIONS    //
 /////////////////////////////
 
-function setLightTheme() {
-  darkTheme = false;
-  localStorage.setItem('darkTheme', darkTheme);
+function setLightUI() {
+  localStorage.setItem('darkUI', false);
   document.documentElement.setAttribute("color-mode", "light");
   var metaThemeColor = document.querySelector("meta[name=theme-color]");
   metaThemeColor.setAttribute("content", "#DDDDB9");
-  if (typeof backgroundTileLayer !== 'undefined') {
-    map.removeLayer(backgroundTileLayer);
-  }
-  backgroundTileLayer = L.tileLayer.provider('CartoDB.Voyager');
-  backgroundTileLayer.addTo(map);
-  updateMap();
 }
 
-function setDarkTheme() {
-  darkTheme = true;
-  localStorage.setItem('darkTheme', darkTheme);
+function setDarkUI() {
+  localStorage.setItem('darkUI', true);
   document.documentElement.setAttribute("color-mode", "dark");
   var metaThemeColor = document.querySelector("meta[name=theme-color]");
   metaThemeColor.setAttribute("content", "#2C2C25");
+}
+
+function setLightSymbols() {
+  darkSymbols = false;
+  localStorage.setItem('darkSymbols', false);
+  updateMap();
+}
+
+function setDarkSymbols() {
+  darkSymbols = true;
+  localStorage.setItem('darkSymbols', true);
+  updateMap();
+}
+
+function setBasemap(basemapname) {
+  localStorage.setItem('basemap', JSON.stringify(basemapname));
   if (typeof backgroundTileLayer !== 'undefined') {
     map.removeLayer(backgroundTileLayer);
   }
-  backgroundTileLayer = L.tileLayer.provider('CartoDB.DarkMatter');
+  backgroundTileLayer = L.tileLayer.provider(basemapname);
+  backgroundTileLayer.setOpacity(basemapOpacity);
   backgroundTileLayer.addTo(map);
+
+  // Identify dark basemaps to ensure we use white text for unselected icons
+  // and change the background colour appropriately
+  baseMapIsDark = (basemapname == "CartoDB.DarkMatter" || basemapname == "Esri.WorldImagery");
+  $("#map").css('background-color', baseMapIsDark ? "black" : "white");
+
   updateMap();
+}
+
+function setBasemapOpacity(opacity) {
+  basemapOpacity = opacity;
+  localStorage.setItem('basemapOpacity', JSON.stringify(opacity));
+  if (typeof backgroundTileLayer !== 'undefined') {
+    backgroundTileLayer.setOpacity(opacity);
+  }
 }
 
 
@@ -909,8 +935,6 @@ markersLayer.addTo(map);
 // Add snail trail layer
 var snailTrailLayer = new L.LayerGroup();
 snailTrailLayer.addTo(map);
-
-// Background layers will be added shortly in setThemeToMatchOS()
 
 // Zooming affects the level of detail shown on icons, so we need to update the map
 // on a zoom change.
@@ -986,8 +1010,10 @@ $("#showBase").change(function() {
 });
 
 // Colour themes
-$("#lightButton").click(setLightTheme);
-$("#darkButton").click(setDarkTheme);
+$("#lightUIButton").click(setLightUI);
+$("#darkUIButton").click(setDarkUI);
+$("#lightSymbolButton").click(setLightSymbols);
+$("#darkSymbolButton").click(setDarkSymbols);
 
 // Dead reckoning
 $("#enableDR").change(function() {
@@ -1007,6 +1033,14 @@ $("#snailTrailLength").change(function() {
   localStorage.setItem('snailTrailLength', snailTrailLength);
   trimPositionHistory();
   updateMap();
+});
+
+// Basemap
+$("#basemap").change(function() {
+  setBasemap($(this).val());
+});
+$("#basemapOpacity").change(function() {
+  setBasemapOpacity($(this).val());
 });
 
 // Overlay layers
@@ -1066,6 +1100,7 @@ function localStorageGetOrDefault(key, defaultVal) {
   if (null === valStr) {
     return defaultVal;
   } else {
+    console.log(key + " " + valStr + " " + typeof(valStr));
     return JSON.parse(valStr);
   }
 }
@@ -1076,7 +1111,10 @@ function loadLocalStorage() {
     firstVisit = true;
   }
 
-  darkTheme = localStorageGetOrDefault('darkTheme', darkTheme);
+  var darkUI = localStorageGetOrDefault('darkUI', true);
+  darkSymbols = localStorageGetOrDefault('darkSymbols', true);
+  var basemap = localStorageGetOrDefault('basemap', "CartoDB.DarkMatter");
+  basemapOpacity = localStorageGetOrDefault('basemapOpacity', 1);
   enableDeadReckoning = localStorageGetOrDefault('enableDeadReckoning', enableDeadReckoning);
   snailTrailMode = localStorageGetOrDefault('snailTrailMode', snailTrailMode);
   snailTrailLength = localStorageGetOrDefault('snailTrailLength', snailTrailLength);
@@ -1086,11 +1124,21 @@ function loadLocalStorage() {
   var showAirspaceLayer = localStorageGetOrDefault('showAirspaceLayer', false);
   var showMaritimeLayer = localStorageGetOrDefault('showMaritimeLayer', false);
 
-  if (darkTheme) {
-    setDarkTheme();
+  if (darkUI) {
+    setDarkUI();
   } else {
-    setLightTheme();
+    setLightUI();
   }
+  if (darkSymbols) {
+    setDarkSymbols();
+  } else {
+    setLightSymbols();
+  }
+  setBasemap(basemap);
+  $("#basemap").val(basemap);
+  setBasemapOpacity(basemapOpacity);
+  $("#basemapOpacity").val(basemapOpacity);
+
   if (showTelemetry) {
     $("#telemetry").show();
   } else {

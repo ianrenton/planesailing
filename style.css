@@ -3,13 +3,17 @@
     --background: #081217;
     --box-background: rgba(22, 22, 22, 0.8);
     --highlight: rgba(120, 200, 255, 1);
+    --loading: rgba(128, 100, 60, 1);
+    --problem: rgba(255, 0, 0, 1);
     --text: white;
     --text-inverted: black;
 }
 :root[color-mode="light"] {
     --background: #95C8EE;
-    --box-background: rgba(224, 224, 224, 0.8);
-    --highlight: rgba(0, 40, 120, 1);
+    --box-background: rgba(255, 255, 255, 0.8);
+    --highlight: rgba(0, 40, 200, 1);
+    --loading: rgba(255, 200, 120, 1);
+    --problem: rgba(255, 0, 0, 1);
     --text: black;
     --text-inverted: white;
 }
@@ -25,6 +29,9 @@ html, body, div#map {
     color: var(--text);
     font-size: 16px;
     cursor: default;
+}
+html, body {
+    background-color: var(--background);
 }
 
 /* Main layout */
@@ -104,15 +111,13 @@ span.menubuttonicon {
     top: 3px;
 }
 div#menu button.loading {
-    background-color: rgba(49, 33, 22, 0.4);
-    border: 1px solid rgba(255, 200, 120, 1);
-    color: rgba(255, 200, 120, 1);
+    border: 1px solid var(--loading);
+    color: var(--loading);
     display: none;
 }
 div#menu button.problem {
-    background-color: rgba(80, 0, 0, 0.4);
-    border: 1px solid rgba(255, 0, 0, 1);
-    color: rgba(255, 0, 0, 1);
+    border: 1px solid var(--problem);
+    color: var(--problem);
     display: none;
 }
 
