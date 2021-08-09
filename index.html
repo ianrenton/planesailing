@@ -65,29 +65,33 @@
 
         <div id="configPanel" class="rightbox">
             <h2>CONFIGURATION</h2>
-            <div class="configPanelSection">
-                UI Theme:<button class="configButton" id="lightUIButton">☀️&nbsp;Light</button><button class="configButton" id="darkUIButton">🌙&nbsp;Dark</button>
+            <div class="configPanelSection" style="line-height: 2.5em;">
+                <div style="display: inline-block;">UI&nbsp;Theme:<button class="configButton" id="lightUIButton">☀️&nbsp;Light</button><button class="configButton" id="darkUIButton">🌙&nbsp;Dark</button></div>
                 <span style="padding-left: 3em;"></span>
-                Symbols:<button class="configButton" id="lightSymbolButton">☀️&nbsp;Light</button><button class="configButton" id="darkSymbolButton">🌙&nbsp;Dark</button>
+                <div style="display: inline-block;">Symbols:<button class="configButton" id="lightSymbolButton">☀️&nbsp;Light</button><button class="configButton" id="darkSymbolButton">🌙&nbsp;Dark</button></div>
             </div>
-            <div class="configPanelSection">
-                <label for="basemap">Basemap:</label>
-                <select id="basemap" class="configSelect">
-                    <option value="CartoDB.DarkMatter" selected="selected">CartoDB DarkMatter</option>
-                    <option value="CartoDB.Voyager">CartoDB Voyager</option>
-                    <option value="Esri.NatGeoWorldMap">ESRI NatGeo World Map</option>
-                    <option value="Esri.WorldTopoMap">ESRI World Topo Map</option>
-                    <option value="Esri.WorldShadedRelief">ESRI World Shaded Relief</option>
-                    <option value="Esri.WorldImagery">ESRI World Imagery</option>
-                    <option value="OpenStreetMap.Mapnik">OpenStreetMap Mapnik</option>
-                </select>
+            <div class="configPanelSection" style="line-height: 2.5em;">
+                <div style="display: inline-block;">
+                    <label for="basemap">Basemap:</label>
+                    <select id="basemap" class="configSelect">
+                        <option value="CartoDB.DarkMatter" selected="selected">CartoDB DarkMatter</option>
+                        <option value="CartoDB.Voyager">CartoDB Voyager</option>
+                        <option value="Esri.NatGeoWorldMap">ESRI NatGeo World Map</option>
+                        <option value="Esri.WorldTopoMap">ESRI World Topo Map</option>
+                        <option value="Esri.WorldShadedRelief">ESRI World Shaded Relief</option>
+                        <option value="Esri.WorldImagery">ESRI World Imagery</option>
+                        <option value="OpenStreetMap.Mapnik">OpenStreetMap Mapnik</option>
+                    </select>
+                </div>
                 <span style="padding-left: 1em;"></span>
-                <label for="basemapOpacity">Opacity:</label>
-                <select id="basemapOpacity" class="configSelect">
-                    <option value="1" selected="selected">100%</option>
-                    <option value="0.75">75%</option>
-                    <option value="0.5">50%</option>
-                </select>
+                <div style="display: inline-block;">
+                    <label for="basemapOpacity">Opacity:</label>
+                    <select id="basemapOpacity" class="configSelect">
+                        <option value="1" selected="selected">100%</option>
+                        <option value="0.75">75%</option>
+                        <option value="0.5">50%</option>
+                    </select>
+                </div>
             </div>
             <div class="configPanelSection">
                 <p>Overlays:</p> 
