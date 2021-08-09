@@ -742,7 +742,7 @@ function getSymbolCode(t) {
     symbol = symbolOverrides.get(t["id"]);
   }
   // Change symbol to "anticipated" if old enough
-  if (oldEnoughToShowAnticipated(t)) {
+  if (oldEnoughToShowAnticipated(t) && symbol.substr(3, 1) == "P") {
     symbol = symbol.substr(0, 3) + "A" + symbol.substr(4);
   }
   return symbol;
@@ -770,8 +770,8 @@ function getDRPosition(t) {
     // Can dead reckon
     var timePassedSec = getTimeInServerRefFrame().diff(t["postime"]) / 1000.0;
     var speedMps = t["speed"] * 0.514444;
-    var newPos = dest(t["lat"], t["lon"], t["course"], timePassedSec * speedMps);
-    return newPos;
+    var newPos = L.GeometryUtil.destination(new L.latLng(t["lat"], t["lon"]), t["course"], timePassedSec * speedMps);
+    return [newPos.lat, newPos.lng];
   } else {
     return null;
   }
@@ -884,31 +884,6 @@ async function setAffiliation(t, aff) {
 /////////////////////////////
 //    UTILITY FUNCTIONS    //
 /////////////////////////////
-
-// Calculate the destination point given start point
-// latitude / longitude (numeric degrees), bearing
-// (numeric degrees) and distance (in m).
-function dest(lat, lon, course, distance) {
-    var startLatitudeRadians = lat * Math.PI / 180;
-    var startLongitudeRadians = lon * Math.PI / 180;
-    var courseRadians = course * Math.PI / 180;
-    var distMovedRadians = distance / 6371000.0;
-        
-    var cosphi1 = Math.cos(startLatitudeRadians);
-    var sinphi1 = Math.sin(startLatitudeRadians);
-    var cosAz = Math.cos(courseRadians);
-    var sinAz = Math.sin(courseRadians);
-    var sinc = Math.sin(distMovedRadians);
-    var cosc = Math.cos(distMovedRadians);
-        
-    var endLatitudeRadians = Math.asin(sinphi1 * cosc + cosphi1 * sinc * cosAz);
-    var endLongitudeRadians = Math.atan2(sinc * sinAz, cosphi1 * cosc - sinphi1 * sinc * cosAz) + startLongitudeRadians;
-        
-    var endLatitudeDegrees = endLatitudeRadians * 180 / Math.PI;
-    var endLongitudeDegrees = endLongitudeRadians * 180 / Math.PI;
-        
-    return [endLatitudeDegrees, endLongitudeDegrees];
-};
 
 // Utility function to get local PC time with data time offset applied.
 function getTimeInServerRefFrame() {

@@ -1,22 +1,31 @@
 var easterEggs = false;
 var hostilesLastTick = false;
 var lastKeyPressed = "";
+var interdicted = [];
 
 $("#easterEggs").change(function() {
   easterEggs = $(this).is(':checked');
 
   if (easterEggs) {
   	$("body").append("<div id='hostileWarning' style='display: none;    z-index: 99999;    position: absolute;    top: 10%;    left: 20%;    right: 20%;    border-top: 4px solid red;    border-bottom: 4px solid red;    text-align: center;    font-size: 36px;    font-weight: bold;    color: red;    -moz-transition:all 0.5s ease-in-out;    -webkit-transition:all 0.5s ease-in-out;    -o-transition:all 0.5s ease-in-out;    -ms-transition:all 0.5s ease-in-out;    transition:all 0.5s ease-in-out;    -moz-animation:blink normal 1.5s infinite ease-in-out;    -webkit-animation:blink normal 1.5s infinite ease-in-out;    -ms-animation:blink normal 1.5s infinite ease-in-out;    animation:blink normal 1.5s infinite ease-in-out;'>WARNING: HOSTILE TARGET DETECTED</div>");
-    if (onMobile) { $("div#hostileWarning").css("font-size", "24px"); }
+    if (onMobile) { $("div#hostileWarning").css("font-size", "20px"); }
     document.onkeypress = function (e) {
         e = e || window.event;
         keyPressed(e.key);
     };
   } else {
   	$("div#hostileWarning").remove();
-    var hostilesLastTick = false;
+    hostilesLastTick = false;
     document.onkeypress = null;
     lastKeyPressed = "";
+    interdicted = [];
+    symbolOverrides.forEach((symbol, id) => {
+      if (symbol.substr(3, 1) == "X") {
+        symbol = symbol.substr(0, 3) + "P" + symbol.substr(4);
+        symbolOverrides.set(id, symbol);
+      }
+    });
+    updateMapObjects();
   }
 });
 
@@ -27,8 +36,12 @@ async function eggTimer() {
     hostilesThisTick = false;
 	  tracks.forEach(function(t) {	    
 			var symbol = getSymbolCode(t);
-	    if (symbol != null && symbol.length > 2 && symbol.substr(1,1) == "H") {
+	    if (symbol != null && symbol.length > 4 && symbol.substr(1,1) == "H") {
 	      hostilesThisTick = true;
+        if (!interdicted.includes(t["id"]) && t["symbolcode"] != "SHAPML------") {
+          interdicted.push(t["id"]);
+          interdict(t);
+        }
 	    }
 	  });
     if (hostilesThisTick && !hostilesLastTick) {
@@ -40,6 +53,44 @@ async function eggTimer() {
     hostilesLastTick = hostilesThisTick;
 
 	}
+}
+
+async function interdict(t) {
+  var start = map.getBounds().getSouthWest();
+  var targetpos = L.latLng(t["lat"], t["lon"]);
+  var firedist = start.distanceTo(targetpos) * 0.75;
+  var firepos = L.GeometryUtil.destinationOnSegment(map, start, targetpos, firedist);
+  var pSymbol = new ms.Symbol((t["tracktype"] == "AIRCRAFT") ? "SFAPMFF-----" : "SFAPMFB-----", { size: 30, colorMode: darkSymbols ? "Dark" : "Light" });
+  var pIcon = L.icon({ iconUrl: pSymbol.toDataURL(), iconAnchor: [pSymbol.getAnchor().x, pSymbol.getAnchor().y] });
+  var mSymbol = new ms.Symbol((t["tracktype"] == "AIRCRAFT") ? "SFAPWMAA----" : "SFAPWMAS----", { size: 30, colorMode: darkSymbols ? "Dark" : "Light" });
+  var mIcon = L.icon({ iconUrl: mSymbol.toDataURL(), iconAnchor: [mSymbol.getAnchor().x, mSymbol.getAnchor().y] });
+  var p = L.Marker.movingMarker([start, firepos, start], 20000, {icon: pIcon, zIndexOffset: 1200, autostart: true});
+  p.on('end', function() { map.removeLayer(p); });
+  map.addLayer(p);
+  setTimeout(function() {
+    var targetpos = L.latLng(tracks.get(t["id"])["lat"], tracks.get(t["id"])["lon"]);
+    var m1 = L.Marker.movingMarker([p.getLatLng(), targetpos], 4000, {icon: mIcon, zIndexOffset: 1100, autostart: true});
+    m1.on('end', function() { 
+      map.removeLayer(m1);
+      var symbol = getSymbolCode(t);
+      symbol = symbol.substr(0, 3) + "X" + symbol.substr(4);
+      symbolOverrides.set(t["id"], symbol);
+      updateMapObjects();
+    });
+    map.addLayer(m1);
+  }, 8000);
+  setTimeout(function() {
+    var targetpos = L.latLng(tracks.get(t["id"])["lat"], tracks.get(t["id"])["lon"]);
+    var m2 = L.Marker.movingMarker([p.getLatLng(), targetpos], 3600, {icon: mIcon, zIndexOffset: 1100, autostart: true});
+    m2.on('end', function() { map.removeLayer(m2); });
+    map.addLayer(m2);
+  }, 9000);
+  setTimeout(function() {
+    var targetpos = L.latLng(tracks.get(t["id"])["lat"], tracks.get(t["id"])["lon"]);
+    var m3 = L.Marker.movingMarker([p.getLatLng(), targetpos], 3200, {icon: mIcon, zIndexOffset: 1100, autostart: true});
+    m3.on('end', function() { map.removeLayer(m3); });
+    map.addLayer(m3);
+  }, 10000);
 }
 
 async function keyPressed(key) {
