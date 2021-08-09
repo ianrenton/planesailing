@@ -10,6 +10,7 @@
     --table-heading: rgba(120, 200, 255, 1);
     --table-row: white;
     --text-inverted: black;
+    --config-select-bg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='rgba(120, 200, 255, 1)'><polygon points='0,0 100,0 50,50'/></svg>");
 }
 :root[color-mode="light"] {
     --background: white;
@@ -22,6 +23,7 @@
     --table-heading: rgba(0, 40, 200, 1);
     --table-row: black;
     --text-inverted: white;
+    --config-select-bg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='black'><polygon points='0,0 100,0 50,50'/></svg>");
 }
 
 /* Overall */
@@ -179,14 +181,19 @@ label.configLabel {
 }
 select.configSelect {
     margin-left: 0.5em;
-    padding: 0.3em;
+    padding: 0.3em 1.3em 0.3em 0.3em;
     font-family: Exo, Arial, sans-serif;
     font-size: 0.9em;    
-/*    -webkit-appearance: none;
-    -moz-appearance: none;*/
-    background-color: var(--box-background) !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
     border: 1px solid var(--text);
     border-radius: 3px;
+    background: var(--config-select-bg) no-repeat;
+    background-size: 12px;
+    background-position: calc(100% + 1em - 20px) calc(50% + 3px);
+    background-repeat: no-repeat;
+    background-color: var(--box-background) !important;
     color: var(--text);
 }
 table#trackTable {
