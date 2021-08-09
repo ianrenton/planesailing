@@ -3,6 +3,8 @@ var hostilesLastTick = false;
 var lastKeyPressed = "";
 var interdicted = [];
 
+$("#configPanelExtras").append('<label for="easterEggs" class="configLabel"><input type="checkbox" id="easterEggs" name="easterEggs">&nbsp;Easter&nbsp;Eggs</label>');
+
 $("#easterEggs").change(function() {
   easterEggs = $(this).is(':checked');
 
@@ -36,7 +38,7 @@ async function eggTimer() {
     hostilesThisTick = false;
 	  tracks.forEach(function(t) {	    
 			var symbol = getSymbolCode(t);
-	    if (symbol != null && symbol.length > 4 && symbol.substr(1,1) == "H") {
+	    if (symbol != null && symbol.length > 4 && symbol.substr(1,1) == "H" && symbol.substr(3,1) != "X") {
 	      hostilesThisTick = true;
         if (!interdicted.includes(t["id"]) && t["symbolcode"] != "SHAPML------") {
           interdicted.push(t["id"]);
@@ -46,7 +48,7 @@ async function eggTimer() {
 	  });
     if (hostilesThisTick && !hostilesLastTick) {
       $("div#hostileWarning").fadeIn();
-      new Audio('warning.mp3').play();
+      new Audio('eastereggs/warning.mp3').play();
     } else if (hostilesLastTick && !hostilesThisTick) {
       $("div#hostileWarning").fadeOut();
     } 

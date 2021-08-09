@@ -131,10 +131,9 @@
                     <option value="999999">Forever</option>
                 </select>
             </div>
-            <div class="configPanelSection">
+            <div id="configPanelExtras" class="configPanelSection">
                 <label for="lanMode" class="configLabel"><input type="checkbox" id="lanMode" name="lanMode">&nbsp;Connect&nbsp;via&nbsp;LAN</label> &nbsp;
                 <label for="showTelemetry" class="configLabel"><input type="checkbox" id="showTelemetry" name="showTelemetry">&nbsp;Show&nbsp;Server&nbsp;Telemetry</label>
-                <label for="easterEggs" class="configLabel"><input type="checkbox" id="easterEggs" name="easterEggs">&nbsp;Easter&nbsp;Eggs</label>
             </div>
 
         </div>
@@ -144,7 +143,7 @@
         </div>
 
         <script src="code.js"></script>
-        <script src="eastereggs.js"></script>
+        <script src="eastereggs/eastereggs.js"></script> <!-- Remove me if you don't want easter eggs in your copy of Plane/Sailing -->
         <script>
             if ((window.location.protocol == "http:" || window.location.protocol == "https:") && 'serviceWorker' in navigator) {
               navigator.serviceWorker.register('service-worker.js');
