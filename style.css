@@ -263,6 +263,10 @@ table#trackTable th.name {
     #tracktablearea {
         overflow-x: scroll;
     }
+    select.configSelect {
+        padding: 0.3em 2.3em 0.3em 0.3em;
+        background-position: calc(100% + 2em - 20px) calc(50% + 3px);
+    }
 }
 
 
