@@ -7,7 +7,7 @@ $("#easterEggs").change(function() {
 
   if (easterEggs) {
   	$("body").append("<div id='hostileWarning' style='display: none;    z-index: 99999;    position: absolute;    top: 10%;    left: 20%;    right: 20%;    border-top: 4px solid red;    border-bottom: 4px solid red;    text-align: center;    font-size: 36px;    font-weight: bold;    color: red;    -moz-transition:all 0.5s ease-in-out;    -webkit-transition:all 0.5s ease-in-out;    -o-transition:all 0.5s ease-in-out;    -ms-transition:all 0.5s ease-in-out;    transition:all 0.5s ease-in-out;    -moz-animation:blink normal 1.5s infinite ease-in-out;    -webkit-animation:blink normal 1.5s infinite ease-in-out;    -ms-animation:blink normal 1.5s infinite ease-in-out;    animation:blink normal 1.5s infinite ease-in-out;'>WARNING: HOSTILE TARGET DETECTED</div>");
-    if (onMobile) { $("div#hostileWarning").css("font-size: 16px"); }
+    if (onMobile) { $("div#hostileWarning").css("font-size", "24px"); }
     document.onkeypress = function (e) {
         e = e || window.event;
         keyPressed(e.key);
