@@ -182,8 +182,8 @@ select.configSelect {
     padding: 0.3em;
     font-family: Exo, Arial, sans-serif;
     font-size: 0.9em;    
-    -webkit-appearance: none;
-    -moz-appearance: none;
+/*    -webkit-appearance: none;
+    -moz-appearance: none;*/
     background-color: var(--box-background) !important;
     border: 1px solid var(--text);
     border-radius: 3px;
