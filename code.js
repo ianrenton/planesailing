@@ -1230,6 +1230,6 @@ $("#clientVersion").text(VERSION);
 setTimeout(function(){ $("#appname").fadeOut(); }, 8000);
 
 // Show info if this is a user's first visit
-if (firstVisit) {
+if (firstVisit && !onMobile) {
   manageRightBoxes("#infoPanel", "#configPanel", "#trackTablePanel");
 }
