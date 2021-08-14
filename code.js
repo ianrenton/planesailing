@@ -46,7 +46,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.1";
+const VERSION = "2.3.2";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -243,6 +243,7 @@ async function handleTelemetry(result) {
   $("#cpuLoad").text(result.cpuLoad + "%");
   $("#memUsed").text(result.memUsed + "%");
   $("#diskUsed").text(result.diskUsed + "%");
+  $("#temp").text(result.temp + "C");
   $("#adsbStatus").text(result.adsbReceiverStatus);
   $("#mlatStatus").text(result.mlatReceiverStatus);
   $("#aisStatus").text(result.aisReceiverStatus);
