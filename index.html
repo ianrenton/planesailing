@@ -112,6 +112,18 @@
                 <label for="showBase" class="configLabel"><input type="checkbox" id="showBase" name="showBase" checked="true">&nbsp;Base&nbsp;Station</label>
             </div>
             <div class="configPanelSection">
+                <label for="queryInterval">Query server every</label>
+                <select id="queryInterval" class="configSelect">
+                    <option value="2">2</option>
+                    <option value="5">5</option>
+                    <option value="10" selected="selected">10</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="60">60</option>
+                </select>
+                <label for="queryInterval">&nbsp;&nbsp;seconds</label>
+            </div>
+            <div class="configPanelSection">
                 <label for="enableDR" class="configLabel"><input type="checkbox" id="enableDR" name="enableDR" checked="true">&nbsp;Enable&nbsp;Dead&nbsp;Reckoning</label>
             </div>
             <div class="configPanelSection">

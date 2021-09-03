@@ -21,10 +21,8 @@ const ZOOM_LEVEL_FOR_LAND_AIR_SYMBOL_NAMES = 9; // If zoomed in at least this fa
 const ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES = 12; // If zoomed in at least this far, show all ship symbol names. Decrease this to show names at lower zooms.
 
 // Update timings. Map updating every second is a good balance of smoothness
-// and not killing your CPU. Query the server more often only if your server
-// PC performance allows, remember you may not be the only active user!
+// and not killing your CPU.
 const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
-const QUERY_SERVER_INTERVAL_MILLISEC = 10000;
 const QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC = 30000;
 
 // Times after which to show tracks as 'anticipated' (dotted outline).
@@ -46,7 +44,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.2";
+const VERSION = "2.3.3";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -63,6 +61,7 @@ var lastQueryTime = moment();
 
 // These are all parameters that can be changed by the user by clicking buttons on the GUI,
 // and are persisted in local storage.
+var queryInterval = 10;
 var darkSymbols = true;
 var basemapOpacity = 1;
 var baseMapIsDark = true; // Set when basemap changes, affects text colour of non-selected symbols to ensure it contrasts
@@ -106,37 +105,41 @@ function fetchDataFirst() {
   });
 }
 
-// "Update" API call - called at regular intervals, this retrieves new data from
-// the server.
+// "Update" API call - called every second, this retrieves new data from
+// the server so long as the next update time has been reached.
 function fetchDataUpdate() {
   // First check how long it's been since we last did an update call.
-  // If it's been a long time, this represents a tab that was in the
-  // background or a PWA that was closed and re-opened, so instead of
-  // an update we should do a first load instead so we get the full
-  // history for the time we missed.
-  if (moment().diff(lastQueryTime, 'milliseconds') > (10 * QUERY_SERVER_INTERVAL_MILLISEC)) {
+  if (moment().diff(lastQueryTime, 'seconds') >= 180) {
+    // If it's been > 3 minutes, this represents a tab that was in the
+    // background or a PWA that was closed and re-opened, so instead of
+    // an update we should do a first load instead so we get the full
+    // history for the time we missed.
     fetchDataFirst();
     fetchTelemetry();
     return;
-  }
 
-  // OK, time for a real update call then
-  showLoadingIndicator(true);
-  $.ajax({
-    url: getServerURL() + "update",
-    dataType: 'json',
-    timeout: 5000,
-    success: async function(result) {
-      showServerOffline(false)
-      handleDataUpdate(result);
-    },
-    error: function() {
-      showServerOffline(true);
-    },
-    complete: function() {
-      showLoadingIndicator(false);
-    }
-  });
+  } else if (moment().diff(lastQueryTime, 'seconds') >= queryInterval) {
+    // Time for a real update call
+    showLoadingIndicator(true);
+    $.ajax({
+      url: getServerURL() + "update",
+      dataType: 'json',
+      timeout: 5000,
+      success: async function(result) {
+        showServerOffline(false)
+        handleDataUpdate(result);
+      },
+      error: function() {
+        showServerOffline(true);
+      },
+      complete: function() {
+        showLoadingIndicator(false);
+      }
+    });
+
+  } else {
+    // Last query was still recent, no need to do it again
+  }
 }
 
 // "Telemetry" API call - called at regular intervals but only effective if
@@ -1065,6 +1068,12 @@ $("#darkUIButton").click(setDarkUI);
 $("#lightSymbolButton").click(setLightSymbols);
 $("#darkSymbolButton").click(setDarkSymbols);
 
+// Query interval
+$("#queryInterval").change(function() {
+  queryInterval = parseInt($(this).val());
+  localStorage.setItem('queryInterval', queryInterval);
+});
+
 // Dead reckoning
 $("#enableDR").change(function() {
   enableDeadReckoning = $(this).is(':checked');
@@ -1160,6 +1169,7 @@ function loadLocalStorage() {
     firstVisit = true;
   }
 
+  queryInterval = localStorageGetOrDefault('queryInterval', 10);
   var darkUI = localStorageGetOrDefault('darkUI', true);
   darkSymbols = localStorageGetOrDefault('darkSymbols', true);
   var basemap = localStorageGetOrDefault('basemap', "CartoDB.DarkMatter");
@@ -1195,6 +1205,7 @@ function loadLocalStorage() {
     $("#telemetry").hide();
   }
 
+  $("#queryInterval").val(queryInterval);
   $("#enableDR").prop('checked', enableDeadReckoning);
   $("#snailTrails").val(snailTrailMode);
   $("#snailTrailLength").val(snailTrailLength);
@@ -1223,7 +1234,7 @@ function loadLocalStorage() {
 loadLocalStorage();
 fetchDataFirst();
 fetchTelemetry();
-setInterval(fetchDataUpdate, QUERY_SERVER_INTERVAL_MILLISEC);
+setInterval(fetchDataUpdate, 1000);
 setInterval(fetchTelemetry, QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 $("#clientVersion").text(VERSION);
