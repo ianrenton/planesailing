@@ -265,6 +265,17 @@ async function trimPositionHistory() {
   });
 }
 
+// Clear the position history, leaving only the current position in
+// the tracks themselves.
+async function clearPositionHistory() {
+  tracks.forEach((t) => {
+    if (t["poshistory"]) {
+      t["poshistory"].length = 0;
+    }
+  });
+  updateMapObjects();
+}
+
 // Standard set of code to call after receiving data and updating 
 // the tracks map with it. This method:
 // * Updates the clock offset, so we know the difference between
@@ -1093,6 +1104,7 @@ $("#snailTrailLength").change(function() {
   trimPositionHistory();
   updateMapObjects();
 });
+$("#clearTrailsButton").click(clearPositionHistory);
 
 // Basemap
 $("#basemap").change(function() {
