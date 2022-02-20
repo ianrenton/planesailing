@@ -15,8 +15,10 @@ $("#easterEggs").change(function() {
         e = e || window.event;
         keyPressed(e.key);
     };
+    $("body").append("<a href='//planesailing1983.ianrenton.com'><div id='eightiesbutton' style='z-index: 99999;    position: absolute;    bottom: 20px;    left: 20px;    border: 2px solid green;    border-radius: 3px;    padding: 5px; font-size: 14px;    font-weight: bold;    color: green;'>&#11207;&#11207;</div></a>");
   } else {
-  	$("div#hostileWarning").remove();
+    $("div#hostileWarning").remove();
+    $("div#eightiesbutton").remove();
     hostilesLastTick = false;
     document.onkeypress = null;
     lastKeyPressed = "";
