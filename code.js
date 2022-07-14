@@ -1117,7 +1117,7 @@ $("#basemapOpacity").change(function() {
 // Overlay layers
 $("#showAirspaceLayer").change(function() {
   if ($(this).is(':checked')) {
-    airspaceLayer = L.tileLayer.provider('OpenAIP')
+    airspaceLayer = L.tileLayer.provider('OpenAIP');
     airspaceLayer.addTo(map);
   } else if (typeof airspaceLayer !== 'undefined') {
     map.removeLayer(airspaceLayer);
