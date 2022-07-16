@@ -1117,7 +1117,13 @@ $("#basemapOpacity").change(function() {
 // Overlay layers
 $("#showAirspaceLayer").change(function() {
   if ($(this).is(':checked')) {
-    airspaceLayer = L.tileLayer.provider('OpenAIP');
+    airspaceLayer = L.tileLayer("https://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png", {
+      maxZoom: 14,
+      minZoom: 4,
+      tms: true,
+      subdomains: '12',
+      opacity: 0.5
+    });
     airspaceLayer.addTo(map);
   } else if (typeof airspaceLayer !== 'undefined') {
     map.removeLayer(airspaceLayer);
