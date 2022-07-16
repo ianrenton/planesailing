@@ -955,6 +955,7 @@ function setBasemap(basemapname) {
     edgeBufferTiles: 1
   });
   backgroundTileLayer.addTo(map);
+  backgroundTileLayer.bringToBack();
 
   // Identify dark basemaps to ensure we use white text for unselected icons
   // and change the background colour appropriately
