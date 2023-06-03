@@ -10,6 +10,11 @@
 const SERVER_URL = "https://planesailingserver.ianrenton.com/";
 const SERVER_URL_LAN = "http://192.168.1.240:8090/";
 
+// OpenAIP client ID. While you can probably continue to use mine without problems,
+// if you are getting airspace maps failing to load, it could be due to rate limiting -
+// in which case please sign up for OpenAIP.net and get your own token.
+const OPENAIP_CLIENT_ID_TOKEN = "463189186a92609a7b637b87c0feeac3"
+
 // Map default position/zoom
 const START_LAT_LON = [50.7, -1.8];
 const START_ZOOM = 11;
@@ -44,7 +49,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.3";
+const VERSION = "2.3.4";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -1118,7 +1123,7 @@ $("#basemapOpacity").change(function() {
 // Overlay layers
 $("#showAirspaceLayer").change(function() {
   if ($(this).is(':checked')) {
-    airspaceLayer = L.tileLayer("https://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{y}.png", {
+    airspaceLayer = L.tileLayer("https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=" + OPENAIP_CLIENT_ID_TOKEN, {
       maxZoom: 14,
       minZoom: 4,
       tms: true,
