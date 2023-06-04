@@ -49,7 +49,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.4";
+const VERSION = "2.3.5";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -1125,10 +1125,9 @@ $("#showAirspaceLayer").change(function() {
   if ($(this).is(':checked')) {
     airspaceLayer = L.tileLayer("https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=" + OPENAIP_CLIENT_ID_TOKEN, {
       maxZoom: 14,
-      minZoom: 4,
-      tms: true,
-      subdomains: '12',
-      opacity: 0.5
+      minZoom: 7,
+      opacity: 0.5,
+      attribution: '© <a href="https://www.openaip.net">OpenAIP</a> contributors'
     });
     airspaceLayer.addTo(map);
   } else if (typeof airspaceLayer !== 'undefined') {
