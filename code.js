@@ -49,7 +49,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.5";
+const VERSION = "2.3.6";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -668,7 +668,7 @@ function getContextMenuItems(t) {
       }];
 
     // Add extra actions to the context menu if required
-    if (t["tracktype"] == "SHIP") {
+    if (t["tracktype"] == "SHIP" || t["tracktype"] == "AIS_SHORE_STATION" || t["tracktype"] == "AIS_ATON") {
       contextMenuItems.push("-");
       contextMenuItems.push({
         text: "Look up on MarineTraffic...",
