@@ -51,7 +51,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.6";
+const VERSION = "2.3.7";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
