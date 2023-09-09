@@ -671,7 +671,7 @@ function getContextMenuItems(t) {
       }];
 
     // Add extra actions to the context menu if required
-    if (t["tracktype"] == "SHIP") {
+    if (t["tracktype"] == "SHIP" || t["tracktype"] == "AIS_SHORE_STATION" || t["tracktype"] == "AIS_ATON") {
       contextMenuItems.push("-");
       contextMenuItems.push({
         text: "Look up on MarineTraffic...",
