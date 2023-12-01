@@ -257,15 +257,16 @@ async function handleTelemetry(result) {
   $("#temp").text(result.temp + "C");
 
   // Feeder status is a complex structure, so design the HTML content for it here based on what's in the JSON
-  var feederStatusHTML = "";
+  var feederStatusHTML = "<table class=\"feederStatusTable\">";
   var feederStatus = result.feederStatus;
   for (var feederName in result.feederStatus) {
-    feederStatusHTML += "<span>" + feederName + ":&nbsp;&nbsp;&nbsp;"
+    feederStatusHTML += "<tr><td>" + feederName + "</td>"
     for (var receiverName in result.feederStatus[feederName]) {
-      feederStatusHTML += receiverName + ":&nbsp;<span class=\"highlight\">" + toTitleCase(result.feederStatus[feederName][receiverName]) + "</span>&nbsp; ";
+      feederStatusHTML += "<td>" + receiverName + ":&nbsp;&nbsp;<span class=\"highlight\">" + toTitleCase(result.feederStatus[feederName][receiverName]) + "</span></td>";
     }
-    feederStatusHTML += "</span>"
+    feederStatusHTML += "</tr>"
   }
+  feederStatusHTML += "</table>"
   $("#feederStatus").html(feederStatusHTML);
 }
 
