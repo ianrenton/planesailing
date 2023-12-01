@@ -173,7 +173,10 @@ div#feederStatus {
     text-align: left;
 }
 div#feederStatus table {
-    border-spacing: 1em 0;
+    border-spacing: 0.2em 0;
+}
+div#feederStatus table tr td:nth-child(2n-1) {
+    padding-right: 1em;
 }
 button.configButton {
     margin-left: 0.5em;

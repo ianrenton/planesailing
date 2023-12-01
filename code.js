@@ -262,7 +262,7 @@ async function handleTelemetry(result) {
   for (var feederName in result.feederStatus) {
     feederStatusHTML += "<tr><td>" + feederName + "</td>"
     for (var receiverName in result.feederStatus[feederName]) {
-      feederStatusHTML += "<td>" + receiverName + ":&nbsp;&nbsp;<span class=\"highlight\">" + toTitleCase(result.feederStatus[feederName][receiverName]) + "</span></td>";
+      feederStatusHTML += "<td>" + receiverName + ":</td><td><span class=\"highlight\">" + toTitleCase(result.feederStatus[feederName][receiverName]) + "</span></td>";
     }
     feederStatusHTML += "</tr>"
   }
