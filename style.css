@@ -136,20 +136,20 @@ div.rightbox {
     border-radius: 3px;
     color: var(--text);
 }
-div#infopanel h2 {
+div#infoPanel h2 {
     margin: 0;
     text-align: center;
 }
-div#infopanel p {
+div#infoPanel p {
     text-align: center;
 }
-div#infopanel p:not(:last-child) {
+div#infoPanel p:not(:last-child) {
     margin-bottom: 1em;
 }
-div#infopanel p:last-child {
+div#infoPanel p:last-child {
     margin-bottom: 0;
 }
-div#infopanel a, div#infopanel a:visited, div#infopanel span.highlight {
+div#infoPanel a, div#infoPanel a:visited, div#infoPanel span.highlight {
     color: var(--text-highlight);
 }
 div#configpanel h2 {

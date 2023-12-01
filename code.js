@@ -468,7 +468,7 @@ async function updateTrackTable() {
   }
 
   // Update DOM
-  $('#tracktable').html(tableContent);
+  $('#trackTable').html(tableContent);
 }
 
 // Update the count of how many things we're tracking in the info panel.
@@ -613,6 +613,7 @@ function getIcon(t) {
     infoColor: showInfoColorWhite,
     outlineWidth: trackSelected(t["id"]) ? 5 : 0,
     outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
+    infoOutlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
     quantity: (t["quantity"] != null) ? t["quantity"] : ""
   });
 
