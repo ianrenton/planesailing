@@ -8,7 +8,7 @@
 // server, where the main URL won't work. There is a switch in the Configuration
 // panel to toggle between them.
 const SERVER_URL = "https://planesailingserver.ianrenton.com/";
-const SERVER_URL_LAN = "http://192.168.1.240:8090/";
+const SERVER_URL_LAN = "http://192.168.1.11:8090/";
 
 // OpenAIP client ID. While you can probably continue to use mine without problems,
 // if you are getting airspace maps failing to load, it could be due to rate limiting -
@@ -51,7 +51,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.7";
+const VERSION = "3.0-SNAPSHOT";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -255,10 +255,26 @@ async function handleTelemetry(result) {
   $("#memUsed").text(result.memUsed + "%");
   $("#diskUsed").text(result.diskUsed + "%");
   $("#temp").text(result.temp + "C");
-  $("#adsbStatus").text(result.adsbReceiverStatus);
-  $("#mlatStatus").text(result.mlatReceiverStatus);
-  $("#aisStatus").text(result.aisReceiverStatus);
-  $("#aprsStatus").text(result.aprsReceiverStatus);
+
+  // Feeder status is a complex structure, so design the HTML content for it here based on what's in the JSON
+  var feederStatusHTML = "";
+  var feederStatus = result.feederStatus;
+  for (var feederName in result.feederStatus) {
+    feederStatusHTML += "<span>" + feederName + ":&nbsp;&nbsp;&nbsp;"
+    for (var receiverName in result.feederStatus[feederName]) {
+      feederStatusHTML += receiverName + ":&nbsp;<span class=\"highlight\">" + toTitleCase(result.feederStatus[feederName][receiverName]) + "</span>&nbsp; ";
+    }
+    feederStatusHTML += "</span>"
+  }
+  $("#feederStatus").html(feederStatusHTML);
+}
+
+// Convert a string to "Title Case"
+function toTitleCase(string) {
+  return string.replace(/\w\S*/g, function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    }
+  );
 }
 
 // Trim the position history to the user-configurable snail trail length,
