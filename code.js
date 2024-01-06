@@ -8,7 +8,7 @@
 // server, where the main URL won't work. There is a switch in the Configuration
 // panel to toggle between them.
 const SERVER_URL = "https://planesailingserver.ianrenton.com/";
-const SERVER_URL_LAN = "http://192.168.1.240:8090/";
+const SERVER_URL_LAN = "http://192.168.1.11:8090/";
 
 // OpenAIP client ID. While you can probably continue to use mine without problems,
 // if you are getting airspace maps failing to load, it could be due to rate limiting -
@@ -21,7 +21,9 @@ const START_ZOOM = 11;
 
 // Zoom levels at which to show symbol names. Lower value for ships because ships
 // are very clustered inside harbours where I live. You may wish to change them,
-// decrease the numbers to show names when more zoomed out.
+// decrease the numbers to show names when more zoomed out. There is also a user
+// control to always/never show names, in addition to this default zoom-dependent
+// mode.
 const ZOOM_LEVEL_FOR_LAND_AIR_SYMBOL_NAMES = 9; // If zoomed in at least this far, show all land & air symbol names. Decrease this to show names at lower zooms.
 const ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES = 12; // If zoomed in at least this far, show all ship symbol names. Decrease this to show names at lower zooms.
 
@@ -49,7 +51,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "2.3.6";
+const VERSION = "3.0";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -73,6 +75,7 @@ var baseMapIsDark = true; // Set when basemap changes, affects text colour of no
 var enableDeadReckoning = true;
 var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
+var namesMode = 1; // 0 = none, 1 = zoom dependent, 2 = all
 var lanMode = false;
 var showTelemetry = false;
 var symbolOverrides = new Map(); // id -> symbol code
@@ -246,10 +249,27 @@ async function handleTelemetry(result) {
   $("#memUsed").text(result.memUsed + "%");
   $("#diskUsed").text(result.diskUsed + "%");
   $("#temp").text(result.temp + "C");
-  $("#adsbStatus").text(result.adsbReceiverStatus);
-  $("#mlatStatus").text(result.mlatReceiverStatus);
-  $("#aisStatus").text(result.aisReceiverStatus);
-  $("#aprsStatus").text(result.aprsReceiverStatus);
+
+  // Feeder status is a complex structure, so design the HTML content for it here based on what's in the JSON
+  var feederStatusHTML = "<table class=\"feederStatusTable\">";
+  var feederStatus = result.feederStatus;
+  for (var feederName in result.feederStatus) {
+    feederStatusHTML += "<tr><td>" + feederName + "</td>"
+    for (var receiverName in result.feederStatus[feederName]) {
+      feederStatusHTML += "<td>" + receiverName + ":</td><td><span class=\"highlight\">" + toTitleCase(result.feederStatus[feederName][receiverName]) + "</span></td>";
+    }
+    feederStatusHTML += "</tr>"
+  }
+  feederStatusHTML += "</table>"
+  $("#feederStatus").html(feederStatusHTML);
+}
+
+// Convert a string to "Title Case"
+function toTitleCase(string) {
+  return string.replace(/\w\S*/g, function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    }
+  );
 }
 
 // Trim the position history to the user-configurable snail trail length,
@@ -442,7 +462,7 @@ async function updateTrackTable() {
   }
 
   // Update DOM
-  $('#tracktable').html(tableContent);
+  $('#trackTable').html(tableContent);
 }
 
 // Update the count of how many things we're tracking in the info panel.
@@ -587,6 +607,7 @@ function getIcon(t) {
     infoColor: showInfoColorWhite,
     outlineWidth: trackSelected(t["id"]) ? 5 : 0,
     outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
+    infoOutlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
     quantity: (t["quantity"] != null) ? t["quantity"] : ""
   });
 
@@ -734,10 +755,16 @@ function trackSelected(id) {
 // Based on zoom level, should the track's name be shown? (When not selected-
 // names are always shown if the track is selected)
 function shouldShowName(t) {
-  if (t["tracktype"] == "SHIP") {
-    return map.getZoom() >= ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES;
+  if (namesMode == 2) {
+    return true;
+  } else if (namesMode == 1) {
+    if (t["tracktype"] == "SHIP") {
+      return map.getZoom() >= ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES;
+    } else {
+      return map.getZoom() >= ZOOM_LEVEL_FOR_LAND_AIR_SYMBOL_NAMES;
+    }
   } else {
-    return map.getZoom() >= ZOOM_LEVEL_FOR_LAND_AIR_SYMBOL_NAMES;
+    return false;
   }
 }
 
@@ -980,7 +1007,10 @@ function setBasemapOpacity(opacity) {
 // Create map
 var map = L.map('map', {
   zoomControl: false,
-  contextmenu: true
+  contextmenu: true,
+  zoomDelta: 0.25,
+  wheelPxPerZoomLevel: 200,
+  zoomSnap: 0
 })
 // Set initial view. Zoom out one level if on mobile
 var startZoom = START_ZOOM;
@@ -1092,6 +1122,13 @@ $("#enableDR").change(function() {
   updateMapObjects();
 });
 
+// Names
+$("#names").change(function() {
+  namesMode = parseInt($(this).val());
+  localStorage.setItem('namesMode', namesMode);
+  updateMapObjects();
+});
+
 // Snail trails
 $("#snailTrails").change(function() {
   snailTrailMode = parseInt($(this).val());
@@ -1192,6 +1229,7 @@ function loadLocalStorage() {
   var basemap = localStorageGetOrDefault('basemap', "CartoDB.DarkMatter");
   basemapOpacity = localStorageGetOrDefault('basemapOpacity', 1);
   enableDeadReckoning = localStorageGetOrDefault('enableDeadReckoning', enableDeadReckoning);
+  namesMode = localStorageGetOrDefault('namesMode', namesMode);
   snailTrailMode = localStorageGetOrDefault('snailTrailMode', snailTrailMode);
   snailTrailLength = localStorageGetOrDefault('snailTrailLength', snailTrailLength);
   lanMode = localStorageGetOrDefault('lanMode', lanMode);
@@ -1224,6 +1262,7 @@ function loadLocalStorage() {
 
   $("#queryInterval").val(queryInterval);
   $("#enableDR").prop('checked', enableDeadReckoning);
+  $("#names").val(namesMode);
   $("#snailTrails").val(snailTrailMode);
   $("#snailTrailLength").val(snailTrailLength);
   $("#lanMode").prop('checked', lanMode);
