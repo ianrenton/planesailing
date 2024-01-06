@@ -94,12 +94,6 @@ function fetchDataFirst() {
     success: async function(result) {
       showServerOffline(false);
       handleDataFirst(result);
-      // Pop out track table by default on desktop browsers after first
-      // successful load, so long as it's not the user's first visit (in
-      // which case the info panel will be on display)
-      if (!onMobile && !firstVisit) {
-        manageRightBoxes("#trackTablePanel", "#configPanel", "#infoPanel");
-      }
     },
     error: function() {
       showServerOffline(true);
