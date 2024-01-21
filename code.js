@@ -591,7 +591,7 @@ function getIcon(t) {
     type: detailedSymb ? t["typeDesc"] : "",
     staffComments: detailedSymb ? t["info1"] : "",
     additionalInformation: detailedSymb ? t["info2"] : "",
-    dtg: ((!t["fixed"] && t["postime"] != null && detailedSymb) ? moment(t["postime"]).utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
+    dtg: ((!t["createdByConfig"] && t["postime"] != null && detailedSymb) ? moment(t["postime"]).utc().format("DD HHmm[Z] MMMYY").toUpperCase() : ""),
     location: detailedSymb ? (Math.abs(lat).toFixed(4).padStart(7, '0') + ((lat >= 0) ? 'N' : 'S') + " " + Math.abs(lon).toFixed(4).padStart(8, '0') + ((lon >= 0) ? 'E' : 'W')) : ""
   });
 
