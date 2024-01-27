@@ -39,6 +39,13 @@ const QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC = 30000;
 const AIR_SHOW_ANTICIPATED_AFTER_MILLISEC = 60000;
 const SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC = 300000;
 
+// For a fixed track, the max interval at which we expect to see data
+// from it. We never show fixed tracks with the dotted "anticipated"
+// outline because they're not expected to move, but we do use this
+// value to distinguish between them being labelled as "Live" vs with
+// their age in the track table.
+const FIXED_TRACK_EXPECTED_BEACON_INTERVAL_MILLISEC = 3600000;
+
 // Colours you may wish to tweak to your liking
 const SELECTED_TRACK_HIGHLIGHT_COLOUR = "#4581CC";
 const UNSELECTED_TRACK_TRAIL_COLOUR_DARK = "#1F3A5B";
@@ -51,7 +58,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "3.0";
+const VERSION = "3.0.1";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -836,12 +843,14 @@ function getIconPosition(t) {
 // Is the track young enough that we should display the track age as "live"?
 // This simplifies the display for the user so they don't have to think
 // about "how many seconds old does it have to be before it's not live?"
-// This is roughly the inverse of oldEnoughToShowAnticipated, but does not
-// take into acount fixed tracks as a special case or whether dead
-// reckoning is enabled.
+// This is roughly the inverse of oldEnoughToShowAnticipated, but it does not
+// take into account whether dead reckoning is enabled, and for fixed tracks
+// it takes into account their expected beacon interval.
 function youngEnoughToShowLive(t) {
   var time = getBestTime(t);
-  if (t["tracktype"] == "AIRCRAFT") {
+  if (t["fixed"]) {
+    return time != null && getTimeInServerRefFrame().diff(time) <= FIXED_TRACK_EXPECTED_BEACON_INTERVAL_MILLISEC;
+  } else if (t["tracktype"] == "AIRCRAFT") {
     return time != null && getTimeInServerRefFrame().diff(time) <= AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
   } else {
     return time != null && getTimeInServerRefFrame().diff(time) <= SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC;
