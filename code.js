@@ -58,7 +58,7 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "3.0.1";
+const VERSION = "3.0.2";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
@@ -79,6 +79,7 @@ var queryInterval = 10;
 var darkSymbols = true;
 var basemapOpacity = 1;
 var baseMapIsDark = true; // Set when basemap changes, affects text colour of non-selected symbols to ensure it contrasts
+var onlyShowLiveTracks = false;
 var enableDeadReckoning = true;
 var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
@@ -775,10 +776,11 @@ function shouldShowName(t) {
   }
 }
 
-// Based on the selected type filters, should we be displaying this track
+// Based on the selected type filters, and choice of whether to only show "live"
+// tracks or also ones that are timing out, should we be displaying this track
 // on the map and the track table?
 function shouldShowIcon(t) {
-  return trackTypesVisible.includes(t["tracktype"]);
+  return trackTypesVisible.includes(t["tracktype"]) && (!onlyShowLiveTracks || youngEnoughToShowLive(t));
 }
 
 // Get the symbol for the track, which may be manually overridden by the
@@ -844,11 +846,12 @@ function getIconPosition(t) {
 // This simplifies the display for the user so they don't have to think
 // about "how many seconds old does it have to be before it's not live?"
 // This is roughly the inverse of oldEnoughToShowAnticipated, but it does not
-// take into account whether dead reckoning is enabled, and for fixed tracks
-// it takes into account their expected beacon interval.
+// take into account whether dead reckoning is enabled
 function youngEnoughToShowLive(t) {
   var time = getBestTime(t);
-  if (t["fixed"]) {
+  if (t["createdByConfig"]) {
+    return true;
+  } else if (t["fixed"]) {
     return time != null && getTimeInServerRefFrame().diff(time) <= FIXED_TRACK_EXPECTED_BEACON_INTERVAL_MILLISEC;
   } else if (t["tracktype"] == "AIRCRAFT") {
     return time != null && getTimeInServerRefFrame().diff(time) <= AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
@@ -859,13 +862,14 @@ function youngEnoughToShowLive(t) {
 
 // Is the track old enough that we should display the track as an anticipated
 // position?
-// This is roughly the inverse of youngEnoughToShowLive, but if a track is fixed
-// or dead reckoning is disabled, then the track will never be shown as
-// anticipated.
+// This is roughly the inverse of youngEnoughToShowLive, but if dead reckoning
+// is disabled, then the track will never be shown as anticipated.
 function oldEnoughToShowAnticipated(t) {
   var time = getBestTime(t);
-  if (!enableDeadReckoning || t["fixed"]) {
+  if (!enableDeadReckoning || t["createdByConfig"]) {
     return false;
+  } else if (t["fixed"]) {
+    return time != null && getTimeInServerRefFrame().diff(time) > FIXED_TRACK_EXPECTED_BEACON_INTERVAL_MILLISEC;
   } else if (t["tracktype"] == "AIRCRAFT") {
     return time != null && getTimeInServerRefFrame().diff(time) > AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
   } else {
@@ -1124,6 +1128,13 @@ $("#queryInterval").change(function() {
   localStorage.setItem('queryInterval', queryInterval);
 });
 
+// Only show live tracks
+$("#onlyShowLive").change(function() {
+  onlyShowLiveTracks = $(this).is(':checked');
+  localStorage.setItem('onlyShowLiveTracks', onlyShowLiveTracks);
+  updateMapObjects();
+});
+
 // Dead reckoning
 $("#enableDR").change(function() {
   enableDeadReckoning = $(this).is(':checked');
@@ -1237,6 +1248,7 @@ function loadLocalStorage() {
   darkSymbols = localStorageGetOrDefault('darkSymbols', true);
   var basemap = localStorageGetOrDefault('basemap', "CartoDB.DarkMatter");
   basemapOpacity = localStorageGetOrDefault('basemapOpacity', 1);
+  onlyShowLiveTracks = localStorageGetOrDefault('onlyShowLiveTracks', onlyShowLiveTracks);
   enableDeadReckoning = localStorageGetOrDefault('enableDeadReckoning', enableDeadReckoning);
   namesMode = localStorageGetOrDefault('namesMode', namesMode);
   snailTrailMode = localStorageGetOrDefault('snailTrailMode', snailTrailMode);
@@ -1270,6 +1282,7 @@ function loadLocalStorage() {
   }
 
   $("#queryInterval").val(queryInterval);
+  $("#onlyShowLive").prop('checked', onlyShowLiveTracks);
   $("#enableDR").prop('checked', enableDeadReckoning);
   $("#names").val(namesMode);
   $("#snailTrails").val(snailTrailMode);
