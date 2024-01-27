@@ -4,10 +4,27 @@ const CACHE_URLS = [
   './'
   'style.css',
   'code.js',
+  'apple-touch-icon.png',
   'favicon.png',
   'favicon.svg',
   'favicon-192.png',
-  'favicon-512.png'
+  'favicon-512.png',
+  'icons/clear.png',
+  'icons/config.png',
+  'icons/flightaware.png',
+  'icons/friend.png',
+  'icons/hostile.png',
+  'icons/info.png',
+  'icons/loading.png',
+  'icons/marinetraffic.png',
+  'icons/neutral.png',
+  'icons/offline.png',
+  'icons/qrz.png',
+  'icons/select.png',
+  'icons/tracktable.png',
+  'icons/unknown.png',
+  'eastereggs/eastereggs.js',
+  'eastereggs/warning.mp3'
 ];
 
 self.addEventListener('fetch', (event) => {
