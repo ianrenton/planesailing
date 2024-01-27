@@ -1,6 +1,4 @@
-const PRECACHE = 'PlaneSailing';
-const CACHE_NAME = 'MyFancyCacheName_v1';
-
+const CACHE_NAME = 'PlaneSailing';
 const CACHE_URLS = [
   'index.html',
   './'
@@ -15,7 +13,7 @@ const CACHE_URLS = [
 self.addEventListener('fetch', (event) => {
   // Is this an asset we can cache?
   const url = new URL(event.request.url);
-  const isCacheableRequest = precachedAssets.includes(url.pathname);
+  const isCacheableRequest = CACHE_URLS.includes(url.pathname);
 
   if (isCacheableRequest) {
     // Open the cache
