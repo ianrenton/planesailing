@@ -58,8 +58,8 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "3.0.2";
-var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "BASE_STATION", "AIRPORT", "SEAPORT"];
+const VERSION = "3.1";
+var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "RADIOSONDE", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
@@ -480,6 +480,7 @@ async function updateCounters() {
   var aprsMobileCount = 0;
   var aisShoreCount = 0;
   var aprsBaseCount = 0;
+  var radiosondeCount = 0;
   tracks.forEach(function(t) {
     if (t["tracktype"] == "AIRCRAFT") {
       aircraftCount++;
@@ -491,6 +492,8 @@ async function updateCounters() {
       aisShoreCount++;
     } else if (t["tracktype"] == "APRS_BASE_STATION") {
       aprsBaseCount++;
+    } else if (t["tracktype"] == "RADIOSONDE") {
+      radiosondeCount++;
     }
   });
   $("#aircraftCount").text(aircraftCount);
@@ -498,6 +501,7 @@ async function updateCounters() {
   $("#aprsMobileCount").text(aprsMobileCount);
   $("#aisShoreCount").text(aisShoreCount);
   $("#aprsBaseCount").text(aprsBaseCount);
+  $("#radiosondeCount").text(radiosondeCount);
 }
 
 // Function called when an icon is clicked. Set track as selected and scroll,
@@ -1106,6 +1110,9 @@ $("#showAPRSMobile").change(function() {
 $("#showAPRSBase").change(function() {
   setTypeEnable("APRS_BASE_STATION", $(this).is(':checked'));
 });
+$("#showRadiosondes").change(function() {
+  setTypeEnable("RADIOSONDE", $(this).is(':checked'));
+});
 $("#showAirports").change(function() {
   setTypeEnable("AIRPORT", $(this).is(':checked'));
 });
@@ -1296,6 +1303,7 @@ function loadLocalStorage() {
   $("#showATONs").prop('checked', trackTypesVisible.includes("AIS_ATON"));
   $("#showAPRSMobile").prop('checked', trackTypesVisible.includes("APRS_MOBILE"));
   $("#showAPRSBase").prop('checked', trackTypesVisible.includes("APRS_BASE_STATION"));
+  $("#showRadiosondes").prop('checked', trackTypesVisible.includes("RADIOSONDE"));
   $("#showAirports").prop('checked', trackTypesVisible.includes("AIRPORT"));
   $("#showSeaPorts").prop('checked', trackTypesVisible.includes("SEAPORT"));
   $("#showBase").prop('checked', trackTypesVisible.includes("BASE_STATION"));

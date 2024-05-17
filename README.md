@@ -6,7 +6,7 @@
 
 ### What is it?
 
-A completely unnecessary military situational awareness display for your home. It shows the location of nearby aircraft and ships in real time, using NATO symbology overlaid on a map.
+A completely unnecessary military situational awareness display for your home. It shows the location of nearby aircraft, ships, amateur radio stations and radiosondes, in real time, using NATO symbology overlaid on a map.
 
 This project contains the client, which runs in a web browser. For a fully functioning Plane/Sailing system, the [server](https://github.com/ianrenton/planesailing-server) is also required, as are third-party applications such as Dump1090, rtl_ais & Direwolf, and a number of radio receivers. You can check out the full build guide for the system [here](https://ianrenton.com/hardware/planesailing/).
 
