@@ -428,7 +428,7 @@ async function updateTrackTable() {
       var typeAbbr = "";
       if (t["tracktype"] == "SHIP" || t["tracktype"] == "AIS_ATON") {
         typeAbbr = "SEA";
-      } else if (t["tracktype"] == "AIRCRAFT") {
+      } else if (t["tracktype"] == "AIRCRAFT" || t["tracktype"] == "RADIOSONDE") {
         typeAbbr = "AIR";
       } else {
         // Anything else is ground domain
