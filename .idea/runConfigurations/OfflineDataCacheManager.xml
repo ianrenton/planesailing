@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="OfflineDataCacheManager" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="com.ianrenton.planesailing.utils.OfflineDataCacheManager" />
+    <module name="plane-sailing-server" />
+    <option name="VM_PARAMETERS" value="-Dconfig.file=application.conf" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/target/output" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.ianrenton.planesailing.utils.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.ianrenton.planesailing.app.Application" />
+    <module name="plane-sailing-server" />
+    <option name="VM_PARAMETERS" value="-Dconfig.file=application.conf" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/target/output" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

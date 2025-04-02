@@ -1,0 +1,287 @@
+/* Colour modes */
+:root[color-mode="dark"] {
+    --background: black;
+    --box-background: rgba(22, 22, 22, 0.8);
+    --highlight: rgba(120, 200, 255, 1);
+    --loading: rgba(255, 200, 120, 1);
+    --problem: rgba(255, 0, 0, 1);
+    --text: rgba(120, 200, 255, 1);
+    --text-highlight: white;
+    --table-heading: rgba(120, 200, 255, 1);
+    --table-row: white;
+    --text-inverted: black;
+    --config-select-bg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='rgba(120, 200, 255, 1)'><polygon points='0,0 100,0 50,50'/></svg>");
+}
+:root[color-mode="light"] {
+    --background: white;
+    --box-background: rgba(255, 255, 255, 0.8);
+    --highlight: rgba(0, 40, 200, 1);
+    --loading: rgba(128, 100, 60, 1);
+    --problem: rgba(255, 0, 0, 1);
+    --text: black;
+    --text-highlight: rgba(0, 40, 200, 1);
+    --table-heading: rgba(0, 40, 200, 1);
+    --table-row: black;
+    --text-inverted: white;
+    --config-select-bg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='black'><polygon points='0,0 100,0 50,50'/></svg>");
+}
+
+/* Overall */
+html, body, div#map { 
+    width:100%; 
+    height:100%; 
+    margin:0; 
+    overflow: hidden;
+    font-family: Exo, Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    font-size: 16px;
+    cursor: default;
+}
+html, body {
+    background-color: var(--background);
+}
+
+/* Main layout */
+div#top {
+    width: 100%;
+    height: 54px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    z-index: 1000;
+    pointer-events: none;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+div#top h1 {
+    margin: 0.3em 0.5em 0.3em 0.5em;
+}
+div#menu {
+    float: right;
+    margin: 0.4em 0.5em 0 0.5em;
+}
+div#menu button {
+    margin-left: 0.5em;
+    padding: 0.5em;
+    height: 43px;
+    pointer-events: auto;
+}
+div#map { 
+    width:auto; 
+    height:100%; 
+    margin:0; 
+    overflow: hidden;
+}
+div.rightbox {
+    width: 550px;
+    position: absolute;
+    top: 50px;
+    right: 0px;
+    margin: 20px;
+    padding: 20px;
+    z-index: 1000;
+    display: none;
+}
+#tracktablearea {
+    max-height: calc(100vh - 200px);
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+table#trackTable {
+    width: 530px;
+}
+
+/* Top bar styles */
+div#top {
+    color: var(--highlight);
+    box-sizing: border-box;
+    display: inline-block;
+    letter-spacing: .06em;
+}
+div#top h1 {
+    font-size: 1.7em;
+    font-weight: bold;
+    text-align: left;
+    text-shadow: -3px 0 2px var(--box-background), 0 3px 2px var(--box-background), 3px 0 2px var(--box-background), 0 -3px 2px var(--box-background);
+}
+div#menu button {
+    font-family: Exo, Arial, sans-serif;
+    font-size: 0.9em;
+    background-color: var(--box-background);
+    border: 1px solid var(--highlight);
+    border-radius: 3px;
+    color: var(--text);
+}
+span.menubuttonicon {
+    position: relative;
+    top: 3px;
+}
+div#menu button.loading {
+    border: 1px solid var(--loading);
+    color: var(--loading);
+    display: none;
+}
+div#menu button.problem {
+    border: 1px solid var(--problem);
+    color: var(--problem);
+    display: none;
+}
+
+/* Right box styles */
+div.rightbox {
+    background-color: var(--box-background);
+    border: 1px solid var(--highlight);
+    border-radius: 3px;
+    color: var(--text);
+}
+div#infoPanel h2 {
+    margin: 0;
+    text-align: center;
+}
+div#infoPanel p {
+    text-align: center;
+}
+div#infoPanel p:not(:last-child) {
+    margin-bottom: 1em;
+}
+div#infoPanel p:last-child {
+    margin-bottom: 0;
+}
+div#infoPanel a, div#infoPanel a:visited, div#infoPanel span.highlight {
+    color: var(--text-highlight);
+}
+div#configpanel h2 {
+    margin: 0;
+    text-align: center;
+}
+div.configPanelSection {
+    margin-top: 1.5em;
+}
+div.configPanelSection p {
+    margin-bottom: 0.2em;
+}
+div#telemetry {
+    display: none;
+}
+div#feederStatusWrapper {
+    text-align: center;
+}
+div#feederStatus {
+    display: inline-block;
+    text-align: left;
+}
+div#feederStatus table {
+    border-spacing: 0.2em 0;
+}
+div#feederStatus table tr td:nth-child(2n-1) {
+    padding-right: 1em;
+}
+button.configButton {
+    margin-left: 0.5em;
+    padding: 0.3em;
+    font-family: Exo, Arial, sans-serif;
+    font-size: 0.9em;    
+    background-color: var(--box-background);
+    border: 1px solid var(--text);
+    border-radius: 3px;
+    color: var(--text);
+}
+label.configLabel {
+    margin-right: 0.5em;
+    display: inline-block;
+}
+select.configSelect {
+    margin-left: 0.5em;
+    padding: 0.3em 1.3em 0.3em 0.3em;
+    font-family: Exo, Arial, sans-serif;
+    font-size: 0.9em;    
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid var(--text);
+    border-radius: 3px;
+    background: var(--config-select-bg) no-repeat;
+    background-size: 12px;
+    background-position: calc(100% + 1em - 20px) calc(50% + 3px);
+    background-repeat: no-repeat;
+    background-color: var(--box-background) !important;
+    color: var(--text);
+}
+table#trackTable {
+    height: 90%;
+    overflow-y: scroll;
+    color: var(--text);
+}
+table#trackTable tr {
+    color: var(--table-row);
+}
+table#trackTable th {
+    color: var(--table-heading);
+}
+table#trackTable tr.selected {
+    background-color: var(--highlight);
+    color: var(--text-inverted);
+}
+table#trackTable tr.notlive {
+    color: gray;
+}
+table#trackTable td {
+    text-align: center;
+}
+table#trackTable td.name {
+    text-align: left;
+    max-width: 140px;
+    overflow: hidden;
+}
+table#trackTable th.name {
+    text-align: left;
+}
+
+/* Leaflet.js mods */
+.leaflet-container .leaflet-control-attribution {
+    background: none;
+}
+
+/* Right-click menu */
+.leaflet-contextmenu a.leaflet-contextmenu-item-disabled {
+    opacity: 1;
+    font-weight: bold;
+}
+.leaflet-contextmenu a.leaflet-contextmenu-item.over {
+    background-color: var(--highlight);
+    border-top: 1px solid var(--highlight);
+    border-bottom: 1px solid var(--highlight);
+}
+.leaflet-contextmenu a.leaflet-contextmenu-item-disabled.over {
+    background-color: white;
+    border-top: 1px solid white;
+    border-bottom: 1px solid white;
+}
+
+
+/* Mobile */
+@media only screen and (max-width: 800px) {
+    div#top h1 {
+        display: none;
+    }
+    span.hideonmobile {
+        display: none;
+    }
+    div.rightbox {
+        width: 70%;
+        font-size: 0.6em;
+    }
+    #tracktablearea {
+        overflow-x: scroll;
+    }
+    select.configSelect {
+        padding: 0.3em 2.3em 0.3em 0.3em;
+        background-position: calc(100% + 2em - 20px) calc(50% + 3px);
+    }
+}
+
+
+/* Animations */
+@keyframes blink {0%{opacity:0.8;} 20%{opacity:0.8;} 50%{opacity:0.2;} 70%{opacity:0.8;} 100%{opacity:0.8;}}

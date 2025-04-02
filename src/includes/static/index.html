@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html color-mode="dark">
+    <head>
+        <title>Plane/Sailing</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width; initial-scale=1.0; viewport-fit=cover">
+        <meta name="color-scheme" content="dark light">
+        <meta name="theme-color" content="#2C2C25" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="description" content="A completely unnecessary military situational awareness display for your home." />
+        <meta property="og:description" content="A completely unnecessary military situational awareness display for your home." />
+        <meta property="og:image" content="https://planesailing.ianrenton.com/banner.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:image" content="https://planesailing.ianrenton.com/banner.png" />
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-contextmenu@1.4.0/dist/leaflet.contextmenu.min.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo&display=swap">
+        <link rel="stylesheet" href="style.css" type="text/css">
+
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery-ui@1.13.2/dist/jquery-ui.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/milsymbol@2.2.0/dist/milsymbol.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-providers@2.0.0/leaflet-providers.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-contextmenu@1.4.0/dist/leaflet.contextmenu.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-edgebuffer@1.0.6/src/leaflet.edgebuffer.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/Leaflet-MovingMaker@0.0.1/MovingMarker.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.10.2/src/leaflet.geometryutil.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet.gridlayer.fadeout@0.1.0/Leaflet.GridLayer.FadeOut.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-arc@1.0.2/bin/leaflet-arc.min.js"></script>
+
+        <link rel="icon" type="image/svg+xml" href="favicon.svg">
+        <link rel="alternate icon" type="image/png" href="favicon.png">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="alternate icon" type="image/png" href="favicon-192.png">
+        <link rel="alternate icon" type="image/png" href="favicon-512.png">
+        <link rel="manifest" href="manifest.webmanifest">
+    </head>
+    <body>
+        <div id="top">
+            <div id="menu">
+                <button id="loading" class="loading"><span class="menubuttonicon"><img src="icons/loading.png"/></span>&#8203;<span class="menubuttontext"><span class="hideonmobile">&nbsp;Loading...</span></span></button>
+                <button id="serverOffline" class="problem"><span class="menubuttonicon"><img src="icons/offline.png"/></span>&#8203;<span class="menubuttontext"><span class="hideonmobile">&nbsp;SERVER&nbsp;OFFLINE</span></span></button>
+                <button id="infoButton"><span class="menubuttonicon"><img src="icons/info.png"/></span>&nbsp;<span class="menubuttontext">Info</span></button>
+                <button id="configButton"><span class="menubuttonicon"><img src="icons/config.png"/></span>&nbsp;<span class="menubuttontext">Conf<span class="hideonmobile">ig</span></span></button>
+                <button id="trackTableButton"><span class="menubuttonicon"><img src="icons/tracktable.png"/></span>&nbsp;<span class="menubuttontext"><span class="hideonmobile">Track</span> Table</span></button>
+            </div>
+            <h1 id="appname">PLANE&nbsp;/&nbsp;SAILING</h1>
+        </div>
+        <div id="map"></div>
+        <div id="infoPanel" class="rightbox">
+            <h2>PLANE&nbsp;/&nbsp;SAILING</h2>
+            <p>The home situational awareness display nobody wanted or needed!</p>
+            <p>This software displays what's currently being tracked by ADS-B, AIS, APRS, Radiosonde and Meshtastic radio packet receivers at the base station.</p>
+            <p>Made by <a href="https://ianrenton.com" target='_blank'>Ian Renton</a></p>
+            <p><a href="https://ianrenton.com/hardware/planesailing" target='_blank'>Project Info</a> &nbsp; &nbsp; <a href="https://github.com/ianrenton/planesailing" target='_blank'>Source Code</a></p>
+            <p>Client version: <span id="clientVersion" class="highlight">Unknown</span> &nbsp; Server version: <span id="serverVersion" class="highlight">Unknown</span></p>
+            <p>This instance is currently tracking <span id="aircraftCount" class="highlight">0</span>&nbsp;aircraft, <span id="shipCount" class="highlight">0</span>&nbsp;ships, <span id="aprsMobileCount" class="highlight">0</span>&nbsp;mobile&nbsp;APRS&nbsp;contacts, and <span id="radiosondeCount" class="highlight">0</span>&nbsp;radiosondes. It has also received data for <span id="aisShoreCount" class="highlight">0</span>&nbsp;AIS&nbsp;shore&nbsp;stations, <span id="aprsBaseCount" class="highlight">0</span>&nbsp;APRS&nbsp;base&nbsp;stations, and <span id="meshtasticCount" class="highlight">0</span>&nbsp;Meshtastic&nbsp;nodes.</p>
+            <div id="telemetry">
+                <p>Last queried the server at: <span id="lastQueryTime" class="highlight">Never</span></p>
+                <p>Server uptime: <span id="uptime" class="highlight">Unknown</span></p>
+                <p>Server&nbsp;CPU:&nbsp;<span id="cpuLoad" class="highlight">Unknown</span>&nbsp; &nbsp;Memory:&nbsp;<span id="memUsed" class="highlight">Unknown</span>&nbsp; &nbsp;Disk:&nbsp;<span id="diskUsed" class="highlight">Unknown</span>&nbsp; &nbsp;Temp:&nbsp;<span id="temp" class="highlight">Unknown</span></p>
+                <div id="feederStatusWrapper"><div id="feederStatus">
+                    Feeder Telemetry:&nbsp;<span class="highlight">Waiting...</span>
+                </div></div>
+            </div>
+        </div>
+
+        <div id="configPanel" class="rightbox">
+            <h2>CONFIGURATION</h2>
+            <div class="configPanelSection" style="line-height: 2.5em;">
+                <div style="display: inline-block;">UI&nbsp;Theme:<button class="configButton" id="lightUIButton">☀️&nbsp;Light</button><button class="configButton" id="darkUIButton">🌙&nbsp;Dark</button></div>
+                <span style="padding-left: 3em;"></span>
+                <div style="display: inline-block;">Symbols:<button class="configButton" id="lightSymbolButton">☀️&nbsp;Light</button><button class="configButton" id="darkSymbolButton">🌙&nbsp;Dark</button></div>
+            </div>
+            <div class="configPanelSection" style="line-height: 2.5em;">
+                <div style="display: inline-block;">
+                    <label for="basemap">Basemap:</label>
+                    <select id="basemap" class="configSelect">
+                        <option value="CartoDB.DarkMatter" selected="selected">CartoDB DarkMatter</option>
+                        <option value="CartoDB.Voyager">CartoDB Voyager</option>
+                        <option value="Esri.NatGeoWorldMap">ESRI NatGeo World Map</option>
+                        <option value="Esri.WorldTopoMap">ESRI World Topo Map</option>
+                        <option value="Esri.WorldShadedRelief">ESRI World Shaded Relief</option>
+                        <option value="Esri.WorldImagery">ESRI World Imagery</option>
+                        <option value="OpenStreetMap.Mapnik">OpenStreetMap Mapnik</option>
+                    </select>
+                </div>
+                <span style="padding-left: 1em;"></span>
+                <div style="display: inline-block;">
+                    <label for="basemapOpacity">Opacity:</label>
+                    <select id="basemapOpacity" class="configSelect">
+                        <option value="1" selected="selected">100%</option>
+                        <option value="0.75">75%</option>
+                        <option value="0.5">50%</option>
+                    </select>
+                </div>
+            </div>
+            <div class="configPanelSection">
+                <p>Overlays:</p> 
+                <label for="showAirspaceLayer" class="configLabel"><input type="checkbox" id="showAirspaceLayer" name="showAirspaceLayer">&nbsp;Airspace (OpenAIP)</label>
+                <label for="showMaritimeLayer" class="configLabel"><input type="checkbox" id="showMaritimeLayer" name="showMaritimeLayer">&nbsp;Maritime (OpenSeaMap)</label>
+            </div>
+            <div class="configPanelSection">
+                <p>Show Track Types:</p> 
+                <label for="showAircraft" class="configLabel"><input type="checkbox" id="showAircraft" name="showAircraft" checked="true">&nbsp;Aircraft</label>
+                <label for="showShips" class="configLabel"><input type="checkbox" id="showShips" name="showShips" checked="true">&nbsp;Ships</label>
+                <label for="showAISShoreStations" class="configLabel"><input type="checkbox" id="showAISShoreStations" name="showAISShoreStations" checked="true">&nbsp;AIS&nbsp;Shore&nbsp;Stations</label>
+                <label for="showATONs" class="configLabel"><input type="checkbox" id="showATONs" name="showATONs" checked="true">&nbsp;AIS&nbsp;Aids&nbsp;to&nbsp;Navigation</label>
+                <label for="showAPRSMobile" class="configLabel"><input type="checkbox" id="showAPRSMobile" name="showAPRSMobile" checked="true">&nbsp;APRS&nbsp;Mobile</label>
+                <label for="showAPRSBase" class="configLabel"><input type="checkbox" id="showAPRSBase" name="showAPRSBase" checked="true">&nbsp;APRS&nbsp;Base&nbsp;Stations</label>
+                <label for="showRadiosondes" class="configLabel"><input type="checkbox" id="showRadiosondes" name="showRadiosondes" checked="true">&nbsp;Radiosondes</label>
+                <label for="showMeshtastic" class="configLabel"><input type="checkbox" id="showMeshtastic" name="showMeshtastic" checked="true">&nbsp;Meshtastic&nbsp;Nodes</label>
+                <label for="showAirports" class="configLabel"><input type="checkbox" id="showAirports" name="showAirports" checked="true">&nbsp;Airports</label>
+                <label for="showSeaPorts" class="configLabel"><input type="checkbox" id="showSeaPorts" name="showSeaPorts" checked="true">&nbsp;Sea&nbsp;Ports</label>
+                <label for="showBase" class="configLabel"><input type="checkbox" id="showBase" name="showBase" checked="true">&nbsp;Base&nbsp;Station</label>
+            </div>
+            <div class="configPanelSection">
+                <label for="queryInterval">Query server every</label>
+                <select id="queryInterval" class="configSelect">
+                    <option value="2">2</option>
+                    <option value="5">5</option>
+                    <option value="10" selected="selected">10</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="60">60</option>
+                </select>
+                <label for="queryInterval">&nbsp;&nbsp;seconds</label>
+            </div>
+            <div class="configPanelSection">
+                <label for="onlyShowLive" class="configLabel"><input type="checkbox" id="onlyShowLive" name="onlyShowLive">&nbsp;Only&nbsp;show&nbsp;live&nbsp;tracks</label>
+                <label for="enableDR" class="configLabel"><input type="checkbox" id="enableDR" name="enableDR" checked="true">&nbsp;Enable&nbsp;Dead&nbsp;Reckoning</label>
+            </div>
+            <div class="configPanelSection">
+                <label for="names">Display names:</label>
+                <select id="names" class="configSelect">
+                    <option value="0">None</option>
+                    <option value="1" selected="selected">Zoom dependent</option>
+                    <option value="2">All</option>
+                </select>
+            </div>
+            <div class="configPanelSection">
+                <label for="snailTrails">Snail Trails:</label>
+                <select id="snailTrails" class="configSelect">
+                    <option value="0">None</option>
+                    <option value="1" selected="selected">Only Selected</option>
+                    <option value="2">All Tracks</option>
+                </select>
+                <select id="snailTrailLength" class="configSelect">
+                    <option value="10">10 points</option>
+                    <option value="20">20 points</option>
+                    <option value="50">50 points</option>
+                    <option value="100">100 points</option>
+                    <option value="200">200 points</option>
+                    <option value="500" selected="selected">500 points</option>
+                    <option value="999999">Forever</option>
+                </select>
+                <button class="configButton" id="clearTrailsButton">Clear</button>
+            </div>
+            <div id="configPanelExtras" class="configPanelSection">
+                <label for="lanMode" class="configLabel"><input type="checkbox" id="lanMode" name="lanMode">&nbsp;Connect&nbsp;via&nbsp;LAN</label> &nbsp;
+                <label for="showTelemetry" class="configLabel"><input type="checkbox" id="showTelemetry" name="showTelemetry">&nbsp;Show&nbsp;Server&nbsp;Telemetry</label>
+            </div>
+
+        </div>
+
+        <div id="trackTablePanel" class="rightbox">
+            <div id="tracktablearea"><table id="trackTable"></table></div>
+        </div>
+
+        <script src="code.js"></script>
+        <script src="eastereggs/eastereggs.js"></script> <!-- Remove me if you don't want easter eggs in your copy of Plane/Sailing -->
+        <script>
+            if ((window.location.protocol == "http:" || window.location.protocol == "https:") && 'serviceWorker' in navigator) {
+              navigator.serviceWorker.register('service-worker.js');
+            }
+        </script>
+    </body>
+</html>
