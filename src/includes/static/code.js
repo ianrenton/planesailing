@@ -50,7 +50,8 @@ const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
 //      DATA STORAGE       //
 /////////////////////////////
 
-const VERSION = "3.1";
+// Server URL. By default that's "here", the same web server as is serving this file, but you could change this if you
+// wanted your front-end to connect to someone else's server backend.
 const SERVER_URL = "/api/";
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "RADIOSONDE", "MESHTASTIC_NODE", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var tracks = new Map(); // id -> Track object
@@ -77,7 +78,6 @@ var enableDeadReckoning = true;
 var snailTrailLength = 500;
 var snailTrailMode = 1; // 0 = none, 1 = only selected, 2 = all
 var namesMode = 1; // 0 = none, 1 = zoom dependent, 2 = all
-var lanMode = false;
 var showTelemetry = false;
 var symbolOverrides = new Map(); // id -> symbol code
 
@@ -92,7 +92,7 @@ var symbolOverrides = new Map(); // id -> symbol code
 function fetchDataFirst() {
   showLoadingIndicator(true);
   $.ajax({
-    url: getServerURL() + "first",
+    url: SERVER_URL + "first",
     dataType: 'json',
     timeout: 10000,
     success: async function(result) {
@@ -125,7 +125,7 @@ function fetchDataUpdate() {
     // Time for a real update call
     showLoadingIndicator(true);
     $.ajax({
-      url: getServerURL() + "update",
+      url: SERVER_URL + "update",
       dataType: 'json',
       timeout: 5000,
       success: async function(result) {
@@ -150,7 +150,7 @@ function fetchDataUpdate() {
 function fetchTelemetry() {
   if (showTelemetry) {
     $.ajax({
-      url: getServerURL() + "telemetry",
+      url: SERVER_URL + "telemetry",
       dataType: 'json',
       timeout: 5000,
       success: async function(result) {
@@ -159,16 +159,6 @@ function fetchTelemetry() {
     });
   }
 }
-
-// Get the URL for the server based on whether we're in LAN mode or not
-function getServerURL() {
-  if (lanMode) {
-    return SERVER_URL_LAN;
-  } else {
-    return SERVER_URL;
-  }
-}
-
 
 
 /////////////////////////////
@@ -181,7 +171,8 @@ function getServerURL() {
 async function handleDataFirst(result) {
   tracks.clear();
   tracks = objectToMap(result.tracks);
-  $("#serverVersion").text(result.version);
+  $("#version").text("v" + result.version);
+  $("#version").show();
   updateGUIAfterDataQuery(result);
 }
 
@@ -1203,13 +1194,6 @@ $("#showMaritimeLayer").change(function() {
   localStorage.setItem('showMaritimeLayer', $(this).is(':checked'));
 });
 
-// LAN mode switch
-$("#lanMode").change(function() {
-  lanMode = $(this).is(':checked');
-  localStorage.setItem('lanMode', lanMode);
-  fetchDataFirst();
-});
-
 // Show Telemetry switch
 $("#showTelemetry").change(function() {
   showTelemetry = $(this).is(':checked');
@@ -1260,7 +1244,6 @@ function loadLocalStorage() {
   namesMode = localStorageGetOrDefault('namesMode', namesMode);
   snailTrailMode = localStorageGetOrDefault('snailTrailMode', snailTrailMode);
   snailTrailLength = localStorageGetOrDefault('snailTrailLength', snailTrailLength);
-  lanMode = localStorageGetOrDefault('lanMode', lanMode);
   showTelemetry = localStorageGetOrDefault('showTelemetry', showTelemetry);
   trackTypesVisible = localStorageGetOrDefault('trackTypesVisible', trackTypesVisible);
   var showAirspaceLayer = localStorageGetOrDefault('showAirspaceLayer', false);
@@ -1294,7 +1277,6 @@ function loadLocalStorage() {
   $("#names").val(namesMode);
   $("#snailTrails").val(snailTrailMode);
   $("#snailTrailLength").val(snailTrailLength);
-  $("#lanMode").prop('checked', lanMode);
   $("#showTelemetry").prop('checked', showTelemetry);
 
   $("#showAircraft").prop('checked', trackTypesVisible.includes("AIRCRAFT"));
@@ -1324,7 +1306,6 @@ fetchTelemetry();
 setInterval(fetchDataUpdate, 1000);
 setInterval(fetchTelemetry, QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
-$("#clientVersion").text(VERSION);
 setTimeout(function(){ $("#appname").fadeOut(); }, 8000);
 
 // Show info if this is a user's first visit

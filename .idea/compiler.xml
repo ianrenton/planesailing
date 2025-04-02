@@ -6,7 +6,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="plane-sailing-server" />
+        <module name="plane-sailing" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

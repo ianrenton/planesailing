@@ -140,6 +140,11 @@ div#infoPanel h2 {
     margin: 0;
     text-align: center;
 }
+div#infoPanel span#version {
+    padding-left: 1em;
+    font-size: 60%;
+    display: none;
+}
 div#infoPanel p {
     text-align: center;
 }

@@ -149,9 +149,10 @@ public class TrackTable extends ConcurrentHashMap<String, Track> {
     public void saveToFile(File file) {
         try {
             LOGGER.info("Saving to track data store...");
-            boolean success = file.delete();
-            if (!success) {
-                LOGGER.error("Failed to delete old track data store before writing a new one, check file permissions!");
+            if (file.exists()) {
+                if (!file.delete()) {
+                    LOGGER.error("Failed to delete old track data store before writing a new one, check file permissions!");
+                }
             }
 
             ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file));

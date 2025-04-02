@@ -22,6 +22,8 @@ I spent too much time thinking about whether I *could*, and not enough time thin
 
 No idea. Ex-military hams who can't leave the SIGINT life behind? Turbo nerds with a hard-on for MIL-STD 2525 symbology? Anyone with a family tolerant enough to let them wall-mount a huge telly and make their kitchen look like Apollo Mission Control?
 
+Please note that this software is intended to receive and display data sourced from your own radio receivers. It does not pull in data from websites such as MarineTraffic or FlightRadar24.
+
 ## Features
 
 * Receives AIS messages in NMEA-0183 format via UDP (e.g. from rtl_ais)
