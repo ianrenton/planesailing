@@ -5,55 +5,57 @@
 // OpenAIP client ID. While you can probably continue to use mine without problems,
 // if you are getting airspace maps failing to load, it could be due to rate limiting -
 // in which case please sign up for OpenAIP.net and get your own token.
-const OPENAIP_CLIENT_ID_TOKEN = "463189186a92609a7b637b87c0feeac3"
+// todo clear this and move to my application.conf only
+let openAIPClientIDToken = "463189186a92609a7b637b87c0feeac3"
 
 // Map default position/zoom
-const START_LAT_LON = [50.7, -1.8];
-const START_ZOOM = 11;
+// todo remove - just bring this from API and recenter map
+let startLatLon = [50.7, -1.8];
+let startZoom = 11;
 
 // Zoom levels at which to show symbol names. Lower value for ships because ships
 // are very clustered inside harbours where I live. You may wish to change them,
 // decrease the numbers to show names when more zoomed out. There is also a user
 // control to always/never show names, in addition to this default zoom-dependent
 // mode.
-const ZOOM_LEVEL_FOR_LAND_AIR_SYMBOL_NAMES = 9; // If zoomed in at least this far, show all land & air symbol names. Decrease this to show names at lower zooms.
-const ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES = 12; // If zoomed in at least this far, show all ship symbol names. Decrease this to show names at lower zooms.
-
-// Update timings. Map updating every second is a good balance of smoothness
-// and not killing your CPU.
-const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
-const QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC = 30000;
+let zoomLevelForLandAirSymbolNames = 9; // If zoomed in at least this far, show all land & air symbol names. Decrease this to show names at lower zooms.
+let zoomLevelForShipSymbolNames = 12; // If zoomed in at least this far, show all ship symbol names. Decrease this to show names at lower zooms.
 
 // Times after which to show tracks as 'anticipated' (dotted outline).
 // Technically we are anticipating position immediately when dead
 // reckoning is enabled, but we use these values as a rough indication
 // of "there should have been an update by now".
-const AIR_SHOW_ANTICIPATED_AFTER_MILLISEC = 60000;
-const SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC = 300000;
+let airShowAnticipatedAfterMillisec = 60000;
+let seaLandShowAnticipatedAfterMillisec = 300000;
 
 // For a fixed track, the max interval at which we expect to see data
 // from it. We never show fixed tracks with the dotted "anticipated"
 // outline because they're not expected to move, but we do use this
 // value to distinguish between them being labelled as "Live" vs with
 // their age in the track table.
-const FIXED_TRACK_EXPECTED_BEACON_INTERVAL_MILLISEC = 3600000;
+let fixedTrackExpectedBeaconIntervalMillisec = 3600000;
 
 // Colours you may wish to tweak to your liking
-const SELECTED_TRACK_HIGHLIGHT_COLOUR = "#4581CC";
-const UNSELECTED_TRACK_TRAIL_COLOUR_DARK = "#1F3A5B";
-const UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT = "#75B3FF";
-
-
+let selectedTrackHighlightColor = "#4581CC";
+let unselectedTrackTrailColorDark = "#1F3A5B";
+let unselectedTrackTrailColorLight = "#75B3FF";
 
 
 /////////////////////////////
-//      DATA STORAGE       //
+//        CONSTANTS        //
 /////////////////////////////
 
 // Server URL. By default that's "here", the same web server as is serving this file, but you could change this if you
 // wanted your front-end to connect to someone else's server backend.
 const SERVER_URL = "/api/";
-var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "RADIOSONDE", "MESHTASTIC_NODE", "BASE_STATION", "AIRPORT", "SEAPORT"];
+// Update timings. Map updating every second is a good balance of smoothness
+// and not killing your CPU.
+const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
+const QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC = 30000;
+
+/////////////////////////////
+//      DATA STORAGE       //
+/////////////////////////////
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
@@ -69,6 +71,7 @@ var lastQueryTime = moment();
 
 // These are all parameters that can be changed by the user by clicking buttons on the GUI,
 // and are persisted in local storage.
+var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "RADIOSONDE", "MESHTASTIC_NODE", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var queryInterval = 10;
 var darkSymbols = true;
 var basemapOpacity = 1;
@@ -606,8 +609,8 @@ function getIcon(t) {
     infoBackground: trackSelected(t["id"]) ? (darkSymbols ? "black" : "white") : "transparent",
     infoColor: showInfoColorWhite,
     outlineWidth: trackSelected(t["id"]) ? 5 : 0,
-    outlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
-    infoOutlineColor: SELECTED_TRACK_HIGHLIGHT_COLOUR,
+    outlineColor: selectedTrackHighlightColor,
+    infoOutlineColor: selectedTrackHighlightColor,
     quantity: (t["quantity"] != null) ? t["quantity"] : ""
   });
 
@@ -739,11 +742,11 @@ function getDRTrail(t) {
 // Get the appropriate trail colour.
 function getTrailColour(id) {
   if (trackSelected(id)) {
-    return SELECTED_TRACK_HIGHLIGHT_COLOUR;
+    return selectedTrackHighlightColor;
   } else if (darkSymbols) {
-    return UNSELECTED_TRACK_TRAIL_COLOUR_DARK;
+    return unselectedTrackTrailColorDark;
   } else {
-    return UNSELECTED_TRACK_TRAIL_COLOUR_LIGHT;
+    return unselectedTrackTrailColorLight;
   }
 }
 
@@ -759,9 +762,9 @@ function shouldShowName(t) {
     return true;
   } else if (namesMode == 1) {
     if (t["tracktype"] == "SHIP") {
-      return map.getZoom() >= ZOOM_LEVEL_FOR_SHIP_SYMBOL_NAMES;
+      return map.getZoom() >= zoomLevelForShipSymbolNames;
     } else {
-      return map.getZoom() >= ZOOM_LEVEL_FOR_LAND_AIR_SYMBOL_NAMES;
+      return map.getZoom() >= zoomLevelForLandAirSymbolNames;
     }
   } else {
     return false;
@@ -844,11 +847,11 @@ function youngEnoughToShowLive(t) {
   if (t["createdByConfig"]) {
     return true;
   } else if (t["fixed"]) {
-    return time != null && getTimeInServerRefFrame().diff(time) <= FIXED_TRACK_EXPECTED_BEACON_INTERVAL_MILLISEC;
+    return time != null && getTimeInServerRefFrame().diff(time) <= fixedTrackExpectedBeaconIntervalMillisec;
   } else if (t["tracktype"] == "AIRCRAFT") {
-    return time != null && getTimeInServerRefFrame().diff(time) <= AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
+    return time != null && getTimeInServerRefFrame().diff(time) <= airShowAnticipatedAfterMillisec;
   } else {
-    return time != null && getTimeInServerRefFrame().diff(time) <= SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC;
+    return time != null && getTimeInServerRefFrame().diff(time) <= seaLandShowAnticipatedAfterMillisec;
   }
 }
 
@@ -861,11 +864,11 @@ function oldEnoughToShowAnticipated(t) {
   if (!enableDeadReckoning || t["createdByConfig"]) {
     return false;
   } else if (t["fixed"]) {
-    return time != null && getTimeInServerRefFrame().diff(time) > FIXED_TRACK_EXPECTED_BEACON_INTERVAL_MILLISEC;
+    return time != null && getTimeInServerRefFrame().diff(time) > fixedTrackExpectedBeaconIntervalMillisec;
   } else if (t["tracktype"] == "AIRCRAFT") {
-    return time != null && getTimeInServerRefFrame().diff(time) > AIR_SHOW_ANTICIPATED_AFTER_MILLISEC;
+    return time != null && getTimeInServerRefFrame().diff(time) > airShowAnticipatedAfterMillisec;
   } else {
-    return time != null && getTimeInServerRefFrame().diff(time) > SEA_LAND_SHOW_ANTICIPATED_AFTER_MILLISEC;
+    return time != null && getTimeInServerRefFrame().diff(time) > seaLandShowAnticipatedAfterMillisec;
   }
 }
 
@@ -1018,12 +1021,11 @@ var map = L.map('map', {
   zoomSnap: 0
 })
 // Set initial view. Zoom out one level if on mobile
-var startZoom = START_ZOOM;
 var screenWidth = (window.innerWidth > 0) ? window.innerWidth : screen.width;
 if (screenWidth <= 600) {
   startZoom--;
 }
-map.setView(START_LAT_LON, startZoom);
+map.setView(startLatLon, startZoom);
 
 // Add main marker layer
 var markersLayer = new L.LayerGroup();
@@ -1172,7 +1174,7 @@ $("#basemapOpacity").change(function() {
 // Overlay layers
 $("#showAirspaceLayer").change(function() {
   if ($(this).is(':checked')) {
-    airspaceLayer = L.tileLayer("https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=" + OPENAIP_CLIENT_ID_TOKEN, {
+    airspaceLayer = L.tileLayer("https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=" + openAIPClientIDToken, {
       maxZoom: 14,
       minZoom: 7,
       opacity: 0.5,
