@@ -7,6 +7,7 @@ import com.ianrenton.planesailing.data.TrackType;
 import com.ianrenton.planesailing.utils.PrometheusMetricGenerator;
 import com.sun.management.OperatingSystemMXBean;
 import com.sun.net.httpserver.*;
+import com.typesafe.config.ConfigValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -63,6 +64,7 @@ public class WebServer {
         server.createContext("/api/first", new CallHandler(Call.FIRST));
         server.createContext("/api/update", new CallHandler(Call.UPDATE));
         server.createContext("/api/telemetry", new CallHandler(Call.TELEMETRY));
+        server.createContext("/api/config", new CallHandler(Call.CONFIG));
         server.createContext("/metrics", new CallHandler(Call.METRICS));
 
         // For everything else, serve static content to deliver the web interface
@@ -100,6 +102,7 @@ public class WebServer {
                     case FIRST -> response = getFirstCallJSON();
                     case UPDATE -> response = getUpdateCallJSON();
                     case TELEMETRY -> response = getTelemetryCallJSON();
+                    case CONFIG -> response = getConfigCallJSON();
                     case METRICS -> {
                         response = getMetricsForPrometheus();
                         contentType = "text/plain";
@@ -198,6 +201,18 @@ public class WebServer {
         map.put("webServerStatus", getStatus());
         map.put("feederStatus", getFeederStatus());
 
+        JSONObject o = new JSONObject(map);
+        return o.toString(readableJSON ? 2 : 0);
+    }
+
+    /**
+     * Get a map of the frontend config which is stored in application.conf and transferred to the frontend via this call.
+     */
+    private String getConfigCallJSON() {
+        Map<String, Object> map = new HashMap<>();
+        for (Map.Entry<String, ConfigValue> e : Application.CONFIG.getConfig("frontend").entrySet()) {
+            map.put(e.getKey(), e.getValue().unwrapped());
+        }
         JSONObject o = new JSONObject(map);
         return o.toString(readableJSON ? 2 : 0);
     }
@@ -329,7 +344,7 @@ public class WebServer {
     }
 
     private enum Call {
-        FIRST, UPDATE, TELEMETRY, METRICS
+        FIRST, UPDATE, TELEMETRY, CONFIG, METRICS
     }
 
     public ConnectionStatus getStatus() {

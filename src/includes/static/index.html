@@ -162,6 +162,7 @@
             </div>
             <div id="configPanelExtras" class="configPanelSection">
                 <label for="showTelemetry" class="configLabel"><input type="checkbox" id="showTelemetry" name="showTelemetry">&nbsp;Show&nbsp;Server&nbsp;Telemetry</label>
+                <label id="easterEggToggle" for="easterEggs" class="configLabel" style="display: none"><input type="checkbox" id="easterEggs" name="easterEggs">&nbsp;Easter&nbsp;Eggs</label>
             </div>
 
         </div>
@@ -171,7 +172,7 @@
         </div>
 
         <script src="code.js"></script>
-        <script src="eastereggs/eastereggs.js"></script> <!-- Remove me if you don't want easter eggs in your copy of Plane/Sailing -->
+        <script src="eastereggs/eastereggs.js"></script>
         <script>
             if ((window.location.protocol == "http:" || window.location.protocol == "https:") && 'serviceWorker' in navigator) {
               navigator.serviceWorker.register('service-worker.js');

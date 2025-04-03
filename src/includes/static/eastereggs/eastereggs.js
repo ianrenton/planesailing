@@ -3,8 +3,6 @@ var hostilesLastTick = false;
 var lastKeyPressed = "";
 var interdicted = [];
 
-$("#configPanelExtras").append('<label for="easterEggs" class="configLabel"><input type="checkbox" id="easterEggs" name="easterEggs">&nbsp;Easter&nbsp;Eggs</label>');
-
 $("#easterEggs").change(function() {
   easterEggs = $(this).is(':checked');
 

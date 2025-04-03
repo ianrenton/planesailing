@@ -1,61 +1,21 @@
 /////////////////////////////
-// USER-CONFIGURABLE VARS  //
-/////////////////////////////
-
-// OpenAIP client ID. While you can probably continue to use mine without problems,
-// if you are getting airspace maps failing to load, it could be due to rate limiting -
-// in which case please sign up for OpenAIP.net and get your own token.
-// todo clear this and move to my application.conf only
-let openAIPClientIDToken = "463189186a92609a7b637b87c0feeac3"
-
-// Map default position/zoom
-// todo remove - just bring this from API and recenter map
-let startLatLon = [50.7, -1.8];
-let startZoom = 11;
-
-// Zoom levels at which to show symbol names. Lower value for ships because ships
-// are very clustered inside harbours where I live. You may wish to change them,
-// decrease the numbers to show names when more zoomed out. There is also a user
-// control to always/never show names, in addition to this default zoom-dependent
-// mode.
-let zoomLevelForLandAirSymbolNames = 9; // If zoomed in at least this far, show all land & air symbol names. Decrease this to show names at lower zooms.
-let zoomLevelForShipSymbolNames = 12; // If zoomed in at least this far, show all ship symbol names. Decrease this to show names at lower zooms.
-
-// Times after which to show tracks as 'anticipated' (dotted outline).
-// Technically we are anticipating position immediately when dead
-// reckoning is enabled, but we use these values as a rough indication
-// of "there should have been an update by now".
-let airShowAnticipatedAfterMillisec = 60000;
-let seaLandShowAnticipatedAfterMillisec = 300000;
-
-// For a fixed track, the max interval at which we expect to see data
-// from it. We never show fixed tracks with the dotted "anticipated"
-// outline because they're not expected to move, but we do use this
-// value to distinguish between them being labelled as "Live" vs with
-// their age in the track table.
-let fixedTrackExpectedBeaconIntervalMillisec = 3600000;
-
-// Colours you may wish to tweak to your liking
-let selectedTrackHighlightColor = "#4581CC";
-let unselectedTrackTrailColorDark = "#1F3A5B";
-let unselectedTrackTrailColorLight = "#75B3FF";
-
-
-/////////////////////////////
 //        CONSTANTS        //
 /////////////////////////////
 
 // Server URL. By default that's "here", the same web server as is serving this file, but you could change this if you
 // wanted your front-end to connect to someone else's server backend.
 const SERVER_URL = "/api/";
-// Update timings. Map updating every second is a good balance of smoothness
-// and not killing your CPU.
+// Update timings. Map updating every second is a good balance of smoothness and not killing your CPU.
 const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
+const QUERY_SERVER_DATA_INTERVAL_MILLISEC = 10000;
 const QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC = 30000;
 
 /////////////////////////////
 //      DATA STORAGE       //
 /////////////////////////////
+
+// Global variables used within the current frontend session
+
 var tracks = new Map(); // id -> Track object
 var markers = new Map(); // id -> Marker
 var clockOffset = 0; // Local PC time (UTC) minus data time. Used to prevent dead reckoning errors if the local PC clock is off or in a different time zone
@@ -65,12 +25,31 @@ var selectedTrackID = "";
 var lastQueryTime = moment();
 
 
+///////////////////////////////
+// BACKEND-CONFIGURABLE VARS //
+///////////////////////////////
+
+// Everything in here has a default, but is overridden when the frontend makes a call to /api/config to fetch the values
+// that the owner put in application.conf. So edit them there!
+
+let openAIPClientIDToken = ""
+let zoomLevelForLandAirSymbolNames = 9;
+let zoomLevelForShipSymbolNames = 12;
+let airShowAnticipatedAfterMillisec = 60000;
+let seaLandShowAnticipatedAfterMillisec = 300000;
+let fixedTrackExpectedBeaconIntervalMillisec = 3600000;
+let selectedTrackHighlightColor = "#4581CC";
+let unselectedTrackTrailColorDark = "#1F3A5B";
+let unselectedTrackTrailColorLight = "#75B3FF";
+
+
 /////////////////////////////
 //  UI CONFIGURABLE VARS   //
 /////////////////////////////
 
-// These are all parameters that can be changed by the user by clicking buttons on the GUI,
-// and are persisted in local storage.
+// These are all parameters that can be changed by the user by clicking buttons on the GUI, and are persisted in local
+// storage.
+
 var trackTypesVisible = ["AIRCRAFT", "SHIP", "AIS_SHORE_STATION", "AIS_ATON", "APRS_MOBILE", "APRS_BASE_STATION", "RADIOSONDE", "MESHTASTIC_NODE", "BASE_STATION", "AIRPORT", "SEAPORT"];
 var queryInterval = 10;
 var darkSymbols = true;
@@ -146,6 +125,20 @@ function fetchDataUpdate() {
   } else {
     // Last query was still recent, no need to do it again
   }
+}
+
+// "Config" API call - called once on page load, this retrieves the frontend config properties from the backend. It will
+// also centre the map based on where the config says it should.
+function fetchConfig() {
+  showLoadingIndicator(true);
+  $.ajax({
+    url: SERVER_URL + "config",
+    dataType: 'json',
+    timeout: 5000,
+    success: async function(result) {
+      handleConfig(result);
+    },
+  });
 }
 
 // "Telemetry" API call - called at regular intervals but only effective if
@@ -235,6 +228,32 @@ async function handleDataUpdate(result) {
   });
 
   updateGUIAfterDataQuery(result);
+}
+
+// Handle successful receive of telemetry data.
+async function handleConfig(result) {
+  openAIPClientIDToken = result.openAIPClientIDToken;
+  zoomLevelForLandAirSymbolNames = result.zoomLevelForLandAirSymbolNames;
+  zoomLevelForShipSymbolNames = result.zoomLevelForShipSymbolNames;
+  airShowAnticipatedAfterMillisec = result.airShowAnticipatedAfterMillisec;
+  seaLandShowAnticipatedAfterMillisec = result.seaLandShowAnticipatedAfterMillisec;
+  fixedTrackExpectedBeaconIntervalMillisec = result.fixedTrackExpectedBeaconIntervalMillisec;
+  selectedTrackHighlightColor = result.selectedTrackHighlightColor;
+  unselectedTrackTrailColorDark = result.unselectedTrackTrailColorDark;
+  unselectedTrackTrailColorLight = result.unselectedTrackTrailColorLight;
+
+  // Set initial view. Zoom out one level if on mobile
+  startZoom = result.startZoom;
+  var screenWidth = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+  if (screenWidth <= 600) {
+    startZoom--;
+  }
+  map.setView([result.startLat, result.startLon], startZoom);
+
+  // Enable easter egg toggle if requested
+  if (result.allowEasterEggs) {
+    $("#easterEggToggle").show();
+  }
 }
 
 // Handle successful receive of telemetry data.
@@ -1020,12 +1039,6 @@ var map = L.map('map', {
   wheelPxPerZoomLevel: 200,
   zoomSnap: 0
 })
-// Set initial view. Zoom out one level if on mobile
-var screenWidth = (window.innerWidth > 0) ? window.innerWidth : screen.width;
-if (screenWidth <= 600) {
-  startZoom--;
-}
-map.setView(startLatLon, startZoom);
 
 // Add main marker layer
 var markersLayer = new L.LayerGroup();
@@ -1303,9 +1316,10 @@ function loadLocalStorage() {
 /////////////////////////////
 
 loadLocalStorage();
+fetchConfig();
 fetchDataFirst();
 fetchTelemetry();
-setInterval(fetchDataUpdate, 1000);
+setInterval(fetchDataUpdate, QUERY_SERVER_DATA_INTERVAL_MILLISEC);
 setInterval(fetchTelemetry, QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 setTimeout(function(){ $("#appname").fadeOut(); }, 8000);
