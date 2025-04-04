@@ -7,7 +7,6 @@
 const SERVER_URL = "/api/";
 // Update timings. Map updating every second is a good balance of smoothness and not killing your CPU.
 const UPDATE_MAP_INTERVAL_MILLISEC = 1000;
-const QUERY_SERVER_DATA_INTERVAL_MILLISEC = 10000;
 const QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC = 30000;
 
 /////////////////////////////
@@ -1319,7 +1318,7 @@ loadLocalStorage();
 fetchConfig();
 fetchDataFirst();
 fetchTelemetry();
-setInterval(fetchDataUpdate, QUERY_SERVER_DATA_INTERVAL_MILLISEC);
+setInterval(fetchDataUpdate, 1000); // Note this just calls the method every second, a UI drop-down controls how often that method actually does anything
 setInterval(fetchTelemetry, QUERY_SERVER_TELEMETRY_INTERVAL_MILLISEC);
 setInterval(updateMap, UPDATE_MAP_INTERVAL_MILLISEC);
 setTimeout(function(){ $("#appname").fadeOut(); }, 8000);
