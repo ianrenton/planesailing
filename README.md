@@ -43,6 +43,8 @@ Please note that this software is intended to receive and display data sourced f
 
 ## Getting a Copy
 
+### Downloading the Software
+
 If you just want to use Plane/Sailing (without making any changes to the source code), go to the [latest release](https://github.com/ianrenton/planesailing/releases/latest) page and download the ZIP file containing the compiled software. This will be a ZIP named like "`plane-sailing-x.y.z.zip`" (*not* "Source Code (zip)").
 
 Unpack this to wherever you would like to run it from, then jump ahead to the Setup section.
@@ -64,12 +66,14 @@ In order to use this software, you should be running some combination of hardwar
 To run Plane/Sailing:
 
 1. Ensure your machine has Java 21 or later installed, e.g. `sudo apt install openjdk-21-jre-headless`. If you're on something like Debian Stable which doesn't yet have Java 21, consider using [the Temurin packages](https://adoptium.net/en-GB/installation/linux/).
-2. Find your copy of Plane/Sailing, either from the ZIP download or one you built yourself (see the previous section). You should have three files: a JAR file, an `application.conf` file, a `run.sh`, and a `data` subdirectory.
-3. Edit `application.conf` and set the IP addresses and ports as required. A list of receiving nodes is supported, each with any number of AIS, ADS-B, MLAT, APRS, HORUS and Meshtastic receivers. One configuration of each type is provided as an example for you to copy. If there's something your setup doesn't do, just delete the corresponding section.
+2. Find your copy of Plane/Sailing, either from the ZIP download or one you built yourself (see the previous section). You should have three files: a JAR file, an `application.conf` file, a `run.sh`, plus `data` and `static` subdirectories.
+3. Edit `application.conf` and set the IP addresses and ports as required. A list of receiving nodes (computers) is supported, each of which can have any number of AIS, ADS-B, MLAT, APRS, HORUS and Meshtastic receivers associated with it. One configuration of each type is provided as an example for you to copy. If there's something your setup doesn't do, just delete the corresponding section.
 4. Set the base station position, and any airports and seaports you'd like to appear in your data.
+5. Set the default position and zoom of the map when it first loads. (You may wish to delay this step until you see it working, so you can adjust accordingly.)
+6. Adjust anything else you can see in `application.conf` that you feel like you might want to change.
 5. Save `application.conf` and run the application, e.g. `chmod +x run.sh`, `./run.sh`
 6. Hopefully you should see log messages indicating that it has started up and loaded data! Every 10 seconds it will print out a summary of what's in its track table.
-7. Leave the software running, then access the web server at `http://[ipaddress]:8090`. You should see the web interface and data will hopefully start coming through. 
+7. Leave the software running, then access the web server at `http://[ipaddress]:8090`. You should see the web interface and tracks will hopefully start to appear. 
 
 If you'd like to make it run automatically on startup on something like a Raspberry Pi, and put it on the internet for everyone to use, the later sections of this README will help you.
 
@@ -106,7 +110,7 @@ sudo systemctl enable plane-sailing
 sudo systemctl start plane-sailing
 ```
 
-If you want to check it's working, use e.g. `systemctl status plane-sailing` to check it's alive, and `journalctl -u plane-sailing.service -f` to see its logs in real time. You should see it successfully start up its interfaces to Dump1090, AIS Dispatcher and Direwolf (assuming they are all enabled) and the regular track table messages should indicate several ships, aircraft and APRS tracks depending on what's around you.
+If you want to check it's working, use e.g. `systemctl status plane-sailing` to check it's alive, and `journalctl -u plane-sailing.service -f` to see its logs in real time. You should see it successfully start up its interfaces to Dump1090, AIS Dispatcher and Direwolf (if they are enabled) and the regular track table messages should indicate several ships, aircraft and/or APRS tracks depending on what's around you.
 
 If you are running Plane/Sailing on Windows you can make it start automatically by using NSSM to install Plane/Sailing as a service, or with Scheduled Tasks, a shortcut in your Startup items, etc.
 
@@ -148,7 +152,7 @@ When you now visit the IP address of your server using a web browser, without sp
 
 If nginx didn't restart properly, you may have mistyped your configuration. Try `sudo nginx -t` to find out what the problem is.
 
-You may wish to add extra features to this configuration. For example if you wanted Plane/Sailing accessible in the root directory as normal, but then have Dump1090 on `/dump1090-fa` and AIS Dispatcher's web interface on `/aisdispatcher` too, all on port 80, you can do that by tweaking the adding new "location" parameters as follows. They are handled in order so Plane/Sailing comes *last*, only if the URL doesn't match any of the other locations.
+You may wish to add extra features to this configuration. For example if you had Dump1090 and AISCatcher installed on the same machine, and you want Plane/Sailing accessible in the root directory as normal, but then have Dump1090 on `/dump1090-fa` and AIS Catcher's web interface on `/aiscatcher` too, all on port 80, you can do that by tweaking the adding new "location" parameters as follows. They are handled in order so Plane/Sailing comes *last*, only if the URL doesn't match any of the other locations.
 
 ```
 server {   
@@ -159,19 +163,15 @@ server {
     rewrite ^/skyaware$ /skyaware/ permanent;
     location /skyaware/ {
         alias /usr/share/skyaware/html/;
-        # Allow CORS requests to /data/ for UMID1090 - not necessarily required for your server!
-        add_header Access-Control-Allow-Origin *;
     }
     location /skyaware/data/ {
         alias /run/dump1090-fa/;
-        # Allow CORS requests to /data/ for UMID1090 - not necessarily required for your server!
-        add_header Access-Control-Allow-Origin *;
     }
 
     # AIS Dispatcher web interface
-    rewrite ^/aisdispatcher$ /aisdispatcher/ permanent;
-    location /aisdispatcher/ {
-        proxy_pass http://127.0.0.1:8080;
+    rewrite ^/aiscatcher$ /aiscatcher/ permanent;
+    location /aiscatcher/ {
+        proxy_pass http://127.0.0.1:8100;
     }
 
     # Plane/Sailing
