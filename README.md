@@ -77,39 +77,6 @@ If you'd like to make it run automatically on startup on something like a Raspbe
 
 If you're running Plane/Sailing on Windows, you may see an "Address already in use" error, and the software will fail to start. This is due to the choice of default port for the webserver, 8090, and its [interaction with a Windows 10/11 feature called WinNAT](https://blog.deanosim.net/windows-10-winnat-and-why-your-programs-cant-listen-on-certain-ports/). While there is a workaround for this involving stopping/starting WinNAT, it's probably easier just to pick a different port for Plane/Sailing's web interface to run on. You can change it in `application.conf`.
 
-### A Note on Choosing Aircraft Data Protocols
-
-A number of aircraft data formats are supported&mdash;for the gory details see the [Tracking Packet Format FAQ](https://ianrenton.com/hardware/planesailing/tracking-packet-format-faq/#what-are-the-common-formats-of-mode-s-data). The preferred format is BEAST Binary format, which Dump1090 produces as an output. This contains the raw Mode-A, Mode-C, Mode-S, ADS-B and Comm-B bytes with some encapsulation. Plane/Sailing can use the same format for receiving live data from the radio via Dump1090 as it can receiving MLAT data from PiAware.
-
-BEAST AVR format is also supported, which is ASCII-encoded and therefore a little easier to parse, but PiAware does not support this for MLAT data. SBS/BaseStation format is supported too, which is both ASCII-encoded *and* supported by PiAware for MLAT, but it doesn't contain all information fields e.g. aircraft category.
-
-Finally, Plane/Sailing v1 loaded its aircraft data from a JSON file written by Dump1090, and Plane/Sailing v2 preserves this capability. This data contains every data point including merged-in MLAT data, however the data is not "live" so requires some adjustments in the code for the time at which data was recorded. It's no longer the preferred option but it is available.
-
-If you're not sure, the default will work fine.
-
-### A Note on Meshtastic Support
-
-Meshtastic node support relies on calling on the Python command-line utility to connect to the node and retrieve data. This is inelegant and somewhat insecure, but does easily provide the ability to connect to Bluetooth nodes as well as WiFi, and avoids me having to write and maintain a Meshtastic protobuf API for Java :)
-
-In `application.conf` you will simply provide a command line for the application to run at an interval. In order for this to work, you will need to [set up the Meshtastic Python CLI interface](https://meshtastic.org/docs/software/python/cli/installation/). On some systems (e.g. recent Ubuntu), this involves a `venv` (virtual environment) as `pip` cannot be run at the system level and the Meshtastic library is not yet available in the package manager. For example, the following may be required to set it up:
-
-```bash
-sudo apt install python3 python3-pip python3-venv 
-python3 -m venv ~/meshtastic-venv 
-source ~/meshtastic-venv/bin/activate 
-pip3 install --upgrade pytap2 
-pip3 install --upgrade meshtastic 
-deactivate
-```
-
-Then the following command is run from Plane/Sailing:
-
-```bash
-source ~/meshtastic-venv/bin/activate && meshtastic --host [ipaddress] --info 
-```
-
-Plane/Sailing is currently *explicitly calling `bash`* to run the command, and therefore this will only work on Linux and where `bash` is available. Improving this is a work in progress.
-
 ## Automatic Run on Startup
 
 Depending on your use case you may wish to have the software run automatically on startup. How to do this is system-dependent, on most Linux systems that use systemd, like Ubuntu and Raspbian, you will want to create a file like `/etc/systemd/system/plane-sailing.service` with the contents similar to this:
@@ -264,3 +231,70 @@ Finally, `sudo systemctl restart nginx` and you should now find that Plane/Saili
 Plane/Sailing exposes a Prometheus metrics endpoint from its web server, at the standard URL of `/metrics`. Metrics available include the number of tracks of various types in the system, and maximum detection ranges. This can be used to aggregate & analyse data on performance, provide alerting on the loss of a feed, and to add pretty graphs to Grafana.
 
 ![Aircraft, Ship and APRS track charts in Grafana](./grafana-screenshot.png)
+
+## How the Software Works
+
+Plane/Sailing was formerly two separate pieces of software, a client written in JavaScript and a server written in Java,
+and although they are now packaged together, the same structure remains.
+
+The Java-based server software is responsible for ingesting data from ADS-B, AIS, APRS etc. receiver software. So for
+example, you may have AIS Catcher receiving data from an RTL-SDR dongle, and AIS Catcher then sends NMEA-0183 format
+data over UDP to the Java/Server side of Plane/Sailing. Plane/Sailing then aggregates all this data from the different
+sources, and deals with things like persistence times, and converting everything to a common data set.
+
+The Java/Server side then exposes an HTTP JSON API which the client JavaScript code connects to. This way the client
+receives only consistently-formatted data, rather than having to deal with the differences between e.g. ADS-B and AIS
+data, as was the case in Plane/Sailing v1, which was client-side code only.
+
+When the server runs, it loads a number of data files available to it which contain mappings of vessel types, ICAO codes
+to airframes, etc. It also has available to it a directory called `static` which contains all the front-end HTML, JS and
+CSS assets. As well as serving the JSON API, the server also serves these static files. The static files are served from
+the root of the HTTP server, while the API endpoints are served from a subdirectory called `/api`.
+
+So, when the user accesses the Plane/Sailing instance with a path like `https://yourserver.com/`, they get served the
+`index.html` file and other static content. Within these files, `code.js` performs the client-side processing, which
+queries the API to get its data.
+
+There are five API endpoints available:
+
+* `/api/config` provides a set of config for the client-side code to use. This comes via the server-side simply to avoid the owner of a Plane/Sailing instance having to tailor both `application.conf` for the server *and* `code.js` for the client to their liking. Instead, `application.conf` also includes client-side config, and the server's API provides it to the client once on first access via this call.
+* `/api/first` provides a complete set of details for all known tracks, including their complete history. The client-side code calls this only once, on first load, to retrieve the full history.
+* `/api/update` provides only the current data for all known tracks, not the history. The client-side code calls this every 10 seconds. It uses this to update its data model, appending the current position to the history, and dropping any tracks that are no longer known to the server.
+* `/api/telemetry` provides server telemetry such as CPU, RAM and disk usage. The client-side code calls this every 30 seconds if it is enabled by the user.
+* `/metrics` provides Prometheus metrics (note, not inside the `/api` directory to comply with the standard)
+
+If any other path is requested from the server, it will then check if it matches a static file. If so, it will serve it,
+if not, it will return a 404 error.
+
+### A Note on Choosing Aircraft Data Protocols
+
+A number of aircraft data formats are supported&mdash;for the gory details see the [Tracking Packet Format FAQ](https://ianrenton.com/hardware/planesailing/tracking-packet-format-faq/#what-are-the-common-formats-of-mode-s-data). The preferred format is BEAST Binary format, which Dump1090 produces as an output. This contains the raw Mode-A, Mode-C, Mode-S, ADS-B and Comm-B bytes with some encapsulation. Plane/Sailing can use the same format for receiving live data from the radio via Dump1090 as it can receiving MLAT data from PiAware.
+
+BEAST AVR format is also supported, which is ASCII-encoded and therefore a little easier to parse, but PiAware does not support this for MLAT data. SBS/BaseStation format is supported too, which is both ASCII-encoded *and* supported by PiAware for MLAT, but it doesn't contain all information fields e.g. aircraft category.
+
+Finally, Plane/Sailing v1 loaded its aircraft data from a JSON file written by Dump1090, and Plane/Sailing v2 preserves this capability. This data contains every data point including merged-in MLAT data, however the data is not "live" so requires some adjustments in the code for the time at which data was recorded. It's no longer the preferred option but it is available.
+
+If you're not sure, the default will work fine.
+
+### A Note on Meshtastic Support
+
+Meshtastic node support relies on calling on the Python command-line utility to connect to the node and retrieve data. This is inelegant and somewhat insecure, but does easily provide the ability to connect to Bluetooth nodes as well as WiFi, and avoids me having to write and maintain a Meshtastic protobuf API for Java :)
+
+In `application.conf` you will simply provide a command line for the application to run at an interval. In order for this to work, you will need to [set up the Meshtastic Python CLI interface](https://meshtastic.org/docs/software/python/cli/installation/). On some systems (e.g. recent Ubuntu), this involves a `venv` (virtual environment) as `pip` cannot be run at the system level and the Meshtastic library is not yet available in the package manager. For example, the following may be required to set it up:
+
+```bash
+sudo apt install python3 python3-pip python3-venv 
+python3 -m venv ~/meshtastic-venv 
+source ~/meshtastic-venv/bin/activate 
+pip3 install --upgrade pytap2 
+pip3 install --upgrade meshtastic 
+deactivate
+```
+
+Then the following command is run from Plane/Sailing:
+
+```bash
+source ~/meshtastic-venv/bin/activate && meshtastic --host [ipaddress] --info 
+```
+
+Plane/Sailing is currently *explicitly calling `bash`* to run the command, and therefore this will only work on Linux and where `bash` is available. Improving this is a work in progress.
