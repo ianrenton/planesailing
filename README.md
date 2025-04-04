@@ -26,8 +26,8 @@ Please note that this software is intended to receive and display data sourced f
 
 ## Features
 
-* Receives AIS messages in NMEA-0183 format via UDP (e.g. from rtl_ais)
-* Receives Mode-S/A/C, ADS-B and some Comm-B messages in BEAST Binary, BEAST AVR and SBS/BaseStation format (e.g. from Dump1090)
+* Receives AIS messages in NMEA-0183 format via UDP (e.g. from AIS Catcher, rtl_ais or dedicated receive hardware)
+* Receives Mode-S/A/C, ADS-B and some Comm-B messages in BEAST Binary, BEAST AVR and SBS/BaseStation format (e.g. from Dump1090 or MODE-S BEAST)
 * Receives MLAT messages in BEAST Binary and SBS/BaseStation format (e.g. from PiAware)
 * Receives complete aircraft data sets direct from Dump1090 in its own JSON format, if preferred
 * Receives APRS messages via KISS TCP (e.g. from Direwolf)
